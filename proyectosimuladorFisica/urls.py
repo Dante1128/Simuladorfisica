@@ -17,7 +17,9 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
+
 urlpatterns = [
-    path('admin/', admin.site.urls),  # Agregado para habilitar el panel de administración
+    path('admin/', admin.site.urls), 
     path('', include('usuarios.urls')),
+   
 ]
