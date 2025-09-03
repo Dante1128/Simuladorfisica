@@ -1,0 +1,136 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Formulario de Registro - PhysicsLab</title>
+    <link rel="stylesheet" href="{% static 'usuarios/css/paginaWeb/registro.css' %}" />
+    <meta
+      http-equiv="Cross-Origin-Opener-Policy"
+      content="same-origin-allow-popups"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <div class="left-panel">
+        <div class="logo-container">
+          <div class="logo">
+            <div class="atom-container">
+              <div class="nucleus"></div>
+              <div class="orbit orbit1">
+                <div class="electron electron1"></div>
+              </div>
+              <div class="orbit orbit2">
+                <div class="electron electron2"></div>
+              </div>
+              <div class="orbit orbit3">
+                <div class="electron electron3"></div>
+              </div>
+            </div>
+            <div class="particle particle1"></div>
+            <div class="particle particle2"></div>
+            <div class="particle particle3"></div>
+            <div class="particle particle4"></div>
+          </div>
+          <div class="welcome-text">¡Explora la Física!</div>
+          <div class="welcome-subtitle">Únete al laboratorio virtual</div>
+        </div>
+      </div>
+
+      <!-- Panel derecho con formulario de Django -->
+      <div class="right-panel">
+        <div class="form-header">
+          <h2 class="form-title">Registro PhysicsLab</h2>
+          <p class="form-subtitle">
+            Completa el formulario para acceder al visualizador
+          </p>
+        </div>
+
+        {% if messages %}
+        <div class="form-messages">
+          {% for message in messages %}
+          <p class="error-msg">{{ message }}</p>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <form action="" method="POST" class="registration-form">
+          {% csrf_token %}
+          <div class="form-row">
+            <div class="form-group">
+              {{ form.nombre.label_tag }} {{ form.nombre }}
+              {% if form.nombre.errors %}
+              <p class="error-msg">{{ form.nombre.errors.0 }}</p>
+              {% endif %}
+            </div>
+            <div class="form-group">
+              {{ form.apellido.label_tag }} {{ form.apellido }}
+              {% if form.apellido.errors %}
+              <p class="error-msg">{{ form.apellido.errors.0 }}</p>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              {{ form.correo.label_tag }} {{ form.correo }}
+              {% if form.correo.errors %}
+              <p class="error-msg">{{ form.correo.errors.0 }}</p>
+              {% endif %}
+            </div>
+            <div class="form-group">
+              {{ form.tipo.label_tag }} {{ form.tipo }}
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              {{ form.contrasena.label_tag }} {{ form.contrasena }}
+            </div>
+            <div class="form-group">
+              {{ form.confirmar_contrasena.label_tag }} {{ form.confirmar_contrasena }}
+              {% if form.confirmar_contrasena.errors %}
+              <p class="error-msg">{{ form.confirmar_contrasena.errors.0 }}</p>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="form-group">
+            <ul id="password-requisitos">
+              <li id="requisito-longitud" class="invalido">
+                <span></span>Al menos 8 caracteres
+              </li>
+              <li id="requisito-mayuscula" class="invalido">
+                <span></span>Al menos una letra mayúscula
+              </li>
+              <li id="requisito-minuscula" class="invalido">
+                <span></span>Al menos una letra minúscula
+              </li>
+              <li id="requisito-numero" class="invalido">
+                <span></span>Al menos un número
+              </li>
+              <li id="requisito-especial" class="invalido">
+                <span></span>Al menos un carácter especial (!@#$%)
+              </li>
+            </ul>
+            {% if form.contrasena.errors %}
+            <p class="error-msg">{{ form.contrasena.errors.0 }}</p>
+            {% endif %}
+          </div>
+
+          <button type="submit" class="submit-btn">Registrar</button>
+        </form>
+
+        <div style="text-align: center; margin: -0.5rem 0"></div>
+        <div class="form-footer">
+          <p>
+            ¿Ya tienes cuenta? <a href="{% url 'login' %}">Inicia sesión</a>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <script src="{% static 'usuarios/js/paginaWeb/registro.js' }"></script>
+  </body>
+</html>

@@ -55,7 +55,10 @@ ROOT_URLCONF = 'proyectosimuladorFisica.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / "templates"],  # Cambiado para buscar plantillas en /templates
+        'DIRS': [BASE_DIR / "templates",
+                # BASE_DIR / 'usuarios/paginaWeb'
+                ],
+         
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -78,7 +81,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'simuladorDeFisica',  
         'USER': 'postgres',         
-        'PASSWORD': 'miclave123',  
+        'PASSWORD': '2811',
         'HOST': 'localhost',        
         'PORT': '5432',              
     }

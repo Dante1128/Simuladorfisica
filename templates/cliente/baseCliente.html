@@ -1,0 +1,76 @@
+<!-- app/templates/app/base.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Sistema de Laboratorios{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'app/css/styles.css' %}">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="{% url 'home' %}" class="navbar-brand">
+                🔬 LabSystem
+            </a>
+
+            <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">
+                ☰
+            </button>
+
+            <ul class="navbar-nav" id="navbarNav">
+                <li class="nav-item dropdown">
+                    <a href="#" class="nav-link">
+                        🧪 Laboratorios
+                    </a>
+                    <div class="dropdown-menu">
+                        <a href="{% url 'laboratorios:lista' %}" class="dropdown-item">Ver Laboratorios</a>
+                        <a href="{% url 'laboratorios:reservar' %}" class="dropdown-item">Reservar Lab</a>
+                        <a href="{% url 'laboratorios:mis_reservas' %}" class="dropdown-item">Mis Reservas</a>
+                        <a href="{% url 'laboratorios:equipos' %}" class="dropdown-item">Equipos Disponibles</a>
+                    </div>
+                </li>
+
+                <li class="nav-item">
+                    <span class="user-info">👋 {{ usuario.nombre }} {{ usuario.apellido }}</span>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'perfil' %}" class="btn btn-primary">
+                        👤 Mi Cuenta
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'logout' %}" class="btn btn-secondary" onclick="return confirm('¿Estás seguro de que deseas cerrar sesión?')">
+                        🚪 Cerrar Sesión
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <script>
+        function toggleMobileMenu() {
+            const nav = document.getElementById('navbarNav');
+            nav.classList.toggle('mobile-active');
+        }
+
+        document.addEventListener('click', function(event) {
+            const nav = document.getElementById('navbarNav');
+            const toggle = document.querySelector('.mobile-menu-toggle');
+            
+            if (!nav.contains(event.target) && !toggle.contains(event.target)) {
+                nav.classList.remove('mobile-active');
+            }
+        });
+    </script>
+</body>
+</html>

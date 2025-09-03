@@ -1,0 +1,610 @@
+/* ============================================
+           ESTILOS GLOBALES Y RESET
+        ============================================ */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  line-height: 1.6;
+  color: #333;
+  background-color: #f3f3e0;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* ============================================
+           HEADER Y NAVEGACIÓN
+        ============================================ */
+.header {
+  background: #133e87;
+  color: white;
+  padding: 1rem 0;
+  position: fixed;
+  width: 100%;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  font-size: 1.8rem;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+}
+
+.logo::before {
+  margin-right: 10px;
+  font-size: 2rem;
+}
+
+.nav-menu {
+  display: flex;
+  list-style: none;
+  gap: 2rem;
+}
+
+.nav-menu a {
+  color: white;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.nav-menu a:hover {
+  color: #cbdceb;
+}
+/* ============================================
+           BOTONES DE NAVEGACIÓN LOGIN Y REGISTRO
+        ============================================ */
+.nav-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.nav-buttons .btn {
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  font-weight: bold;
+  text-decoration: none;
+  transition: background 0.3s ease, transform 0.3s ease;
+}
+
+/* Botón iniciar sesión */
+.login-btn {
+  background: #608bc1;
+  color: #fff;
+}
+
+.login-btn:hover {
+  background: #0f316b;
+  transform: translateY(-2px);
+}
+
+/* Botón registrarse */
+.register-btn {
+  background: #608bc1;
+  color: #fff;
+}
+
+.register-btn:hover {
+  background: #466b94;
+  transform: translateY(-2px);
+}
+.logo {
+    /* Mantiene el tamaño original de la imagen */
+    display: flex;
+    align-items: center;
+    justify-content: flex-start; /* Cambiar a flex-end para mover más a la derecha */
+    padding-left: 50px; /* Ajusta este valor según lo que necesites */
+}
+
+.logo-img {
+    width: auto; /* Mantiene proporción */
+    height: 60px; /* Ajusta la altura a tu gusto */
+}
+
+/* ============================================
+           SECCIÓN HERO
+        ============================================ */
+.hero {
+  background: #133e87;
+  color: white;
+  padding: 120px 0 80px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="40" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="40" cy="80" r="1.5" fill="rgba(255,255,255,0.1)"/></svg>');
+  background-size: 100px 100px;
+  animation: float 20s infinite linear;
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+  100% {
+    transform: translateY(-100px);
+  }
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+}
+
+.hero h1 {
+  font-size: 3.5rem;
+  margin-bottom: 1rem;
+  font-weight: 700;
+}
+
+.hero .slogan {
+  font-size: 1.3rem;
+  margin-bottom: 2rem;
+  opacity: 0.9;
+}
+
+.cta-button {
+  background: #608bc1;
+  color: white;
+  padding: 15px 40px;
+  border: none;
+  border-radius: 50px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-block;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.cta-button:hover {
+  background: #cbdceb;
+  color: #133e87;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.hero-image {
+  margin-top: 3rem;
+  position: relative;
+}
+
+.simulator-preview {
+  width: 300px;
+  height: 200px;
+  background: linear-gradient(45deg, #cbdceb, #608bc1);
+  border-radius: 15px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 4rem;
+  animation: pulse 2s infinite;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* ============================================
+           SECCIÓN CARACTERÍSTICAS
+        ============================================ */
+.features {
+  padding: 80px 0;
+  background-color: #f3f3e0;
+}
+
+.section-title {
+  text-align: center;
+  font-size: 2.5rem;
+  color: #133e87;
+  margin-bottom: 3rem;
+  font-weight: 700;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-top: 3rem;
+}
+
+.feature-card {
+  background: white;
+  padding: 2rem;
+  border-radius: 15px;
+  text-align: center;
+  box-shadow: 0 5px 20px rgba(19, 62, 135, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.feature-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 15px 40px rgba(19, 62, 135, 0.2);
+  border-color: #608bc1;
+}
+
+.feature-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  color: #608bc1;
+}
+
+.feature-card h3 {
+  color: #133e87;
+  margin-bottom: 1rem;
+  font-size: 1.3rem;
+}
+
+.feature-card p {
+  color: #666;
+  line-height: 1.6;
+}
+
+/* ============================================
+           SECCIÓN PRECIOS
+        ============================================ */
+/* Contenedor de las tarjetas */
+.pricing-grid {
+  display: flex; /* Hace que las tarjetas estén en fila */
+  flex-wrap: wrap; /* Permite que bajen en pantallas pequeñas */
+  justify-content: center; /* Centra las tarjetas horizontalmente */
+  gap: 20px; /* Espacio entre tarjetas */
+  margin-top: 2rem;
+}
+
+/* Cada tarjeta individual */
+.pricing-card {
+  background: #f3f3e0; /* Fondo sólido de tu paleta */
+  border-radius: 12px;
+  padding: 2rem;
+  width: 300px; /* Tamaño fijo para que queden alineadas */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: #0f316b 2px solid;
+  
+}
+
+/* Efecto hover */
+.pricing-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Tarjeta destacada */
+.featured {
+  background: #608bc1; /* Fondo sólido diferente */
+  color: #fff;
+ 
+}
+.featured:hover {
+  background: #4a6f9f; /* Fondo más oscuro para el hover */
+  color: #fff; /* Asegura que el texto siga siendo blanco */
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Botones CTA */
+.cta-button {
+  display: inline-block;
+  padding: 0.8rem 1.5rem;
+  border-radius: 6px;
+  background: #133e87;
+  color: #fff;
+  text-decoration: none;
+  font-weight: bold;
+  transition: background 0.3s ease, transform 0.3s ease;
+}
+
+.cta-button:hover {
+   background: #072964; /* Fondo más claro para hover */
+  color: #fff; /* Asegurar que el texto siga siendo blanco */
+  transform: translateY(-2px);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Precios */
+.price {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+.price-currency {
+  font-size: 1rem;
+  vertical-align: top;
+}
+
+/* Responsive: en móviles, las tarjetas bajan */
+@media (max-width: 768px) {
+  .pricing-card {
+    width: 90%;
+  }
+}
+
+/* ============================================
+           SECCIÓN TESTIMONIOS
+        ============================================ */
+.testimonials {
+  padding: 80px 0;
+  background-color: #f3f3e0;
+}
+
+.testimonials-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 2rem;
+  margin-top: 3rem;
+}
+
+.testimonial-card {
+  background: white;
+  padding: 2rem;
+  border-radius: 15px;
+  box-shadow: 0 5px 20px rgba(19, 62, 135, 0.1);
+  position: relative;
+}
+
+.testimonial-card::before {
+  content: "“"; /* Comilla de apertura de cita */
+  font-size: 4rem;
+  color: #608bc1;
+  position: absolute;
+  top: -10px;
+  left: 20px;
+  font-family: serif;
+}
+
+.testimonial-text {
+  font-style: italic;
+  margin-bottom: 1rem;
+  color: #555;
+  padding-top: 1rem;
+}
+
+.testimonial-author {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.author-avatar {
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(45deg, #133e87, #608bc1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.author-info h4 {
+  color: #133e87;
+  font-size: 1.1rem;
+}
+
+.author-info p {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+/* ============================================
+           FOOTER
+        ============================================ */
+.footer {
+  background: #133e87;
+  color: white;
+  padding: 3rem 0 1rem;
+}
+
+.footer-content {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.footer-section h3 {
+  margin-bottom: 1rem;
+  color: #cbdceb;
+}
+
+.footer-section p,
+.footer-section a {
+  color: #cbdceb;
+  text-decoration: none;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.footer-section a:hover {
+  color: white;
+}
+
+.social-links {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.social-links a {
+  width: 40px;
+  height: 40px;
+  background: #608bc1;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: background 0.3s ease;
+}
+
+.social-links a:hover {
+  background: #cbdceb;
+  color: #133e87;
+}
+
+.footer-bottom {
+  border-top: 1px solid #608bc1;
+  padding-top: 1rem;
+  text-align: center;
+  color: #cbdceb;
+}
+
+/* ============================================
+           EFECTOS Y ANIMACIONES
+        ============================================ */
+.fade-in {
+  opacity: 0;
+  transform: translateY(30px);
+  animation: fadeInUp 0.8s ease forwards;
+}
+
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.section {
+  animation-delay: 0.2s;
+}
+
+/* ============================================
+           RESPONSIVE DESIGN
+        ============================================ */
+@media (max-width: 768px) {
+  .nav-menu {
+    display: none;
+  }
+
+  .hero h1 {
+    font-size: 2.5rem;
+  }
+
+  .hero .slogan {
+    font-size: 1.1rem;
+  }
+
+  .features-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .testimonials-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pricing-grid {
+    display: flex; /* Hace que los hijos estén en fila */
+    flex-wrap: wrap; /* Permite que se muevan a la siguiente línea en pantallas pequeñas */
+    justify-content: center; /* Centra las tarjetas horizontalmente */
+    gap: 20px; /* Espacio entre tarjetas */
+    margin-top: 2rem;
+  }
+
+  .pricing-card.featured {
+    transform: none;
+    margin-top: 1rem;
+  }
+
+  .simulator-preview {
+    width: 250px;
+    height: 150px;
+    font-size: 3rem;
+  }
+
+  .pricing-card {
+    margin: 0 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 0 15px;
+  }
+
+  .hero h1 {
+    font-size: 2rem;
+  }
+
+  .price {
+    font-size: 3rem;
+  }
+
+  .feature-card {
+    padding: 1.5rem;
+  }
+}
+
+/* ============================================
+           ESTILOS ADICIONALES PARA INTERACTIVIDAD
+        ============================================ */
+.highlight {
+  background: linear-gradient(
+    120deg,
+    transparent 0%,
+    rgba(96, 139, 193, 0.3) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.floating {
+  animation: floating 3s ease-in-out infinite;
+}
+
+@keyframes floating {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
