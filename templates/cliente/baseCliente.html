@@ -1,17 +1,64 @@
-<!-- app/templates/app/base.html -->
+{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Sistema de Laboratorios{% endblock %}</title>
-    <link rel="stylesheet" href="{% static 'app/css/styles.css' %}">
+    <link rel="stylesheet" href="{% static 'usuarios/css/cliente/baseCliente.css'%}">
+    <style>
+        /* Estilos del Modal */
+        .modal {
+            display: none; /* Ocultar el modal por defecto */
+            position: fixed; /* Fijo para que cubra toda la pantalla */
+            z-index: 1000; /* Asegúrate de que se superponga al contenido */
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5); /* Fondo semitransparente */
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            width: 300px;
+            text-align: center;
+        }
+
+
+        .modal-footer {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .btn-confirm {
+            background-color: #ff6f61;
+            color: white;
+        }
+
+        .btn-cancel {
+            background-color: #cccccc;
+        }
+    </style>
 </head>
 <body>
     <!-- Navbar -->
     <nav class="navbar">
         <div class="navbar-container">
-            <a href="{% url 'home' %}" class="navbar-brand">
+            <a href="#" class="navbar-brand">
                 🔬 LabSystem
             </a>
 
@@ -25,10 +72,10 @@
                         🧪 Laboratorios
                     </a>
                     <div class="dropdown-menu">
-                        <a href="{% url 'laboratorios:lista' %}" class="dropdown-item">Ver Laboratorios</a>
-                        <a href="{% url 'laboratorios:reservar' %}" class="dropdown-item">Reservar Lab</a>
-                        <a href="{% url 'laboratorios:mis_reservas' %}" class="dropdown-item">Mis Reservas</a>
-                        <a href="{% url 'laboratorios:equipos' %}" class="dropdown-item">Equipos Disponibles</a>
+                        <a href="#" class="dropdown-item">Ver Laboratorios</a>
+                        <a href="#" class="dropdown-item">Reservar Lab</a>
+                        <a href="#" class="dropdown-item">Mis Reservas</a>
+                        <a href="#" class="dropdown-item">Equipos Disponibles</a>
                     </div>
                 </li>
 
@@ -37,13 +84,13 @@
                 </li>
 
                 <li class="nav-item">
-                    <a href="{% url 'perfil' %}" class="btn btn-primary">
+                    <a href="{% url 'cuenta_cliente' %}" class="btn btn-primary">
                         👤 Mi Cuenta
                     </a>
                 </li>
 
                 <li class="nav-item">
-                    <a href="{% url 'logout' %}" class="btn btn-secondary" onclick="return confirm('¿Estás seguro de que deseas cerrar sesión?')">
+                    <a href="#" class="btn btn-secondary" onclick="showLogoutModal()">
                         🚪 Cerrar Sesión
                     </a>
                 </li>
@@ -51,26 +98,37 @@
         </div>
     </nav>
 
-    <!-- Main Content -->
+    <!-- Modal de confirmación de logout -->
+    <div id="logoutModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                ¿Estás seguro de que deseas cerrar sesión?
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-cancel" onclick="closeLogoutModal()">Cancelar</button>
+                <a href="{% url 'logout' %}" class="btn btn-confirm">Confirmar</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTENIDO -->
     <main class="main-content">
-        {% block content %}
+        {% block content %} 
         {% endblock %}
     </main>
 
+    <script src="{% static 'usuarios/js/cliente/baseCliente.js' %}"></script>
+
     <script>
-        function toggleMobileMenu() {
-            const nav = document.getElementById('navbarNav');
-            nav.classList.toggle('mobile-active');
+        // Mostrar el modal
+        function showLogoutModal() {
+            document.getElementById('logoutModal').style.display = 'flex';
         }
 
-        document.addEventListener('click', function(event) {
-            const nav = document.getElementById('navbarNav');
-            const toggle = document.querySelector('.mobile-menu-toggle');
-            
-            if (!nav.contains(event.target) && !toggle.contains(event.target)) {
-                nav.classList.remove('mobile-active');
-            }
-        });
+        // Cerrar el modal
+        function closeLogoutModal() {
+            document.getElementById('logoutModal').style.display = 'none';
+        }
     </script>
 </body>
 </html>
