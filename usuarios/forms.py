@@ -1,39 +1,43 @@
 from django import forms
 from .models import Usuario
+import re
 
 class RegistroUsuarioForm(forms.ModelForm):
     contrasena = forms.CharField(
-        widget=forms.PasswordInput(attrs={'placeholder':'Ingresa su contresaña'}),
-        label='Contraseña')
-    
+        widget=forms.PasswordInput(),
+        label="Contraseña"
+    )
     confirmar_contrasena = forms.CharField(
-        widget =forms.PasswordInput(attrs={'placeholder':'Confirme sus contraseña'}),
-        label = "Confirma Contraseña")
-    
+        widget=forms.PasswordInput(),
+        label="Confirmar Contraseña"
+    )
+
     class Meta:
-        model =  Usuario
-        fields = ['nombre','apellido','correo','contrasena', 'tipo']
-        widgets = {
-            'nombre':forms.TextInput(attrs={'placeholder':'Ingrese su nombre'}),
-            'apellido':forms.TextInput(attrs={'placeholder':'Ingrese su apellido'}),
-            'correo':forms.EmailInput(attrs={'placeholder':'Ingrese su correo'}),
-            'tipo':forms.Select(),
-        }
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields = {
-            'nombre': self.fields['nombre'],
-            'apellido': self.fields['apellido'],
-            'correo': self.fields['correo'],
-            'contrasena': self.fields['contrasena'],
-            'confirmar_contrasena': self.fields['confirmar_contrasena'],
-            'tipo': self.fields['tipo'],
-        }
-    
+        model = Usuario
+        fields = ['nombre', 'apellido', 'correo', 'contrasena', 'tipo']
+
+    # Validación de la contraseña
+    def clean_contrasena(self):
+        contrasena = self.cleaned_data.get('contrasena')
+
+        if len(contrasena) < 6:
+            raise forms.ValidationError("La contraseña debe tener al menos 6 caracteres.")
+        if not re.search(r'[A-Z]', contrasena):
+            raise forms.ValidationError("Debe contener al menos una letra mayúscula.")
+        if not re.search(r'[a-z]', contrasena):
+            raise forms.ValidationError("Debe contener al menos una letra minúscula.")
+        if not re.search(r'\d', contrasena):
+            raise forms.ValidationError("Debe contener al menos un número.")
+        if not re.search(r'[!@#$%^&*(),.?":{}|<>]', contrasena):
+            raise forms.ValidationError("Debe contener al menos un carácter especial.")
+
+        return contrasena
+
+    # Validar que coincidan contraseñas
     def clean(self):
         cleaned_data = super().clean()
         contrasena = cleaned_data.get("contrasena")
-        confirmar_contrasena = cleaned_data.get("confirmar_contrasena")
+        confirmar = cleaned_data.get("confirmar_contrasena")
 
-        if contrasena and confirmar_contrasena and contrasena != confirmar_contrasena:
-            self.add_error('confirmar_contrasena',"Las contraseñas no coinciden")
+        if contrasena != confirmar:
+            raise forms.ValidationError("Las contraseñas no coinciden.")

@@ -1,55 +1,67 @@
-from django.contrib.auth import authenticate
-from django.contrib.auth.models import User
-from django.core.checks import messages
-from django.shortcuts import render, redirect
 from .forms import RegistroUsuarioForm
 from django.contrib.auth.hashers import make_password
+from django.shortcuts import render, redirect
+from django.contrib.auth.hashers import check_password
+from django.contrib import messages
+from .models import Usuario  
 
 def index(request):
-    return render(request, 'usuarios/index.html')
+    return render(request, 'paginaWeb/index.html')
 
 def registro_usuario(request):
     if request.method == "POST":
         form = RegistroUsuarioForm(request.POST)
         if form.is_valid():
-            usuario = form.save(commit= False)
+            usuario = form.save(commit=False)
             usuario.contrasena = make_password(form.cleaned_data["contrasena"])
             usuario.save()
-            return redirect('registro')
+            messages.success(request, "¡Registro exitoso! Ya puedes iniciar sesión.")
+            return redirect('login')
+        else:
+            # Mostrar errores del formulario
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{error}")
     else:
-         form =  RegistroUsuarioForm()
+        form = RegistroUsuarioForm()
 
-    return render(request, 'usuarios/registro.html',{"form":form})
+    return render(request, 'paginaWeb/registro.html', {"form": form})
 
 def login(request):
     if request.method == 'POST':
-        email = request.POST.get('email')
-        password = request.POST.get('password')
-        
-        if not email or not password:
-            messages.error(request, 'Por favor ingresa todos los campos')
-            return render(request, 'usuarios/login.html')
-        
-        # Buscar usuario por email (ya que Django usa username por defecto)
-        try:
-            user = User.objects.get(email=email)
-            username = user.username
-        except User.DoesNotExist:
-            messages.error(request, 'Credenciales incorrectas')
-            return render(request, 'usuarios/login.html')
-        
-        # Autenticar usuario
-        user = authenticate(request, username=username, password=password)
-        
-        if user is not None:
-            if user.is_active:
-                login(request, user)
-                messages.success(request, f'¡Bienvenido {user.first_name or user.username}!')
-                # Redirigir a dashboard o página principal
-                return redirect('dashboard')  # Cambia por tu URL de destino
-            else:
-                messages.error(request, 'Tu cuenta está desactivada')
-        else:
-            messages.error(request, 'Credenciales incorrectas')
-    
-    return render(request, 'usuarios/login.html')
+        correo = request.POST.get('correo')
+        contrasena = request.POST.get('contrasena')
+
+        # Validar campos vacíos
+        if not correo or not contrasena:
+            messages.error(request, "Todos los campos son obligatorios")
+            return render(request, 'paginaWeb/login.html')
+
+        # Validar si el correo existe
+        usuario = Usuario.objects.filter(correo=correo).first()
+        if not usuario:
+            messages.error(request, "El correo ingresado no está registrado")
+            return render(request, 'PaginaWeb/login.html')
+
+        # Validar contraseña
+        if not check_password(contrasena, usuario.contrasena):
+            messages.error(request, "La contraseña es incorrecta")
+            return render(request, 'paginaWeb/login.html')
+
+        # Si todo es correcto, guardar sesión
+        request.session['usuario_id'] = usuario.id
+        messages.success(request, f"¡Bienvenido {usuario.nombre}!")
+        return redirect('home_cliente')
+
+    return render(request, 'paginaWeb/login.html')
+
+
+def home_cliente(request):
+    usuario_id = request.session.get('usuario_id')
+    usuario = None
+    if usuario_id:
+        from .models import Usuario
+        usuario = Usuario.objects.get(id=usuario_id)
+    return render(request, 'cliente/homeCliente.html', {"usuario": usuario})
+
+
