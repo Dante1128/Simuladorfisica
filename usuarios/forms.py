@@ -2,6 +2,9 @@ from django import forms
 from .models import Usuario
 import re
 
+from django import forms
+from .models import Usuario
+
 class RegistroUsuarioForm(forms.ModelForm):
     contrasena = forms.CharField(
         widget=forms.PasswordInput(),
@@ -41,3 +44,13 @@ class RegistroUsuarioForm(forms.ModelForm):
 
         if contrasena != confirmar:
             raise forms.ValidationError("Las contraseñas no coinciden.")
+
+
+
+class CuentaClienteForm(forms.ModelForm):
+    class Meta:
+        model = Usuario
+        fields = ['nombre', 'apellido', 'correo', 'tipo']
+        widgets = {
+            'correo': forms.EmailInput(attrs={'readonly': 'readonly'}),  # Para que el correo no sea editable
+        }

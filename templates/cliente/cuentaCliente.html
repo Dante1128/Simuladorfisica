@@ -1,0 +1,370 @@
+{% extends 'cliente/baseCliente.html' %}
+
+{% block title %}Mi Cuenta{% endblock %}
+
+{% block content %}
+<style>
+    .mi-cuenta-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    .cuenta-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding: 2rem 0;
+        background: linear-gradient(135deg, #133E87 0%, #608BC1 100%);
+        color: white;
+        border-radius: 20px;
+        box-shadow: 0 8px 32px rgba(19, 62, 135, 0.2);
+    }
+
+    .cuenta-header h2 {
+        margin: 0;
+        font-size: 2.5rem;
+        font-weight: 300;
+        letter-spacing: 1px;
+    }
+
+    .cuenta-card {
+        background: #F3F3E0;
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        border: 2px solid #CBDCEB;
+        transition: all 0.3s ease;
+    }
+
+    .cuenta-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 16px 48px rgba(0, 0, 0, 0.15);
+    }
+
+    .user-info {
+        display: grid;
+        gap: 1.5rem;
+    }
+
+    .info-item {
+        display: flex;
+        align-items: center;
+        padding: 1rem;
+        background: white;
+        border-radius: 12px;
+        border-left: 4px solid #608BC1;
+        transition: all 0.3s ease;
+    }
+
+    .info-item:hover {
+        transform: translateX(8px);
+        box-shadow: 0 4px 16px rgba(96, 139, 193, 0.2);
+    }
+
+    .info-icon {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, #608BC1, #CBDCEB);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+        color: white;
+        font-weight: bold;
+    }
+
+    .info-content {
+        flex: 1;
+    }
+
+    .info-label {
+        color: #133E87;
+        font-weight: 600;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.25rem;
+    }
+
+    .info-value {
+        color: #333;
+        font-size: 1.1rem;
+        font-weight: 500;
+    }
+
+    .btn-custom {
+        background: linear-gradient(135deg, #608BC1 0%, #133E87 100%);
+        color: white;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 50px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 16px rgba(19, 62, 135, 0.3);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 2rem auto 0;
+        max-width: fit-content;
+    }
+
+    .btn-custom:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 32px rgba(19, 62, 135, 0.4);
+        background: linear-gradient(135deg, #133E87 0%, #608BC1 100%);
+    }
+
+    .btn-custom:active {
+        transform: translateY(0);
+    }
+
+    .btn-cancel {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    }
+
+    .btn-cancel:hover {
+        background: linear-gradient(135deg, #c82333 0%, #dc3545 100%);
+        box-shadow: 0 8px 32px rgba(220, 53, 69, 0.4);
+    }
+
+    .edit-form-container {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        margin-top: 2rem;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        border: 2px solid #608BC1;
+        display: none;
+        animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .edit-form-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        color: #133E87;
+    }
+
+    .edit-form-header h3 {
+        margin: 0;
+        font-size: 1.8rem;
+        font-weight: 600;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #133E87;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.9rem;
+        letter-spacing: 0.5px;
+    }
+
+    .form-group input,
+    .form-group select {
+        width: 100%;
+        padding: 1rem;
+        border: 2px solid #CBDCEB;
+        border-radius: 12px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background: #F3F3E0;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+        outline: none;
+        border-color: #608BC1;
+        box-shadow: 0 0 0 4px rgba(96, 139, 193, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .btn-submit {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        width: 100%;
+        margin-top: 1rem;
+    }
+
+    .btn-submit:hover {
+        background: linear-gradient(135deg, #20c997 0%, #28a745 100%);
+        box-shadow: 0 8px 32px rgba(40, 167, 69, 0.4);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .mi-cuenta-container {
+            margin: 1rem auto;
+            padding: 0 0.5rem;
+        }
+
+        .cuenta-header {
+            padding: 1.5rem 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .cuenta-header h2 {
+            font-size: 2rem;
+        }
+
+        .cuenta-card {
+            padding: 1.5rem;
+        }
+
+        .info-item {
+            flex-direction: column;
+            text-align: center;
+            gap: 0.5rem;
+        }
+
+        .info-icon {
+            margin-right: 0;
+            margin-bottom: 0.5rem;
+        }
+
+        .btn-custom {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+
+<div class="mi-cuenta-container">
+    <div class="cuenta-header">
+        <h2>Mi Cuenta</h2>
+    </div>
+    <div class="cuenta-card">
+        <div class="user-info">
+            <div class="info-item">
+                <div class="info-icon">👤</div>
+                <div class="info-content">
+                    <div class="info-label">Nombre Completo</div>
+                    <div class="info-value">{{ usuario.nombre }} {{ usuario.apellido }}</div>
+                </div>
+            </div>
+
+            <div class="info-item">
+                <div class="info-icon">📧</div>
+                <div class="info-content">
+                    <div class="info-label">Correo Electrónico</div>
+                    <div class="info-value">{{ usuario.correo }}</div>
+                </div>
+            </div>
+
+            <div class="info-item">
+                <div class="info-icon">🏷️</div>
+                <div class="info-content">
+                    <div class="info-label">Tipo de Usuario</div>
+                    <div class="info-value">{{ usuario.get_tipo_display }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botón para editar la información -->
+        <button id="editar-btn" class="btn-custom" onclick="toggleEditForm()">
+            ✏️ Editar Información
+        </button>
+    </div>
+
+    <!-- Formulario de edición de datos -->
+    <div id="edit-form" class="edit-form-container">
+        <div class="edit-form-header">
+            <h3>✨ Editar Información</h3>
+        </div>
+        <form method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+                {{ form.nombre.label_tag }}
+                {{ form.nombre }}
+            </div>
+            
+            <div class="form-group">
+                {{ form.apellido.label_tag }}
+                {{ form.apellido }}
+            </div>
+            
+            <div class="form-group">
+                {{ form.correo.label_tag }}
+                {{ form.correo }}
+            </div>            
+            {% for field in form %}
+                {% if field.name not in 'nombre,apellido,correo' %}
+                    <div class="form-group">
+                        {{ field.label_tag }}
+                        {{ field }}
+                    </div>
+                {% endif %}
+            {% endfor %}
+            
+            <button type="submit" class="btn-custom btn-submit">
+                💾 Actualizar Datos
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Función para alternar la visibilidad del formulario de edición
+    function toggleEditForm() {
+        var form = document.getElementById('edit-form');
+        var btn = document.getElementById('editar-btn');
+        if (form.style.display === 'none' || form.style.display === '') {
+            form.style.display = 'block';
+            btn.innerHTML = '❌ Cancelar Edición';
+            btn.classList.add('btn-cancel');
+            // Scroll suave hacia el formulario
+            setTimeout(() => {
+                form.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'start' 
+                });
+            }, 100);
+        } else {
+            form.style.display = 'none';
+            btn.innerHTML = '✏️ Editar Información';
+            btn.classList.remove('btn-cancel');
+            
+            // Scroll suave hacia arriba
+            window.scrollTo({ 
+                top: 0, 
+                behavior: 'smooth' 
+            });
+        }
+    }
+
+    // Agregar efectos de hover dinámicos
+    document.addEventListener('DOMContentLoaded', function() {
+        const infoItems = document.querySelectorAll('.info-item');
+        
+        infoItems.forEach(item => {
+            item.addEventListener('mouseenter', function() {
+                this.style.borderLeftWidth = '6px';
+            });
+            
+            item.addEventListener('mouseleave', function() {
+                this.style.borderLeftWidth = '4px';
+            });
+        });
+    });
+</script>
+{% endblock %}
