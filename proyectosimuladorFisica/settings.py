@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',      # para sesiones
     'django.contrib.messages',      # para mensajes
     'django.contrib.staticfiles',   # para archivos estáticos
+    'django.contrib.humanize',      # ✅ AGREGADO: Para formatear números en templates
     'usuarios',                     # Quitar temporalmente para poder crear la app
 ]
 
@@ -58,10 +59,7 @@ ROOT_URLCONF = 'proyectosimuladorFisica.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / "templates",
-                # BASE_DIR / 'usuarios/paginaWeb'
-                ],
-         
+        'DIRS': [BASE_DIR / "templates"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -113,12 +111,10 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
-
-TIME_ZONE = 'UTC'
-
+# ✅ CONFIGURACIÓN PARA BOLIVIA
+LANGUAGE_CODE = 'es-es'  # Español
+TIME_ZONE = 'America/La_Paz'  # Zona horaria de Bolivia
 USE_I18N = True
-
 USE_TZ = True
 
 
@@ -138,3 +134,28 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# CONFIGURACIÓN ADICIONAL PARA REPORTES PDF 
+
+# Directorio para almacenar reportes PDF temporales
+REPORTS_DIR = os.path.join(BASE_DIR, 'reportes_pdf')
+if not os.path.exists(REPORTS_DIR):
+    os.makedirs(REPORTS_DIR)
+
+# Configuración para generación de PDFs
+PDF_SETTINGS = {
+    'PAGE_SIZE': 'A4',
+    'MARGINS': (40, 40, 40, 40),  # izquierda, arriba, derecha, abajo
+    'TITLE': 'Sistema de Laboratorios de Física VR',
+    'AUTHOR': 'Administrador del Sistema',
+}
+
+# Configuración de sesión para el dashboard
+SESSION_COOKIE_AGE = 3600  # 1 hora de sesión
+SESSION_SAVE_EVERY_REQUEST = True
+
+# Configuración para login
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/home-cliente/'
+LOGOUT_REDIRECT_URL = '/login/'
