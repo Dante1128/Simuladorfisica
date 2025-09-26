@@ -1,0 +1,134 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Sistema de Laboratorios{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'usuarios/css/cliente/baseCliente.css'%}">
+    <style>
+        /* Estilos del Modal */
+        .modal {
+            display: none; /* Ocultar el modal por defecto */
+            position: fixed; /* Fijo para que cubra toda la pantalla */
+            z-index: 1000; /* Asegúrate de que se superponga al contenido */
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5); /* Fondo semitransparente */
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            width: 300px;
+            text-align: center;
+        }
+
+
+        .modal-footer {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .btn-confirm {
+            background-color: #ff6f61;
+            color: white;
+        }
+
+        .btn-cancel {
+            background-color: #cccccc;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="#" class="navbar-brand">
+                🔬 LabSystem
+            </a>
+
+            <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">
+                ☰
+            </button>
+
+            <ul class="navbar-nav" id="navbarNav">
+                <li class="nav-item dropdown">
+                    <a href="#" class="nav-link">
+                        🧪 Laboratorios
+                    </a>
+                    <div class="dropdown-menu">
+                        <a href="#" class="dropdown-item">Ver Laboratorios</a>
+                        <a href="#" class="dropdown-item">Reservar Lab</a>
+                        <a href="#" class="dropdown-item">Mis Reservas</a>
+                        <a href="#" class="dropdown-item">Equipos Disponibles</a>
+                    </div>
+                </li>
+
+                <li class="nav-item">
+                    <span class="user-info">👋 {{ usuario.nombre }} {{ usuario.apellido }}</span>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{% url 'cuenta_cliente' %}" class="btn btn-primary">
+                        👤 Mi Cuenta
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="#" class="btn btn-secondary" onclick="showLogoutModal()">
+                        🚪 Cerrar Sesión
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Modal de confirmación de logout -->
+    <div id="logoutModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                ¿Estás seguro de que deseas cerrar sesión?
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-cancel" onclick="closeLogoutModal()">Cancelar</button>
+                <a href="{% url 'logout' %}" class="btn btn-confirm">Confirmar</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTENIDO -->
+    <main class="main-content">
+        {% block content %} 
+        {% endblock %}
+    </main>
+
+    <script src="{% static 'usuarios/js/cliente/baseCliente.js' %}"></script>
+
+    <script>
+        // Mostrar el modal
+        function showLogoutModal() {
+            document.getElementById('logoutModal').style.display = 'flex';
+        }
+
+        // Cerrar el modal
+        function closeLogoutModal() {
+            document.getElementById('logoutModal').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

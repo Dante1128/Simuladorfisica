@@ -1,0 +1,164 @@
+{% load static %}
+{# {% load json_script %} #}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reportes del Sistema</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* === Estilos conservados y funcionales === */
+        * {margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', Arial, sans-serif;}
+        body {background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height:100vh; padding:20px;}
+        .reportes-container {max-width:1400px; margin:0 auto; background:white; border-radius:15px; box-shadow:0 20px 40px rgba(0,0,0,0.1); overflow:hidden;}
+        .header {background: linear-gradient(135deg, #2c3e50, #34495e); color:white; padding:30px; text-align:center; border-bottom:1px solid #34495e;}
+        .header h1 {font-size:2.5em; margin-bottom:10px; font-weight:300;}
+        .header .subtitle {opacity:0.8; font-size:1.1em;}
+        .estadisticas-principales {display:grid; grid-template-columns:repeat(auto-fit, minmax(300px,1fr)); gap:25px; padding:40px; background:#f8f9fa;}
+        .estadistica-card {background:white; padding:25px; border-radius:12px; box-shadow:0 5px 15px rgba(0,0,0,0.08); text-align:center; border-left:5px solid; transition:transform 0.3s ease;}
+        .estadistica-card:hover {transform:translateY(-5px);}
+        .estadistica-card.usuarios {border-left-color:#e74c3c;}
+        .estadistica-card.simulaciones {border-left-color:#3498db;}
+        .estadistica-card.ingresos {border-left-color:#2ecc71;}
+        .estadistica-card h3 {color:#7f8c8d; margin-bottom:15px; font-size:1.1em; text-transform:uppercase; letter-spacing:1px;}
+        .numero-principal {font-size:3em; font-weight:bold; color:#2c3e50; margin:10px 0;}
+        .variacion {display:inline-block; padding:8px 16px; border-radius:20px; font-weight:bold; font-size:0.9em;}
+        .variacion.positiva {background:#d4edda; color:#155724;}
+        .variacion.negativa {background:#f8d7da; color:#721c24;}
+        .seccion-graficos {padding:40px;}
+        .graficos-grid {display:grid; grid-template-columns:repeat(auto-fit, minmax(500px,1fr)); gap:30px; margin-top:30px;}
+        .grafico-card {background:white; padding:25px; border-radius:12px; box-shadow:0 5px 15px rgba(0,0,0,0.08); border:1px solid #e9ecef;}
+        .grafico-titulo {font-size:1.3em; font-weight:600; color:#2c3e50; margin-bottom:20px; text-align:center; padding-bottom:15px; border-bottom:2px solid #f8f9fa;}
+        .canvas-container {position:relative; height:300px; width:100%;}
+        .info-adicional {background:#f8f9fa; padding:30px 40px; border-top:1px solid #e9ecef;}
+        .info-grid {display:grid; grid-template-columns:repeat(auto-fit, minmax(250px,1fr)); gap:20px;}
+        .info-item {background:white; padding:20px; border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,0.05);}
+        .info-item h4 {color:#495057; margin-bottom:10px; font-size:1em;}
+        .info-item .valor {font-size:1.4em; font-weight:bold; color:#2c3e50;}
+        .acciones {text-align:center; padding:40px; background:white; border-top:1px solid #e9ecef;}
+        .btn-generar-pdf {background:linear-gradient(135deg, #e74c3c, #c0392b); color:white; padding:18px 35px; border:none; border-radius:50px; font-size:1.1em; font-weight:bold; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:12px; box-shadow:0 5px 15px rgba(231,76,60,0.3); transition:all 0.3s ease;}
+        .btn-generar-pdf:hover {transform:translateY(-2px); box-shadow:0 8px 25px rgba(231,76,60,0.4);}
+        @media(max-width:768px){.graficos-grid{grid-template-columns:1fr;}.estadisticas-principales{grid-template-columns:1fr; padding:20px;}.header h1{font-size:2em;}}
+    </style>
+</head>
+<body>
+    <div class="reportes-container">
+        <!-- HEADER -->
+        <div class="header">
+            <h1>📊 Reportes del Sistema</h1>
+            <p class="subtitle">Estadísticas en tiempo real - Período: {{ fecha_inicio|date:"d/m/Y" }} al {{ fecha_fin|date:"d/m/Y" }}</p>
+        </div>
+
+        <!-- ESTADÍSTICAS PRINCIPALES -->
+        <div class="estadisticas-principales">
+            <div class="estadistica-card usuarios">
+                <h3>👥 Usuarios Registrados</h3>
+                <div class="numero-principal">{{ total_usuarios|default:0 }}</div>
+                <div class="variacion {% if porcentaje_usuarios >= 0 %}positiva{% else %}negativa{% endif %}">
+                    {{ porcentaje_usuarios|default:0 }}% vs período anterior
+                </div>
+                <p style="margin-top: 10px; color: #6c757d; font-size: 0.9em;">Usuarios activos: {{ usuarios_activos|default:0 }}</p>
+            </div>
+
+            <div class="estadistica-card simulaciones">
+                <h3>🔬 Simulaciones Realizadas</h3>
+                <div class="numero-principal">{{ simulaciones_realizadas|default:0 }}</div>
+                <div class="variacion {% if porcentaje_simulaciones >= 0 %}positiva{% else %}negativa{% endif %}">
+                    {{ porcentaje_simulaciones|default:0 }}% vs período anterior
+                </div>
+                <p style="margin-top: 10px; color: #6c757d; font-size: 0.9em;">Últimos 30 días</p>
+            </div>
+
+            <div class="estadistica-card ingresos">
+                <h3>💰 Ingresos del Mes</h3>
+                <div class="numero-principal">${{ ingresos_mes|default:0 }}</div>
+                <p style="margin-top: 10px; color: #6c757d; font-size: 0.9em;">Total recaudado</p>
+            </div>
+        </div>
+
+        <!-- SECCIÓN DE GRÁFICOS -->
+        <div class="seccion-graficos">
+            <div class="graficos-grid">
+                <div class="grafico-card">
+                    <div class="grafico-titulo">Distribución de Usuarios por Tipo</div>
+                    <div class="canvas-container">
+                        <canvas id="graficoUsuarios"></canvas>
+                    </div>
+                </div>
+                <div class="grafico-card">
+                    <div class="grafico-titulo">Membresías Activas por Tipo</div>
+                    <div class="canvas-container">
+                        <canvas id="graficoMembresias"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- INFORMACIÓN ADICIONAL -->
+        <div class="info-adicional">
+            <div class="info-grid">
+                <div class="info-item">
+                    <h4>📅 Período Analizado</h4>
+                    <div class="valor">{{ fecha_inicio|date:"d/m/Y" }} a {{ fecha_fin|date:"d/m/Y" }}</div>
+                </div>
+                <div class="info-item">
+                    <h4>⚡ Actualización</h4>
+                    <div class="valor">Tiempo real</div>
+                </div>
+                <div class="info-item">
+                    <h4>📈 Tendencia</h4>
+                    <div class="valor">Crecimiento positivo</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BOTÓN PDF -->
+        <div class="acciones">
+            <a href="{% url 'generar_informe_completo_pdf' %}" class="btn-generar-pdf">📄 Generar Reporte PDF Completo</a>
+        </div>
+    </div>
+
+    <!-- PASO SEGURO DE DATOS A JS -->
+    {{ usuarios_por_tipo|json_script:"usuarios-data" }}
+    {{ membresias_por_tipo|json_script:"membresias-data" }}
+
+    <script>
+        const datosUsuarios = JSON.parse(document.getElementById('usuarios-data').textContent);
+        const datosMembresias = JSON.parse(document.getElementById('membresias-data').textContent);
+
+        // GRÁFICO USUARIOS
+        new Chart(document.getElementById('graficoUsuarios'), {
+            type: 'pie',
+            data: {
+                labels: ['Estudiantes', 'Universitarios', 'Profesionales'],
+                datasets: [{
+                    data: [datosUsuarios.estudiante||0, datosUsuarios.universitario||0, datosUsuarios.profesional||0],
+                    backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56'],
+                    borderWidth: 2, borderColor: '#fff'
+                }]
+            },
+            options: {responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom', labels:{padding:20, usePointStyle:true}}}}
+        });
+
+        // GRÁFICO MEMBRESÍAS
+        new Chart(document.getElementById('graficoMembresias'), {
+            type: 'bar',
+            data: {
+                labels: ['Mensual', 'Semestral', 'Anual'],
+                datasets: [{
+                    label: 'Cantidad',
+                    data: [datosMembresias.mensual||0, datosMembresias.semestral||0, datosMembresias.anual||0],
+                    backgroundColor: ['#4BC0C0', '#FF9F40', '#9966FF'],
+                    borderWidth:0, borderRadius:5
+                }]
+            },
+            options: {
+                responsive:true, maintainAspectRatio:false,
+                scales: {y:{beginAtZero:true, grid:{color:'rgba(0,0,0,0.05)'}}, x:{grid:{display:false}}}
+            }
+        });
+    </script>
+</body>
+</html>

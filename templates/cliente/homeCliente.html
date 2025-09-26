@@ -1,0 +1,11 @@
+<!-- homeCliente.html -->
+
+
+{% extends 'cliente/baseCliente.html' %}
+{% load static %}
+{% block title %}Bienvenido al Sistema de Laboratorios{% endblock %}
+
+{% block content %}
+    <h2>Bienvenido, {{ usuario.nombre }}</h2>
+    <p>Aquí puedes  explorar los laboratorios disponibles.</p>
+{% endblock %}

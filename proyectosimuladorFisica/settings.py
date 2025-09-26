@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -25,23 +26,26 @@ SECRET_KEY = 'django-insecure-v@b^u*w9kg%9&u8b_ggptzyf(&q@hj6wc1qqnh=8*yfh*z!56e
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['.vercel.app','localhost','127.0.0.1']
 
 
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',             # <-- Agregado
+    'django.contrib.admin',  
+    'whitenoise.runserver_nostatic',
     'django.contrib.auth',          # para usuarios y permisos
     'django.contrib.contenttypes',  # necesario para modelos del sistema
     'django.contrib.sessions',      # para sesiones
     'django.contrib.messages',      # para mensajes
     'django.contrib.staticfiles',   # para archivos estáticos
+    'django.contrib.humanize',      # ✅ AGREGADO: Para formatear números en templates
     'usuarios',                     # Quitar temporalmente para poder crear la app
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware', 
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -55,7 +59,7 @@ ROOT_URLCONF = 'proyectosimuladorFisica.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / "templates"],  # Cambiado para buscar plantillas en /templates
+        'DIRS': [BASE_DIR / "templates"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -67,7 +71,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'proyectosimuladorFisica.wsgi.application'
+WSGI_APPLICATION = 'proyectosimuladorFisica.wsgi.app'
 
 
 # Database
@@ -76,11 +80,11 @@ WSGI_APPLICATION = 'proyectosimuladorFisica.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'simuladorDeFisica',  
+        'NAME': 'railway',  
         'USER': 'postgres',         
-        'PASSWORD': '2811',  
-        'HOST': 'localhost',        
-        'PORT': '5432',              
+        'PASSWORD': 'BImGrCGUYvMImjRlTFpxKdLFDkTeQSeb',
+        'HOST': 'shortline.proxy.rlwy.net',        
+        'PORT': '27873',              
     }
 }
 
@@ -107,12 +111,10 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
-
-TIME_ZONE = 'UTC'
-
+# ✅ CONFIGURACIÓN PARA BOLIVIA
+LANGUAGE_CODE = 'es-es'  # Español
+TIME_ZONE = 'America/La_Paz'  # Zona horaria de Bolivia
 USE_I18N = True
-
 USE_TZ = True
 
 
@@ -120,6 +122,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 STATICFILES_DIRS = [BASE_DIR / 'static']
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -129,3 +134,28 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# CONFIGURACIÓN ADICIONAL PARA REPORTES PDF 
+
+# Directorio para almacenar reportes PDF temporales
+REPORTS_DIR = os.path.join(BASE_DIR, 'reportes_pdf')
+if not os.path.exists(REPORTS_DIR):
+    os.makedirs(REPORTS_DIR)
+
+# Configuración para generación de PDFs
+PDF_SETTINGS = {
+    'PAGE_SIZE': 'A4',
+    'MARGINS': (40, 40, 40, 40),  # izquierda, arriba, derecha, abajo
+    'TITLE': 'Sistema de Laboratorios de Física VR',
+    'AUTHOR': 'Administrador del Sistema',
+}
+
+# Configuración de sesión para el dashboard
+SESSION_COOKIE_AGE = 3600  # 1 hora de sesión
+SESSION_SAVE_EVERY_REQUEST = True
+
+# Configuración para login
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/home-cliente/'
+LOGOUT_REDIRECT_URL = '/login/'

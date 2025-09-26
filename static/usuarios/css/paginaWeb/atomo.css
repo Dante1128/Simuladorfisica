@@ -1,0 +1,28 @@
+#container {
+    width: 30vw;
+    height: 30vh;
+    position: relative;
+    margin: 0 auto; /* Centrado horizontal */
+    margin-top: 5%; /* Desplaza hacia abajo un 10% de la altura de la pantalla */
+    display: flex;
+    justify-content: center; /* Centrado horizontal */
+    align-items: center; /* Centrado vertical */
+}
+
+.hero-image {
+    display: flex;
+    justify-content: center; /* Centrado horizontal */
+    align-items: center; /* Centrado vertical */
+    height: 100%; /* Ocupa todo el alto del contenedor */
+}
+
+#controls {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    z-index: 100;
+}
+.cta-button {
+    position: relative;
+    z-index: 10; /* Asegúrate de que el botón esté por encima */
+}
