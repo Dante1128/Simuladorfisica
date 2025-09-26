@@ -1,5 +1,4 @@
 {% load static %}
-{# {% load json_script %} #}
 
 <!DOCTYPE html>
 <html lang="es">
@@ -8,157 +7,315 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reportes del Sistema</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
-        /* === Estilos conservados y funcionales === */
+        :root {
+            --color-crema: #F3F3E0;
+            --color-azul-oscuro: #133E87;
+            --color-azul-medio: #608BC1;
+            --color-azul-claro: #CBDCEB;
+            --color-blanco: #FFFFFF;
+            --sombra-azul: rgba(19, 62, 135, 0.08);
+        }
+
         * {margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', Arial, sans-serif;}
-        body {background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height:100vh; padding:20px;}
-        .reportes-container {max-width:1400px; margin:0 auto; background:white; border-radius:15px; box-shadow:0 20px 40px rgba(0,0,0,0.1); overflow:hidden;}
-        .header {background: linear-gradient(135deg, #2c3e50, #34495e); color:white; padding:30px; text-align:center; border-bottom:1px solid #34495e;}
+        body {background: var(--color-crema); min-height:100vh; padding:20px; color: #223;}
+        .reportes-container {max-width:1400px; margin:0 auto; background: var(--color-blanco); border-radius:15px; box-shadow:0 20px 40px var(--sombra-azul); overflow:hidden;}
+        .header {background: linear-gradient(135deg, var(--color-azul-oscuro), var(--color-azul-medio)); color: var(--color-blanco); padding:30px; text-align:center; border-bottom:1px solid rgba(96,139,193,0.15);}
         .header h1 {font-size:2.5em; margin-bottom:10px; font-weight:300;}
-        .header .subtitle {opacity:0.8; font-size:1.1em;}
-        .estadisticas-principales {display:grid; grid-template-columns:repeat(auto-fit, minmax(300px,1fr)); gap:25px; padding:40px; background:#f8f9fa;}
-        .estadistica-card {background:white; padding:25px; border-radius:12px; box-shadow:0 5px 15px rgba(0,0,0,0.08); text-align:center; border-left:5px solid; transition:transform 0.3s ease;}
+        .header .subtitle {opacity:0.9; font-size:1.1em;}
+        .estadisticas-principales {display:grid; grid-template-columns:repeat(auto-fit, minmax(300px,1fr)); gap:25px; padding:40px; background: var(--color-crema);}
+        .estadistica-card {background:var(--color-blanco); padding:25px; border-radius:12px; box-shadow:0 5px 15px var(--sombra-azul); text-align:center; border-left:5px solid var(--color-azul-medio); transition:transform 0.3s ease;}
         .estadistica-card:hover {transform:translateY(-5px);}
-        .estadistica-card.usuarios {border-left-color:#e74c3c;}
-        .estadistica-card.simulaciones {border-left-color:#3498db;}
-        .estadistica-card.ingresos {border-left-color:#2ecc71;}
-        .estadistica-card h3 {color:#7f8c8d; margin-bottom:15px; font-size:1.1em; text-transform:uppercase; letter-spacing:1px;}
-        .numero-principal {font-size:3em; font-weight:bold; color:#2c3e50; margin:10px 0;}
+        .estadistica-card.usuarios {border-left-color: var(--color-azul-oscuro);}
+        .estadistica-card.simulaciones {border-left-color: var(--color-azul-medio);}
+        .estadistica-card.ingresos {border-left-color: var(--color-azul-claro);}
+        .estadistica-card h3 {color:#465; margin-bottom:15px; font-size:1.1em; text-transform:uppercase; letter-spacing:1px;}
+        .numero-principal {font-size:3em; font-weight:bold; color:var(--color-azul-oscuro); margin:10px 0;}
         .variacion {display:inline-block; padding:8px 16px; border-radius:20px; font-weight:bold; font-size:0.9em;}
-        .variacion.positiva {background:#d4edda; color:#155724;}
-        .variacion.negativa {background:#f8d7da; color:#721c24;}
+        .variacion.positiva {background: rgba(96,139,193,0.15); color: var(--color-azul-oscuro);}
+        .variacion.negativa {background: rgba(196, 65, 65, 0.12); color: #b03a3a;}
         .seccion-graficos {padding:40px;}
         .graficos-grid {display:grid; grid-template-columns:repeat(auto-fit, minmax(500px,1fr)); gap:30px; margin-top:30px;}
-        .grafico-card {background:white; padding:25px; border-radius:12px; box-shadow:0 5px 15px rgba(0,0,0,0.08); border:1px solid #e9ecef;}
-        .grafico-titulo {font-size:1.3em; font-weight:600; color:#2c3e50; margin-bottom:20px; text-align:center; padding-bottom:15px; border-bottom:2px solid #f8f9fa;}
+        .grafico-card {background:var(--color-blanco); padding:25px; border-radius:12px; box-shadow:0 5px 15px var(--sombra-azul); border:1px solid rgba(98,140,193,0.08);}
+        .grafico-titulo {font-size:1.3em; font-weight:600; color:var(--color-azul-oscuro); margin-bottom:20px; text-align:center; padding-bottom:15px; border-bottom:2px solid var(--color-azul-claro);}
         .canvas-container {position:relative; height:300px; width:100%;}
-        .info-adicional {background:#f8f9fa; padding:30px 40px; border-top:1px solid #e9ecef;}
+        .info-adicional {background: var(--color-crema); padding:30px 40px; border-top:1px solid rgba(98,140,193,0.06);}
         .info-grid {display:grid; grid-template-columns:repeat(auto-fit, minmax(250px,1fr)); gap:20px;}
-        .info-item {background:white; padding:20px; border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,0.05);}
+        .info-item {background:var(--color-blanco); padding:20px; border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,0.04);}
         .info-item h4 {color:#495057; margin-bottom:10px; font-size:1em;}
-        .info-item .valor {font-size:1.4em; font-weight:bold; color:#2c3e50;}
-        .acciones {text-align:center; padding:40px; background:white; border-top:1px solid #e9ecef;}
-        .btn-generar-pdf {background:linear-gradient(135deg, #e74c3c, #c0392b); color:white; padding:18px 35px; border:none; border-radius:50px; font-size:1.1em; font-weight:bold; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:12px; box-shadow:0 5px 15px rgba(231,76,60,0.3); transition:all 0.3s ease;}
-        .btn-generar-pdf:hover {transform:translateY(-2px); box-shadow:0 8px 25px rgba(231,76,60,0.4);}
-        @media(max-width:768px){.graficos-grid{grid-template-columns:1fr;}.estadisticas-principales{grid-template-columns:1fr; padding:20px;}.header h1{font-size:2em;}}
+        .info-item .valor {font-size:1.4em; font-weight:bold; color:var(--color-azul-oscuro);}
+        .acciones {text-align:center; padding:40px; background:var(--color-blanco); border-top:1px solid rgba(98,140,193,0.06);}
+        .btn-generar-pdf {background: linear-gradient(135deg, var(--color-azul-oscuro), var(--color-azul-medio)); color:var(--color-blanco); padding:18px 35px; border:none; border-radius:50px; font-size:1.1em; font-weight:bold; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:12px; box-shadow:0 5px 15px rgba(19,62,135,0.18); transition:all 0.3s ease;}
+        .btn-generar-pdf:hover {transform:translateY(-2px); box-shadow:0 8px 25px rgba(19,62,135,0.26);}
+        .filtros-container {background: var(--color-crema); padding: 20px; margin-bottom: 20px; border-radius: 10px; border: 1px solid var(--color-azul-claro);}
+        .filtros-form {display: flex; gap: 15px; align-items: center; flex-wrap: wrap;}
+        .filtros-form select, .filtros-form input {padding: 10px; border-radius: 5px; border: 1px solid var(--color-azul-claro); background: var(--color-blanco);}
+        .filtros-form button {padding: 10px 20px; background: var(--color-azul-oscuro); color: var(--color-blanco); border: none; border-radius: 5px; cursor: pointer;}
+        .filtros-form button:hover {background: var(--color-azul-medio);}
+        /* Corrección: Estas clases ya estaban bien, pero se mantienen */
+        .fechas-visible {display: flex !important; gap: 10px; align-items: center;}
+        .fechas-ocultas {display: none !important;}
+        @media(max-width:768px){
+            .graficos-grid{grid-template-columns:1fr;}
+            .estadisticas-principales{grid-template-columns:1fr; padding:20px;}
+            .header h1{font-size:2em;}
+            .filtros-form{flex-direction:column; align-items:stretch;}
+        }
     </style>
 </head>
 <body>
-    <div class="reportes-container">
-        <!-- HEADER -->
-        <div class="header">
-            <h1>📊 Reportes del Sistema</h1>
-            <p class="subtitle">Estadísticas en tiempo real - Período: {{ fecha_inicio|date:"d/m/Y" }} al {{ fecha_fin|date:"d/m/Y" }}</p>
+<div class="reportes-container">
+    <div class="header">
+        <h1>📊 Reportes del Sistema</h1>
+        <p class="subtitle">Estadísticas en tiempo real - Período: {{ fecha_inicio|date:"d/m/Y" }} al {{ fecha_fin|date:"d/m/Y" }}</p>
+    </div>
+
+    <div class="filtros-container">
+        <form method="get" class="filtros-form" id="filtros-form">
+            <select name="periodo" id="periodo-select">
+                <option value="dia" {% if periodo_seleccionado == 'dia' %}selected{% endif %}>Hoy</option>
+                <option value="semana" {% if periodo_seleccionado == 'semana' %}selected{% endif %}>Última Semana</option>
+                <option value="mes" {% if periodo_seleccionado == 'mes' %}selected{% endif %}>Último Mes</option>
+                <option value="año" {% if periodo_seleccionado == 'año' %}selected{% endif %}>Este Año</option>
+                <option value="personalizado" {% if periodo_seleccionado == 'personalizado' %}selected{% endif %}>Personalizado</option>
+            </select>
+
+            <div id="fechas-personalizadas" class="{% if periodo_seleccionado == 'personalizado' %}fechas-visible{% else %}fechas-ocultas{% endif %}">
+                <input type="date" name="fecha_inicio" value="{{ fecha_inicio_str|default:'' }}">
+                <span>a</span>
+                <input type="date" name="fecha_fin" value="{{ fecha_fin_str|default:'' }}">
+                <button type="submit">Aplicar</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="estadisticas-principales">
+        <div class="estadistica-card usuarios">
+            <h3>👥 Usuarios Totales</h3>
+            <div class="numero-principal">{{ usuarios_por_tipo.total|default:0 }}</div>
+            <div class="variacion {% if porcentaje_usuarios|default:0 >= 0 %}positiva{% else %}negativa{% endif %}">
+                {{ porcentaje_usuarios|floatformat:2|default:0 }}% vs período anterior
+            </div>
+            <p style="margin-top: 10px; color: #6c757d; font-size: 0.9em;">Usuarios activos: {{ usuarios_activos|default:0 }}</p>
         </div>
 
-        <!-- ESTADÍSTICAS PRINCIPALES -->
-        <div class="estadisticas-principales">
-            <div class="estadistica-card usuarios">
-                <h3>👥 Usuarios Registrados</h3>
-                <div class="numero-principal">{{ total_usuarios|default:0 }}</div>
-                <div class="variacion {% if porcentaje_usuarios >= 0 %}positiva{% else %}negativa{% endif %}">
-                    {{ porcentaje_usuarios|default:0 }}% vs período anterior
-                </div>
-                <p style="margin-top: 10px; color: #6c757d; font-size: 0.9em;">Usuarios activos: {{ usuarios_activos|default:0 }}</p>
+        <div class="estadistica-card simulaciones">
+            <h3>🔬 Simulaciones Realizadas</h3>
+            <div class="numero-principal">{{ simulaciones_realizadas|default:0 }}</div>
+            <div class="variacion {% if porcentaje_simulaciones|default:0 >= 0 %}positiva{% else %}negativa{% endif %}">
+                {{ porcentaje_simulaciones|floatformat:2|default:0 }}% vs período anterior
             </div>
-
-            <div class="estadistica-card simulaciones">
-                <h3>🔬 Simulaciones Realizadas</h3>
-                <div class="numero-principal">{{ simulaciones_realizadas|default:0 }}</div>
-                <div class="variacion {% if porcentaje_simulaciones >= 0 %}positiva{% else %}negativa{% endif %}">
-                    {{ porcentaje_simulaciones|default:0 }}% vs período anterior
-                </div>
-                <p style="margin-top: 10px; color: #6c757d; font-size: 0.9em;">Últimos 30 días</p>
-            </div>
-
-            <div class="estadistica-card ingresos">
-                <h3>💰 Ingresos del Mes</h3>
-                <div class="numero-principal">${{ ingresos_mes|default:0 }}</div>
-                <p style="margin-top: 10px; color: #6c757d; font-size: 0.9em;">Total recaudado</p>
-            </div>
+            <p style="margin-top: 10px; color: #6c757d; font-size: 0.9em;">Período seleccionado</p>
         </div>
 
-        <!-- SECCIÓN DE GRÁFICOS -->
-        <div class="seccion-graficos">
-            <div class="graficos-grid">
-                <div class="grafico-card">
-                    <div class="grafico-titulo">Distribución de Usuarios por Tipo</div>
-                    <div class="canvas-container">
-                        <canvas id="graficoUsuarios"></canvas>
-                    </div>
-                </div>
-                <div class="grafico-card">
-                    <div class="grafico-titulo">Membresías Activas por Tipo</div>
-                    <div class="canvas-container">
-                        <canvas id="graficoMembresias"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- INFORMACIÓN ADICIONAL -->
-        <div class="info-adicional">
-            <div class="info-grid">
-                <div class="info-item">
-                    <h4>📅 Período Analizado</h4>
-                    <div class="valor">{{ fecha_inicio|date:"d/m/Y" }} a {{ fecha_fin|date:"d/m/Y" }}</div>
-                </div>
-                <div class="info-item">
-                    <h4>⚡ Actualización</h4>
-                    <div class="valor">Tiempo real</div>
-                </div>
-                <div class="info-item">
-                    <h4>📈 Tendencia</h4>
-                    <div class="valor">Crecimiento positivo</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- BOTÓN PDF -->
-        <div class="acciones">
-            <a href="{% url 'generar_informe_completo_pdf' %}" class="btn-generar-pdf">📄 Generar Reporte PDF Completo</a>
+        <div class="estadistica-card ingresos">
+            <h3>💰 Ingresos del Período</h3>
+            <div class="numero-principal">${{ ingresos_periodo|floatformat:2|default:"0.00" }}</div>
+            <p style="margin-top: 10px; color: #6c757d; font-size: 0.9em;">Total recaudado</p>
         </div>
     </div>
 
-    <!-- PASO SEGURO DE DATOS A JS -->
-    {{ usuarios_por_tipo|json_script:"usuarios-data" }}
-    {{ membresias_por_tipo|json_script:"membresias-data" }}
+    <div class="seccion-graficos">
+        <div class="graficos-grid">
+            <div class="grafico-card">
+                <div class="grafico-titulo">Distribución de Usuarios por Tipo</div>
+                <div class="canvas-container">
+                    <canvas id="graficoUsuarios"></canvas>
+                </div>
+            </div>
+            <div class="grafico-card">
+                <div class="grafico-titulo">Membresías Activas por Tipo</div>
+                <div class="canvas-container">
+                    <canvas id="graficoMembresias"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <script>
-        const datosUsuarios = JSON.parse(document.getElementById('usuarios-data').textContent);
-        const datosMembresias = JSON.parse(document.getElementById('membresias-data').textContent);
+    {% if meses_actividad and meses_actividad|length > 0 %}
+    <div class="seccion-graficos">
+        <div class="grafico-card">
+            <div class="grafico-titulo">Actividad de Simulaciones - Evolución</div>
+            <div class="canvas-container">
+                <canvas id="graficoLineas"></canvas>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 
-        // GRÁFICO USUARIOS
-        new Chart(document.getElementById('graficoUsuarios'), {
+    <div class="info-adicional">
+        <div class="info-grid">
+            <div class="info-item">
+                <h4>📅 Período Analizado</h4>
+                <div class="valor">{{ fecha_inicio|date:"d/m/Y" }} a {{ fecha_fin|date:"d/m/Y" }}</div>
+            </div>
+            <div class="info-item">
+                <h4>📊 Total de Actividades</h4>
+                <div class="valor">{{ actividades_recientes|length|default:0 }}</div>
+            </div>
+            <div class="info-item">
+                <h4>📈 Tendencia</h4>
+                <div class="valor">{% if porcentaje_simulaciones|default:0 >= 0 %}↗️ Crecimiento{% else %}↘️ Decrecimiento{% endif %}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="acciones">
+        <a href="{% url 'generar_informe_completo_pdf' %}?periodo={{ periodo_seleccionado }}&fecha_inicio={{ fecha_inicio_str|default:''|urlencode }}&fecha_fin={{ fecha_fin_str|default:''|urlencode }}" 
+           class="btn-generar-pdf">📄 Generar Reporte PDF con Filtros</a>
+    </div>
+</div>
+
+<script id="django-data" type="application/json">
+{
+    "usuarios": {
+        "estudiante": {{ usuarios_por_tipo.estudiante|default:0 }},
+        "universitario": {{ usuarios_por_tipo.universitario|default:0 }},
+        "profesional": {{ usuarios_por_tipo.profesional|default:0 }}
+    },
+    "membresias": {
+        "mensual": {{ membresias_por_tipo.mensual|default:0 }},
+        "semestral": {{ membresias_por_tipo.semestral|default:0 }},
+        "anual": {{ membresias_por_tipo.anual|default:0 }}
+    },
+    "actividad": {
+        "labels": [{% for item in meses_actividad %}"{{ item.mes|escapejs }}"{% if not forloop.last %},{% endif %}{% endfor %}],
+        "data": [{% for item in meses_actividad %}{{ item.simulaciones|default:0 }}{% if not forloop.last %},{% endif %}{% endfor %}],
+        "hasData": {% if meses_actividad and meses_actividad|length > 0 %}true{% else %}false{% endif %}
+    }
+}
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 1. Obtener datos de Django de forma segura
+    const scriptData = document.getElementById('django-data');
+    const windowData = scriptData ? JSON.parse(scriptData.textContent) : {
+        usuarios: {},
+        membresias: {},
+        actividad: { labels: [], data: [], hasData: false }
+    };
+
+    const datosUsuarios = windowData.usuarios;
+    const datosMembresias = windowData.membresias;
+    const datosActividad = windowData.actividad;
+
+    // Gráfico Usuarios (Pie Chart)
+    const ctxUsuarios = document.getElementById('graficoUsuarios');
+    if (ctxUsuarios) {
+        new Chart(ctxUsuarios, {
             type: 'pie',
             data: {
                 labels: ['Estudiantes', 'Universitarios', 'Profesionales'],
                 datasets: [{
-                    data: [datosUsuarios.estudiante||0, datosUsuarios.universitario||0, datosUsuarios.profesional||0],
-                    backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56'],
-                    borderWidth: 2, borderColor: '#fff'
+                    // Usar || 0 para manejar casos donde el valor es null o undefined
+                    data: [
+                        datosUsuarios.estudiante || 0,
+                        datosUsuarios.universitario || 0,
+                        datosUsuarios.profesional || 0
+                    ],
+                    backgroundColor: ['#133E87', '#608BC1', '#CBDCEB'],
+                    borderColor: '#FFFFFF',
+                    borderWidth: 2
                 }]
             },
-            options: {responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom', labels:{padding:20, usePointStyle:true}}}}
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
         });
+    }
 
-        // GRÁFICO MEMBRESÍAS
-        new Chart(document.getElementById('graficoMembresias'), {
+    // Gráfico Membresías (Bar Chart)
+    const ctxMembresias = document.getElementById('graficoMembresias');
+    if (ctxMembresias) {
+        new Chart(ctxMembresias, {
             type: 'bar',
             data: {
                 labels: ['Mensual', 'Semestral', 'Anual'],
                 datasets: [{
-                    label: 'Cantidad',
-                    data: [datosMembresias.mensual||0, datosMembresias.semestral||0, datosMembresias.anual||0],
-                    backgroundColor: ['#4BC0C0', '#FF9F40', '#9966FF'],
-                    borderWidth:0, borderRadius:5
+                    label: 'Cantidad de Membresías',
+                    data: [
+                        datosMembresias.mensual || 0,
+                        datosMembresias.semestral || 0,
+                        datosMembresias.anual || 0
+                    ],
+                    backgroundColor: ['#133E87', '#608BC1', '#CBDCEB'],
+                    borderRadius: 5
                 }]
             },
             options: {
-                responsive:true, maintainAspectRatio:false,
-                scales: {y:{beginAtZero:true, grid:{color:'rgba(0,0,0,0.05)'}}, x:{grid:{display:false}}}
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1 }
+                    },
+                    x: {
+                        grid: { display: false }
+                    }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
             }
         });
-    </script>
+    }
+
+    // Gráfico de Línea (Actividad)
+    const ctxLineas = document.getElementById('graficoLineas');
+    if (ctxLineas && datosActividad.hasData) {
+        new Chart(ctxLineas, {
+            type: 'line',
+            data: {
+                labels: datosActividad.labels,
+                datasets: [{
+                    label: 'Simulaciones realizadas',
+                    data: datosActividad.data,
+                    borderColor: '#133E87',
+                    backgroundColor: 'rgba(19,62,135,0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    }
+
+    // Lógica para mostrar/ocultar fechas personalizadas y enviar formulario
+    const selectPeriodo = document.getElementById('periodo-select');
+    const fechasDiv = document.getElementById('fechas-personalizadas');
+    const formFiltros = document.getElementById('filtros-form');
+
+    if (selectPeriodo && fechasDiv && formFiltros) {
+        // Maneja el cambio de selección
+        selectPeriodo.addEventListener('change', function() {
+            if (this.value === 'personalizado') {
+                fechasDiv.classList.remove('fechas-ocultas');
+                fechasDiv.classList.add('fechas-visible');
+            } else {
+                fechasDiv.classList.remove('fechas-visible');
+                fechasDiv.classList.add('fechas-ocultas');
+                // Envía el formulario si se selecciona un período predefinido
+                formFiltros.submit();
+            }
+        });
+    }
+});
+</script>
+
 </body>
 </html>
