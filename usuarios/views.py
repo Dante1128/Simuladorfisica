@@ -126,7 +126,7 @@ def logout(request):
     # Redirigir al login
     return redirect('login')
 
-# ============ VISTAS PARA REPORTES CORREGIDAS ============
+# ============ VISTAS PARA REPORTES COMPLETAMENTE CORREGIDAS ============
 
 from django.shortcuts import render
 from django.http import JsonResponse, HttpResponse
@@ -209,35 +209,6 @@ def dashboard_reportes(request):
     porcentaje_simulaciones = calcular_porcentaje(simulaciones_realizadas, simulaciones_anterior)
     porcentaje_usuarios = calcular_porcentaje(usuarios_activos, usuarios_activos_anterior)
     
-    # DATOS ADICIONALES - SIN FILTRAR POR FECHA DE REGISTRO (porque no existe el campo)
-    usuarios = Usuario.objects.all().order_by('-id')[:10]
-    
-    # Para membresías, usar fecha_inicio si existe, sino mostrar todas
-    try:
-        # Intentar filtrar por fecha_inicio si el campo existe
-        membresias = Membresia.objects.select_related('usuario').filter(
-            estado='activo'
-        )[:10]
-    except:
-        # Si no existe fecha_inicio, mostrar todas
-        membresias = Membresia.objects.select_related('usuario').filter(
-            estado='activo'
-        )[:10]
-    
-    laboratorios = Laboratorio.objects.all()
-    
-    # Actividades SÍ pueden filtrarse por fecha_actividad (CORREGIDO: usar timezone-aware)
-    actividades_recientes = ActividadSimulacion.objects.select_related(
-        'usuario', 'laboratorio'
-    ).filter(
-        fecha_actividad__date__range=[fecha_inicio, fecha_fin]
-    ).order_by('-fecha_actividad')[:10]
-    
-    # Pagos SÍ pueden filtrarse por fecha_pago
-    pagos_recientes = Pago.objects.select_related('usuario').filter(
-        fecha_pago__date__range=[fecha_inicio, fecha_fin]
-    ).order_by('-fecha_pago')[:10]
-    
     # Estadisticas por tipo de usuario - SIN FILTRO POR FECHA (no hay fecha_registro)
     usuarios_por_tipo_data = {
         'estudiante': Usuario.objects.filter(tipo='estudiante').count(),
@@ -254,28 +225,12 @@ def dashboard_reportes(request):
         usuarios_por_tipo[tipo] = cantidad
         usuarios_por_tipo[f'{tipo}_porc'] = porcentaje
     
-    # Estadisticas de membresias - intentar filtrar por fecha si existe
-    try:
-        membresias_por_tipo = {
-            'mensual': Membresia.objects.filter(
-                tipo_membresia='mensual', 
-                estado='activo'
-            ).count(),
-            'semestral': Membresia.objects.filter(
-                tipo_membresia='semestral', 
-                estado='activo'
-            ).count(),
-            'anual': Membresia.objects.filter(
-                tipo_membresia='anual', 
-                estado='activo'
-            ).count(),
-        }
-    except:
-        membresias_por_tipo = {
-            'mensual': Membresia.objects.filter(tipo_membresia='mensual', estado='activo').count(),
-            'semestral': Membresia.objects.filter(tipo_membresia='semestral', estado='activo').count(),
-            'anual': Membresia.objects.filter(tipo_membresia='anual', estado='activo').count(),
-        }
+    # Estadisticas de membresias
+    membresias_por_tipo = {
+        'mensual': Membresia.objects.filter(tipo_membresia='mensual', estado='activo').count(),
+        'semestral': Membresia.objects.filter(tipo_membresia='semestral', estado='activo').count(),
+        'anual': Membresia.objects.filter(tipo_membresia='anual', estado='activo').count(),
+    }
     
     total_membresias_grafico = sum(membresias_por_tipo.values()) or 1
     
@@ -356,12 +311,7 @@ def dashboard_reportes(request):
         'fecha_inicio_str': fecha_inicio_str or fecha_inicio.isoformat(),
         'fecha_fin_str': fecha_fin_str or fecha_fin.isoformat(),
         
-        # DATOS UNIFICADOS
-        'usuarios': usuarios,
-        'membresias': membresias,
-        'laboratorios': laboratorios,
-        'actividades_recientes': actividades_recientes,
-        'pagos_recientes': pagos_recientes,
+        # SOLO DATOS PARA GRÁFICOS - NO TABLAS DETALLADAS EN DASHBOARD
         'usuarios_por_tipo': usuarios_por_tipo,
         'membresias_por_tipo': membresias_por_tipo,
         'total_membresias_grafico': total_membresias_grafico,
@@ -377,9 +327,9 @@ def calcular_porcentaje(actual, anterior):
         return 0
     return round(((actual - anterior) / anterior) * 100, 1)
 
-# PDF UNIFICADO CORREGIDO (SIN FILTROS POR FECHA DE REGISTRO)
+# PDF UNIFICADO COMPLETO - SIEMPRE MOSTRAR TODAS LAS TABLAS (INCLUSO VACÍAS)
 def generar_informe_completo_pdf(request):
-    """Generar PDF unificado con todos los reportes, mostrando tablas aunque estén vacías"""
+    """Generar PDF unificado mostrando TODAS las tablas siempre"""
 
     # Obtener parámetros de filtro si existen
     periodo = request.GET.get('periodo', '')
@@ -405,78 +355,138 @@ def generar_informe_completo_pdf(request):
 
     # Título del informe
     titulo = "INFORME COMPLETO - SISTEMA DE LABORATORIOS VR"
-    if periodo and fecha_inicio_str and fecha_fin_str:
+    if fecha_inicio_str and fecha_fin_str:
         titulo = f"INFORME COMPLETO - {fecha_inicio_str} a {fecha_fin_str}"
     
     elements.append(Paragraph(titulo, title_style))
-    elements.append(Paragraph("<br/>", styles['Normal']))  # espacio
+    elements.append(Paragraph("<br/><br/>", styles['Normal']))
 
-    # ==================== TABLA DE USUARIOS ====================
-    usuarios = Usuario.objects.all().order_by('-id')
-    data_usuarios = [['ID', 'Nombre', 'Correo', 'Tipo']]  # encabezados
-    for u in usuarios:
-        data_usuarios.append([u.id, u.nombre, u.correo, u.tipo])
-    table_usuarios = Table(data_usuarios, hAlign='LEFT')
-    table_usuarios.setStyle(table_style)
-    elements.append(Paragraph("Usuarios Registrados", styles['Heading2']))
-    elements.append(table_usuarios)
-    elements.append(Paragraph("<br/>", styles['Normal']))  # espacio
+    # ==================== TABLA DE ESTUDIANTES ====================
+    estudiantes = Usuario.objects.filter(tipo='estudiante').order_by('nombre')
+    data_estudiantes = [['#', 'Nombre', 'Correo']]
+    
+    if estudiantes.exists():
+        for i, estudiante in enumerate(estudiantes, 1):
+            data_estudiantes.append([i, estudiante.nombre, estudiante.correo])
+    else:
+        data_estudiantes.append(['-', 'No hay estudiantes registrados', '-'])
+    
+    table_estudiantes = Table(data_estudiantes, hAlign='LEFT')
+    table_estudiantes.setStyle(table_style)
+    elements.append(Paragraph("ESTUDIANTES REGISTRADOS", styles['Heading2']))
+    elements.append(Paragraph("<br/>", styles['Normal']))
+    elements.append(table_estudiantes)
+    elements.append(Paragraph("<br/><br/>", styles['Normal']))
+
+    # ==================== TABLA DE PROFESIONALES ====================
+    profesionales = Usuario.objects.filter(tipo='profesional').order_by('nombre')
+    data_profesionales = [['#', 'Nombre', 'Correo']]
+    
+    if profesionales.exists():
+        for i, profesional in enumerate(profesionales, 1):
+            data_profesionales.append([i, profesional.nombre, profesional.correo])
+    else:
+        data_profesionales.append(['-', 'No hay profesionales registrados', '-'])
+    
+    table_profesionales = Table(data_profesionales, hAlign='LEFT')
+    table_profesionales.setStyle(table_style)
+    elements.append(Paragraph("PROFESIONALES REGISTRADOS", styles['Heading2']))
+    elements.append(Paragraph("<br/>", styles['Normal']))
+    elements.append(table_profesionales)
+    elements.append(Paragraph("<br/><br/>", styles['Normal']))
+
+    # ==================== TABLA DE UNIVERSITARIOS ====================
+    universitarios = Usuario.objects.filter(tipo='universitario').order_by('nombre')
+    data_universitarios = [['#', 'Nombre', 'Correo']]
+    
+    if universitarios.exists():
+        for i, universitario in enumerate(universitarios, 1):
+            data_universitarios.append([i, universitario.nombre, universitario.correo])
+    else:
+        data_universitarios.append(['-', 'No hay universitarios registrados', '-'])
+    
+    table_universitarios = Table(data_universitarios, hAlign='LEFT')
+    table_universitarios.setStyle(table_style)
+    elements.append(Paragraph("UNIVERSITARIOS REGISTRADOS", styles['Heading2']))
+    elements.append(Paragraph("<br/>", styles['Normal']))
+    elements.append(table_universitarios)
+    elements.append(Paragraph("<br/><br/>", styles['Normal']))
 
     # ==================== TABLA DE MEMBRESIAS ====================
-    membresias = Membresia.objects.select_related('usuario').all()
-    data_membresias = [['ID', 'Usuario', 'Tipo Membresía', 'Estado']]
-    for m in membresias:
-        data_membresias.append([m.id, m.usuario.nombre, m.tipo_membresia, m.estado])
-    table_membresias = Table(data_membresias, hAlign='LEFT')
-    table_membresias.setStyle(table_style)
-    elements.append(Paragraph("Membresías", styles['Heading2']))
-    elements.append(table_membresias)
-    elements.append(Paragraph("<br/>", styles['Normal']))
+    try:
+        membresias = Membresia.objects.select_related('usuario').all()
+        data_membresias = [['#', 'Usuario', 'Tipo Membresía', 'Estado']]
+        
+        if membresias.exists():
+            for i, membresia in enumerate(membresias, 1):
+                data_membresias.append([i, membresia.usuario.nombre, membresia.tipo_membresia, membresia.estado])
+        else:
+            data_membresias.append(['-', 'No hay membresías', '-', '-'])
+        
+        table_membresias = Table(data_membresias, hAlign='LEFT')
+        table_membresias.setStyle(table_style)
+        elements.append(Paragraph("MEMBRESÍAS DEL SISTEMA", styles['Heading2']))
+        elements.append(Paragraph("<br/>", styles['Normal']))
+        elements.append(table_membresias)
+        elements.append(Paragraph("<br/><br/>", styles['Normal']))
+    except Exception as e:
+        data_membresias = [['#', 'Usuario', 'Tipo Membresía', 'Estado'], ['-', f'Error: {str(e)}', '-', '-']]
+        table_membresias = Table(data_membresias, hAlign='LEFT')
+        table_membresias.setStyle(table_style)
+        elements.append(Paragraph("MEMBRESÍAS DEL SISTEMA", styles['Heading2']))
+        elements.append(Paragraph("<br/>", styles['Normal']))
+        elements.append(table_membresias)
+        elements.append(Paragraph("<br/><br/>", styles['Normal']))
 
-    # ==================== TABLA DE ACTIVIDADES (CON FILTRO SI EXISTE) ====================
-    actividades = ActividadSimulacion.objects.select_related('usuario', 'laboratorio')
-    
-    # Aplicar filtro de fecha si se proporciona (CORREGIDO: usar timezone-aware)
-    if fecha_inicio_str and fecha_fin_str:
-        try:
-            fecha_inicio = datetime.strptime(fecha_inicio_str, '%Y-%m-%d').date()
-            fecha_fin = datetime.strptime(fecha_fin_str, '%Y-%m-%d').date()
-            actividades = actividades.filter(
-                fecha_actividad__date__range=[fecha_inicio, fecha_fin]
-            )
-        except (ValueError, TypeError):
-            pass
-    
-    data_actividades = [['ID', 'Usuario', 'Laboratorio', 'Fecha']]
-    for a in actividades:
-        data_actividades.append([a.id, a.usuario.nombre, a.laboratorio.nombre, a.fecha_actividad.strftime('%Y-%m-%d')])
-    table_actividades = Table(data_actividades, hAlign='LEFT')
-    table_actividades.setStyle(table_style)
-    elements.append(Paragraph("Actividades de Simulación", styles['Heading2']))
-    elements.append(table_actividades)
-    elements.append(Paragraph("<br/>", styles['Normal']))
+    # ==================== TABLA DE ACTIVIDADES ====================
+    try:
+        actividades = ActividadSimulacion.objects.select_related('usuario', 'laboratorio').all()
+        data_actividades = [['#', 'Usuario', 'Laboratorio', 'Fecha']]
+        
+        if actividades.exists():
+            for i, actividad in enumerate(actividades, 1):
+                data_actividades.append([i, actividad.usuario.nombre, actividad.laboratorio.nombre, actividad.fecha_actividad.strftime('%Y-%m-%d %H:%M')])
+        else:
+            data_actividades.append(['-', 'No hay actividades', '-', '-'])
+        
+        table_actividades = Table(data_actividades, hAlign='LEFT')
+        table_actividades.setStyle(table_style)
+        elements.append(Paragraph("ACTIVIDADES DE SIMULACIÓN", styles['Heading2']))
+        elements.append(Paragraph("<br/>", styles['Normal']))
+        elements.append(table_actividades)
+        elements.append(Paragraph("<br/><br/>", styles['Normal']))
+    except Exception as e:
+        data_actividades = [['#', 'Usuario', 'Laboratorio', 'Fecha'], ['-', f'Error: {str(e)}', '-', '-']]
+        table_actividades = Table(data_actividades, hAlign='LEFT')
+        table_actividades.setStyle(table_style)
+        elements.append(Paragraph("ACTIVIDADES DE SIMULACIÓN", styles['Heading2']))
+        elements.append(Paragraph("<br/>", styles['Normal']))
+        elements.append(table_actividades)
+        elements.append(Paragraph("<br/><br/>", styles['Normal']))
 
-    # ==================== TABLA DE PAGOS (CON FILTRO SI EXISTE) ====================
-    pagos = Pago.objects.select_related('usuario')
-    
-    # Aplicar filtro de fecha si se proporciona
-    if fecha_inicio_str and fecha_fin_str:
-        try:
-            fecha_inicio = datetime.strptime(fecha_inicio_str, '%Y-%m-%d').date()
-            fecha_fin = datetime.strptime(fecha_fin_str, '%Y-%m-%d').date()
-            pagos = pagos.filter(
-                fecha_pago__date__range=[fecha_inicio, fecha_fin]
-            )
-        except (ValueError, TypeError):
-            pass
-    
-    data_pagos = [['ID', 'Usuario', 'Monto', 'Fecha Pago']]
-    for p in pagos:
-        data_pagos.append([p.id, p.usuario.nombre, f"${p.monto:.2f}", p.fecha_pago.strftime('%Y-%m-%d')])
-    table_pagos = Table(data_pagos, hAlign='LEFT')
-    table_pagos.setStyle(table_style)
-    elements.append(Paragraph("Pagos Realizados", styles['Heading2']))
-    elements.append(table_pagos)
+    # ==================== TABLA DE PAGOS ====================
+    try:
+        pagos = Pago.objects.select_related('usuario').all()
+        data_pagos = [['#', 'Usuario', 'Monto', 'Fecha Pago']]
+        
+        if pagos.exists():
+            for i, pago in enumerate(pagos, 1):
+                data_pagos.append([i, pago.usuario.nombre, f"${pago.monto:.2f}", pago.fecha_pago.strftime('%Y-%m-%d')])
+        else:
+            data_pagos.append(['-', 'No hay pagos', '$0.00', '-'])
+        
+        table_pagos = Table(data_pagos, hAlign='LEFT')
+        table_pagos.setStyle(table_style)
+        elements.append(Paragraph("PAGOS REALIZADOS", styles['Heading2']))
+        elements.append(Paragraph("<br/>", styles['Normal']))
+        elements.append(table_pagos)
+    except Exception as e:
+        data_pagos = [['#', 'Usuario', 'Monto', 'Fecha Pago'], ['-', f'Error: {str(e)}', '$0.00', '-']]
+        table_pagos = Table(data_pagos, hAlign='LEFT')
+        table_pagos.setStyle(table_style)
+        elements.append(Paragraph("PAGOS REALIZADOS", styles['Heading2']))
+        elements.append(Paragraph("<br/>", styles['Normal']))
+        elements.append(table_pagos)
 
     # Generar PDF
     doc.build(elements)

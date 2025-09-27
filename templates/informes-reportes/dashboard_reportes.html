@@ -35,7 +35,7 @@
         .variacion {display:inline-block; padding:8px 16px; border-radius:20px; font-weight:bold; font-size:0.9em;}
         .variacion.positiva {background: rgba(96,139,193,0.15); color: var(--color-azul-oscuro);}
         .variacion.negativa {background: rgba(196, 65, 65, 0.12); color: #b03a3a;}
-        .seccion-graficos {padding:40px;}
+        .seccion-graficos {padding:40px; padding-bottom: 0;}
         .graficos-grid {display:grid; grid-template-columns:repeat(auto-fit, minmax(500px,1fr)); gap:30px; margin-top:30px;}
         .grafico-card {background:var(--color-blanco); padding:25px; border-radius:12px; box-shadow:0 5px 15px var(--sombra-azul); border:1px solid rgba(98,140,193,0.08);}
         .grafico-titulo {font-size:1.3em; font-weight:600; color:var(--color-azul-oscuro); margin-bottom:20px; text-align:center; padding-bottom:15px; border-bottom:2px solid var(--color-azul-claro);}
@@ -53,14 +53,18 @@
         .filtros-form select, .filtros-form input {padding: 10px; border-radius: 5px; border: 1px solid var(--color-azul-claro); background: var(--color-blanco);}
         .filtros-form button {padding: 10px 20px; background: var(--color-azul-oscuro); color: var(--color-blanco); border: none; border-radius: 5px; cursor: pointer;}
         .filtros-form button:hover {background: var(--color-azul-medio);}
-        /* Corrección: Estas clases ya estaban bien, pero se mantienen */
         .fechas-visible {display: flex !important; gap: 10px; align-items: center;}
         .fechas-ocultas {display: none !important;}
+
+        /* ELIMINAR ESTILOS DE TABLAS QUE YA NO EXISTEN */
+        .detalles-recientes {display: none;} /* OCULTAR COMPLETAMENTE LAS TABLAS DEL DASHBOARD */
+
         @media(max-width:768px){
             .graficos-grid{grid-template-columns:1fr;}
             .estadisticas-principales{grid-template-columns:1fr; padding:20px;}
             .header h1{font-size:2em;}
             .filtros-form{flex-direction:column; align-items:stretch;}
+            .seccion-graficos{padding: 20px;}
         }
     </style>
 </head>
@@ -93,7 +97,7 @@
     <div class="estadisticas-principales">
         <div class="estadistica-card usuarios">
             <h3>👥 Usuarios Totales</h3>
-            <div class="numero-principal">{{ usuarios_por_tipo.total|default:0 }}</div>
+            <div class="numero-principal">{{ total_usuarios|default:0 }}</div>
             <div class="variacion {% if porcentaje_usuarios|default:0 >= 0 %}positiva{% else %}negativa{% endif %}">
                 {{ porcentaje_usuarios|floatformat:2|default:0 }}% vs período anterior
             </div>
@@ -112,6 +116,9 @@
         <div class="estadistica-card ingresos">
             <h3>💰 Ingresos del Período</h3>
             <div class="numero-principal">${{ ingresos_periodo|floatformat:2|default:"0.00" }}</div>
+            <div class="variacion positiva">
+                --
+            </div>
             <p style="margin-top: 10px; color: #6c757d; font-size: 0.9em;">Total recaudado</p>
         </div>
     </div>
@@ -151,8 +158,8 @@
                 <div class="valor">{{ fecha_inicio|date:"d/m/Y" }} a {{ fecha_fin|date:"d/m/Y" }}</div>
             </div>
             <div class="info-item">
-                <h4>📊 Total de Actividades</h4>
-                <div class="valor">{{ actividades_recientes|length|default:0 }}</div>
+                <h4>📊 Total de Simulaciones</h4>
+                <div class="valor">{{ simulaciones_realizadas|default:0 }}</div>
             </div>
             <div class="info-item">
                 <h4>📈 Tendencia</h4>
@@ -163,7 +170,7 @@
 
     <div class="acciones">
         <a href="{% url 'generar_informe_completo_pdf' %}?periodo={{ periodo_seleccionado }}&fecha_inicio={{ fecha_inicio_str|default:''|urlencode }}&fecha_fin={{ fecha_fin_str|default:''|urlencode }}" 
-           class="btn-generar-pdf">📄 Generar Reporte PDF con Filtros</a>
+           class="btn-generar-pdf">📄 Generar Reporte PDF Completo</a>
     </div>
 </div>
 
@@ -209,7 +216,6 @@ document.addEventListener('DOMContentLoaded', function() {
             data: {
                 labels: ['Estudiantes', 'Universitarios', 'Profesionales'],
                 datasets: [{
-                    // Usar || 0 para manejar casos donde el valor es null o undefined
                     data: [
                         datosUsuarios.estudiante || 0,
                         datosUsuarios.universitario || 0,
