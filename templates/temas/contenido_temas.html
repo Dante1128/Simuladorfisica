@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contenido Teórico - Laboratorios VR</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: #F3F3E0;
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1a5276 0%, #2e86c1 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .search-container {
+            max-width: 800px;
+            margin: 0 auto 30px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .search-input {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #2e86c1;
+            box-shadow: 0 0 0 3px rgba(46, 134, 193, 0.1);
+        }
+        
+        .search-button {
+            background: linear-gradient(135deg, #2e86c1 0%, #1a5276 100%);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        .search-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(46, 134, 193, 0.3);
+        }
+        
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .category-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            border-left: 5px solid #2e86c1;
+        }
+        
+        .category-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        .category-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .category-title {
+            font-size: 1.4rem;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        
+        .documents-count {
+            background: #e74c3c;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        
+        .documents-list {
+            list-style: none;
+        }
+        
+        .document-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        
+        .document-item:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+        
+        .document-info {
+            flex: 1;
+        }
+        
+        .document-name {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .document-meta {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+        
+        .document-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-download, .btn-preview {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .btn-download {
+            background: linear-gradient(135deg, #27ae60 0%, #219653 100%);
+            color: white;
+        }
+        
+        .btn-download:hover {
+            background: linear-gradient(135deg, #219653 0%, #1e8449 100%);
+            transform: translateY(-2px);
+        }
+        
+        .btn-preview {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+        }
+        
+        .btn-preview:hover {
+            background: linear-gradient(135deg, #2980b9 0%, #1f618d 100%);
+            transform: translateY(-2px);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #6c757d;
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #bdc3c7;
+        }
+        
+        .pdf-viewer-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .pdf-viewer-content {
+            background: white;
+            border-radius: 10px;
+            width: 90%;
+            height: 90%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .pdf-viewer-header {
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .pdf-viewer-body {
+            flex: 1;
+            padding: 20px;
+        }
+        
+        .pdf-viewer-body iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 5px;
+        }
+        
+        .close-modal {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 6px;
+            color: white;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transform: translateX(150%);
+            transition: transform 0.4s ease;
+            z-index: 1000;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.success {
+            background-color: #27ae60;
+        }
+        
+        .notification.error {
+            background-color: #e74c3c;
+        }
+        
+        @media (max-width: 768px) {
+            .categories-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .search-container {
+                flex-direction: column;
+            }
+            
+            .document-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .document-actions {
+                align-self: flex-end;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1><i class="fas fa-book-open"></i> Contenido Teórico</h1>
+        <p>Explora nuestra biblioteca de documentos y materiales de estudio</p>
+    </div>
+
+    <div class="search-container">
+        <input type="text" class="search-input" id="searchInput" placeholder="Buscar documentos por nombre, categoría o descripción...">
+        <button class="search-button" id="searchButton">
+            <i class="fas fa-search"></i> Buscar
+        </button>
+    </div>
+
+    <div class="categories-grid" id="categoriesContainer">
+        <!-- Las categorías se cargarán dinámicamente -->
+        {% for categoria, documentos in categorias.items %}
+        <div class="category-card" data-category="{{ categoria }}">
+            <div class="category-header">
+                <h3 class="category-title">
+                    <i class="fas fa-folder"></i> {{ categoria|title }}
+                </h3>
+                <span class="documents-count">{{ documentos|length }} documentos</span>
+            </div>
+            
+            <ul class="documents-list">
+                <!-- En la parte de los documentos, cambia esta sección: -->
+{% for documento in documentos %}
+<li class="document-item" data-name="{{ documento.nombre|lower }}" data-desc="{{ documento.descripcion|lower }}" data-id="{{ documento.id }}">
+    <div class="document-info">
+        <div class="document-name">{{ documento.nombre }}</div>
+        <div class="document-meta">
+            <i class="fas fa-file-pdf" style="color: #e74c3c;"></i> 
+            {{ documento.get_tamaño_formateado }} • 
+            {{ documento.fecha_actualizacion|date:"d/m/Y" }}
+        </div>
+        {% if documento.descripcion %}
+        <div class="document-meta">{{ documento.descripcion|truncatewords:10 }}</div>
+        {% endif %}
+    </div>
+    <div class="document-actions">
+        <a href="{% url 'descargar_documento' documento.id %}" class="btn-download" title="Descargar PDF">
+            <i class="fas fa-download"></i> Descargar
+        </a>
+        <!-- En lugar de onclick, usa data attributes -->
+        <button class="btn-preview preview-btn" data-doc-id="{{ documento.id }}" title="Vista previa">
+            <i class="fas fa-eye"></i> Ver
+        </button>
+    </div>
+</li>
+{% empty %}
+<li class="empty-state">
+    <i class="fas fa-inbox"></i>
+    <p>No hay documentos en esta categoría</p>
+</li>
+{% endfor %}
+            </ul>
+        </div>
+        {% empty %}
+        <div class="empty-state" style="grid-column: 1 / -1;">
+            <i class="fas fa-inbox"></i>
+            <h3>No hay documentos disponibles</h3>
+            <p>Los documentos aparecerán aquí una vez que sean cargados por los administradores.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Modal para vista previa de PDF -->
+    <div class="pdf-viewer-modal" id="pdfViewerModal">
+        <div class="pdf-viewer-content">
+            <div class="pdf-viewer-header">
+                <h3 id="pdfViewerTitle">Vista previa del documento</h3>
+                <button class="close-modal" onclick="closePDFViewer()">
+                    <i class="fas fa-times"></i> Cerrar
+                </button>
+            </div>
+            <div class="pdf-viewer-body">
+                <iframe id="pdfFrame" src=""></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notificación -->
+    <div class="notification" id="notification"></div>
+
+    <script>
+        // Función para mostrar notificaciones
+        function showNotification(message, type) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type} show`;
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 4000);
+        }
+
+        // Función para vista previa de PDF
+        function previewPDF(documentoId) {
+            const pdfFrame = document.getElementById('pdfFrame');
+            const pdfViewerModal = document.getElementById('pdfViewerModal');
+            const pdfViewerTitle = document.getElementById('pdfViewerTitle');
+            
+            // Aquí deberías tener una URL para obtener el PDF
+            // Por ahora, usaremos una URL placeholder
+            pdfFrame.src = `/documentos/${documentoId}/preview/`;
+            pdfViewerTitle.textContent = 'Cargando documento...';
+            pdfViewerModal.style.display = 'flex';
+            
+            // Cuando el PDF cargue, actualizar el título
+            pdfFrame.onload = function() {
+                // Obtener el nombre del documento del elemento correspondiente
+                const docElement = document.querySelector(`[onclick="previewPDF(${documentoId})"]`).closest('.document-item');
+                const docName = docElement.querySelector('.document-name').textContent;
+                pdfViewerTitle.textContent = docName;
+            };
+        }
+
+        // Función para cerrar el visor de PDF
+        function closePDFViewer() {
+            document.getElementById('pdfViewerModal').style.display = 'none';
+            document.getElementById('pdfFrame').src = '';
+        }
+
+        // Funcionalidad de búsqueda
+        document.getElementById('searchButton').addEventListener('click', performSearch);
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+
+        function performSearch() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+            const categoryCards = document.querySelectorAll('.category-card');
+            let foundResults = false;
+
+            categoryCards.forEach(card => {
+                const documents = card.querySelectorAll('.document-item');
+                let categoryHasResults = false;
+
+                documents.forEach(doc => {
+                    const docName = doc.getAttribute('data-name');
+                    const docDesc = doc.getAttribute('data-desc');
+                    
+                    if (docName.includes(searchTerm) || docDesc.includes(searchTerm)) {
+                        doc.style.display = 'flex';
+                        categoryHasResults = true;
+                        foundResults = true;
+                    } else {
+                        doc.style.display = 'none';
+                    }
+                });
+
+                // Mostrar/ocultar categorías según si tienen resultados
+                if (categoryHasResults || searchTerm === '') {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            if (searchTerm && !foundResults) {
+                showNotification('No se encontraron documentos que coincidan con la búsqueda', 'error');
+            }
+        }
+
+        // Cerrar modal al hacer clic fuera
+        document.getElementById('pdfViewerModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closePDFViewer();
+            }
+        });
+
+        // Animación de entrada
+        // En el JavaScript, cambia la función para usar event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    // Agregar event listeners a todos los botones de vista previa
+    document.querySelectorAll('.preview-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const docId = this.getAttribute('data-doc-id');
+            previewPDF(docId);
+        });
+    });
+});
+
+// Modifica la función previewPDF para ser más robusta
+function previewPDF(documentoId) {
+    // Validar que documentoId sea un número válido
+    if (!documentoId || isNaN(documentoId)) {
+        showNotification('Error: ID de documento inválido', 'error');
+        return;
+    }
+    
+    const pdfFrame = document.getElementById('pdfFrame');
+    const pdfViewerModal = document.getElementById('pdfViewerModal');
+    const pdfViewerTitle = document.getElementById('pdfViewerTitle');
+    
+    // Mostrar loading
+    pdfViewerTitle.textContent = 'Cargando documento...';
+    pdfViewerModal.style.display = 'flex';
+    
+    // Construir la URL correctamente
+    pdfFrame.src = `/documentos/${documentoId}/preview/`;
+    
+    // Encontrar el nombre del documento
+    const docElement = document.querySelector(`[data-doc-id="${documentoId}"]`).closest('.document-item');
+    if (docElement) {
+        const docName = docElement.querySelector('.document-name').textContent;
+        pdfViewerTitle.textContent = docName;
+    }
+}
+    </script>
+</body>
+</html>
