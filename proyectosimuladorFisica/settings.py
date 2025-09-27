@@ -80,11 +80,11 @@ WSGI_APPLICATION = 'proyectosimuladorFisica.wsgi.app'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'railway',  
+        'NAME': 'simuladordefisica',  
         'USER': 'postgres',         
-        'PASSWORD': 'BImGrCGUYvMImjRlTFpxKdLFDkTeQSeb',
-        'HOST': 'shortline.proxy.rlwy.net',        
-        'PORT': '27873',              
+        'PASSWORD': 'BTSway1306',
+        'HOST': 'localhost',        
+        'PORT': '5432',              
     }
 }
 
