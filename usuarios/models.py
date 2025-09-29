@@ -154,3 +154,4 @@ class ReporteIngresos(models.Model):
     
     def __str__(self):
         return f"Reporte Ingresos - {self.fecha_reporte}"
+#=================================Fin de las tablas para reportes==============================
