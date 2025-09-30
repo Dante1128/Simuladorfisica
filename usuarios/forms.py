@@ -2,9 +2,6 @@ from django import forms
 from .models import Usuario
 import re
 
-from django import forms
-from .models import Usuario
-
 class RegistroUsuarioForm(forms.ModelForm):
     contrasena = forms.CharField(
         widget=forms.PasswordInput(),

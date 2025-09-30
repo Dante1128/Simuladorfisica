@@ -1,0 +1,845 @@
+{% extends 'administrador/base_admin.html' %}
+{% load static %}
+{% block title %}Bienvenido al Sistema de Laboratorios{% endblock %}
+
+{% block content %}
+    <style>
+        :root {
+            --primary: #133E87;
+            --secondary: #608BC1;
+            --accent: #608BC1;
+            --light: #F3F3E0;
+            --success: #2ecc71;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --dark: #133E87;
+            --gray: #95a5a6;
+            --pale-blue: #CBDCEB;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--light);
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            display: grid;
+            min-height: 100vh;
+        }
+        
+        /* Main Content */
+        .main-content {
+            padding: 15px;
+            overflow-y: auto;
+            max-width: 1200px;
+            margin-left: 150px;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: var(--primary);
+            font-weight: 600;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background-color: var(--secondary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary);
+        }
+        
+        .btn-secondary {
+            background-color: var(--pale-blue);
+            color: var(--primary);
+        }
+        
+        .btn-secondary:hover {
+            background-color: var(--secondary);
+            color: white;
+        }
+        
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+        
+        /* Profile Card */
+        .profile-section {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .profile-card {
+            background-color: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+        
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--secondary), var(--primary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 3rem;
+            font-weight: bold;
+            margin: 0 auto 20px;
+            box-shadow: 0 4px 10px rgba(19, 62, 135, 0.2);
+        }
+        
+        .profile-name {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+        
+        .profile-role {
+            color: var(--gray);
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+        
+        .profile-stats {
+            display: flex;
+            justify-content: space-around;
+            padding: 20px 0;
+            border-top: 1px solid var(--pale-blue);
+            border-bottom: 1px solid var(--pale-blue);
+            margin: 20px 0;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--gray);
+            text-transform: uppercase;
+        }
+        
+        .profile-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        /* Info Section */
+        .info-card {
+            background-color: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--pale-blue);
+        }
+        
+        .info-group {
+            margin-bottom: 20px;
+        }
+        
+        .info-label {
+            font-size: 0.85rem;
+            color: var(--gray);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            font-size: 1rem;
+            color: var(--dark);
+            padding: 10px;
+            background-color: var(--light);
+            border-radius: 5px;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        /* Activity Section */
+        .activity-section {
+            background-color: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
+        }
+        
+        .activity-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid var(--pale-blue);
+            transition: background-color 0.3s ease;
+        }
+        
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+        
+        .activity-item:hover {
+            background-color: var(--light);
+        }
+        
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--pale-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 1.2rem;
+        }
+        
+        .activity-content {
+            flex: 1;
+        }
+        
+        .activity-text {
+            color: var(--dark);
+            margin-bottom: 3px;
+        }
+        
+        .activity-time {
+            font-size: 0.85rem;
+            color: var(--gray);
+        }
+        
+        /* Permissions Section */
+        .permissions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .permission-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background-color: var(--light);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .permission-item:hover {
+            background-color: var(--pale-blue);
+        }
+        
+        .permission-icon {
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+        
+        .permission-text {
+            font-size: 0.9rem;
+            color: var(--dark);
+        }
+        
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .modal-overlay.active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal {
+            background-color: white;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            animation: slideUp 0.3s ease;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--pale-blue);
+        }
+        
+        .modal-header h2 {
+            color: var(--primary);
+            font-size: 1.5rem;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--gray);
+            transition: color 0.3s ease;
+        }
+        
+        .close-btn:hover {
+            color: var(--danger);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--dark);
+            font-weight: 500;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--pale-blue);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--secondary);
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 25px;
+        }
+        
+        .notification-option {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            background-color: var(--light);
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        
+        .notification-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 26px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--gray);
+            transition: 0.4s;
+            border-radius: 34px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: var(--success);
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        /* Responsive */
+        @media (max-width: 992px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            
+            .profile-section {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .permissions-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .modal {
+                width: 95%;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="header">
+                <h1>Mi Perfil</h1>
+                <button class="btn btn-primary" onclick="openEditModal()">Editar Perfil</button>
+            </div>
+            
+            <!-- Profile Section -->
+            <div class="profile-section">
+                <div class="profile-card">
+                    <div class="profile-avatar" id="profileAvatar">AD</div>
+                    <div class="profile-name" id="profileName">Admin Principal</div>
+                    <div class="profile-role" id="profileRole">Administrador del Sistema</div>
+                    
+                    <div class="profile-stats">
+                        <div class="stat-item">
+                            <div class="stat-number">142</div>
+                            <div class="stat-label">Usuarios</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">15</div>
+                            <div class="stat-label">Simulaciones</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">328</div>
+                            <div class="stat-label">Acciones</div>
+                        </div>
+                    </div>
+                    
+                    <div class="profile-actions">
+                        <button class="btn btn-secondary" onclick="openPasswordModal()">Cambiar Contraseña</button>
+                        <button class="btn btn-secondary" onclick="openNotificationsModal()">Configurar Notificaciones</button>
+                    </div>
+                </div>
+                
+                <div class="info-card">
+                    <div class="section-title">Información Personal</div>
+                    
+                    <div class="info-grid">
+                        <div class="info-group">
+                            <div class="info-label">Nombre Completo</div>
+                            <div class="info-value" id="displayName">Administrador Principal</div>
+                        </div>
+                        
+                        <div class="info-group">
+                            <div class="info-label">Email</div>
+                            <div class="info-value" id="displayEmail">admin@laboratoriosrv.com</div>
+                        </div>
+                        
+                        <div class="info-group">
+                            <div class="info-label">Teléfono</div>
+                            <div class="info-value" id="displayPhone">+591 2 234 5678</div>
+                        </div>
+                        
+                        <div class="info-group">
+                            <div class="info-label">Rol</div>
+                            <div class="info-value">Super Administrador</div>
+                        </div>
+                        
+                        <div class="info-group">
+                            <div class="info-label">Fecha de Registro</div>
+                            <div class="info-value">15 de Enero, 2024</div>
+                        </div>
+                        
+                        <div class="info-group">
+                            <div class="info-label">Último Acceso</div>
+                            <div class="info-value">Hoy, 14:32</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Activity Section -->
+            <div class="activity-section">
+                <div class="section-title">Actividad Reciente</div>
+                
+                <div class="activity-item">
+                    <div class="activity-icon">👥</div>
+                    <div class="activity-content">
+                        <div class="activity-text">Aprobó 3 nuevas membresías</div>
+                        <div class="activity-time">Hace 2 horas</div>
+                    </div>
+                </div>
+                
+                <div class="activity-item">
+                    <div class="activity-icon">🔬</div>
+                    <div class="activity-content">
+                        <div class="activity-text">Actualizó la simulación "M.R.U.V."</div>
+                        <div class="activity-time">Hace 5 horas</div>
+                    </div>
+                </div>
+                
+                <div class="activity-item">
+                    <div class="activity-icon">📊</div>
+                    <div class="activity-content">
+                        <div class="activity-text">Generó reporte mensual de ingresos</div>
+                        <div class="activity-time">Ayer, 16:45</div>
+                    </div>
+                </div>
+                
+                <div class="activity-item">
+                    <div class="activity-icon">⚙️</div>
+                    <div class="activity-content">
+                        <div class="activity-text">Modificó configuración del sistema</div>
+                        <div class="activity-time">Ayer, 10:20</div>
+                    </div>
+                </div>
+                
+                <div class="activity-item">
+                    <div class="activity-icon">📚</div>
+                    <div class="activity-content">
+                        <div class="activity-text">Agregó nuevo contenido teórico</div>
+                        <div class="activity-time">2 días atrás</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Permissions Section -->
+            <div class="info-card">
+                <div class="section-title">Permisos y Accesos</div>
+                
+                <div class="permissions-grid">
+                    <div class="permission-item">
+                        <span class="permission-icon">✅</span>
+                        <span class="permission-text">Gestión de Usuarios</span>
+                    </div>
+                    <div class="permission-item">
+                        <span class="permission-icon">✅</span>
+                        <span class="permission-text">Administrar Simulaciones</span>
+                    </div>
+                    <div class="permission-item">
+                        <span class="permission-icon">✅</span>
+                        <span class="permission-text">Ver Reportes</span>
+                    </div>
+                    <div class="permission-item">
+                        <span class="permission-icon">✅</span>
+                        <span class="permission-text">Gestión de Contenido</span>
+                    </div>
+                    <div class="permission-item">
+                        <span class="permission-icon">✅</span>
+                        <span class="permission-text">Configuración del Sistema</span>
+                    </div>
+                    <div class="permission-item">
+                        <span class="permission-icon">✅</span>
+                        <span class="permission-text">Gestión de Membresías</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Editar Perfil -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Editar Perfil</h2>
+                <button class="close-btn" onclick="closeModal('editModal')">&times;</button>
+            </div>
+            <form onsubmit="saveProfile(event)">
+                <div class="form-group">
+                    <label for="editName">Nombre Completo</label>
+                    <input type="text" id="editName" value="Administrador Principal" required>
+                </div>
+                <div class="form-group">
+                    <label for="editEmail">Email</label>
+                    <input type="email" id="editEmail" value="admin@laboratoriosrv.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="editPhone">Teléfono</label>
+                    <input type="tel" id="editPhone" value="+591 2 234 5678" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('editModal')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Cambiar Contraseña -->
+    <div class="modal-overlay" id="passwordModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Cambiar Contraseña</h2>
+                <button class="close-btn" onclick="closeModal('passwordModal')">&times;</button>
+            </div>
+            <form onsubmit="changePassword(event)">
+                <div class="form-group">
+                    <label for="currentPassword">Contraseña Actual</label>
+                    <input type="password" id="currentPassword" required>
+                </div>
+                <div class="form-group">
+                    <label for="newPassword">Nueva Contraseña</label>
+                    <input type="password" id="newPassword" required minlength="8">
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">Confirmar Nueva Contraseña</label>
+                    <input type="password" id="confirmPassword" required minlength="8">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('passwordModal')">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">Cambiar Contraseña</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Notificaciones -->
+    <div class="modal-overlay" id="notificationsModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Configurar Notificaciones</h2>
+                <button class="close-btn" onclick="closeModal('notificationsModal')">&times;</button>
+            </div>
+            <div>
+                <div class="notification-option">
+                    <div class="notification-info">
+                        <span>📧</span>
+                        <span>Notificaciones por Email</span>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                
+                <div class="notification-option">
+                    <div class="notification-info">
+                        <span>👥</span>
+                        <span>Nuevos Usuarios</span>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                
+                <div class="notification-option">
+                    <div class="notification-info">
+                        <span>💳</span>
+                        <span>Nuevas Membresías</span>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                
+                <div class="notification-option">
+                    <div class="notification-info">
+                        <span>🔬</span>
+                        <span>Actividad en Simulaciones</span>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                
+                <div class="notification-option">
+                    <div class="notification-info">
+                        <span>📊</span>
+                        <span>Reportes Semanales</span>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('notificationsModal')">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="saveNotifications()">Guardar Preferencias</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openEditModal() {
+            document.getElementById('editModal').classList.add('active');
+        }
+
+        function openPasswordModal() {
+            document.getElementById('passwordModal').classList.add('active');
+        }
+
+        function openNotificationsModal() {
+            document.getElementById('notificationsModal').classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        function saveProfile(event) {
+            event.preventDefault();
+            
+            const name = document.getElementById('editName').value;
+            const email = document.getElementById('editEmail').value;
+            const phone = document.getElementById('editPhone').value;
+            
+            document.getElementById('displayName').textContent = name;
+            document.getElementById('displayEmail').textContent = email;
+            document.getElementById('displayPhone').textContent = phone;
+            document.getElementById('profileName').textContent = name;
+            
+            const initials = name.split(' ').map(word => word[0]).join('').substring(0, 2).toUpperCase();
+            document.getElementById('profileAvatar').textContent = initials;
+            
+            alert('¡Perfil actualizado exitosamente!');
+            closeModal('editModal');
+        }
+
+        function changePassword(event) {
+            event.preventDefault();
+            
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (newPassword !== confirmPassword) {
+                alert('Las contraseñas no coinciden. Por favor, inténtalo de nuevo.');
+                return;
+            }
+            
+            if (newPassword.length < 8) {
+                alert('La contraseña debe tener al menos 8 caracteres.');
+                return;
+            }
+            
+            alert('¡Contraseña cambiada exitosamente!');
+            document.getElementById('passwordModal').querySelector('form').reset();
+            closeModal('passwordModal');
+        }
+
+        function saveNotifications() {
+            alert('¡Preferencias de notificaciones guardadas exitosamente!');
+            closeModal('notificationsModal');
+        }
+
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+{% endblock %}

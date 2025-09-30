@@ -80,14 +80,13 @@ WSGI_APPLICATION = 'proyectosimuladorFisica.wsgi.app'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'simuladordefisica',  
+        'NAME': 'simuladorDeFisica',  
         'USER': 'postgres',         
-        'PASSWORD': 'BTSway1306',
+        'PASSWORD': 'miclave123',  
         'HOST': 'localhost',        
         'PORT': '5432',              
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators

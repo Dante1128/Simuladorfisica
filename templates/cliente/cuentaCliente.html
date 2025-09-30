@@ -4,75 +4,162 @@
 
 {% block content %}
 <style>
+    :root {
+        --primary: #133E87;
+        --secondary: #608BC1;
+        --accent: #CBDCEB;
+        --light: #F3F3E0;
+        --success: #28a745;
+        --warning: #ffc107;
+        --danger: #dc3545;
+        --dark: #2c3e50;
+        --gray: #6c757d;
+        --white: #ffffff;
+    }
+
     .mi-cuenta-container {
-        max-width: 800px;
+        max-width: 900px;
         margin: 2rem auto;
         padding: 0 1rem;
     }
 
+    /* Header con gradiente mejorado */
     .cuenta-header {
         text-align: center;
-        margin-bottom: 2rem;
-        padding: 2rem 0;
-        background: linear-gradient(135deg, #133E87 0%, #608BC1 100%);
-        color: white;
-        border-radius: 20px;
-        box-shadow: 0 8px 32px rgba(19, 62, 135, 0.2);
+        margin-bottom: 3rem;
+        padding: 3rem 2rem;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 50%, var(--accent) 100%);
+        color: var(--white);
+        border-radius: 25px;
+        box-shadow: 0 15px 40px rgba(19, 62, 135, 0.3);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .cuenta-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+        background-size: 20px 20px;
+        animation: float 20s linear infinite;
+    }
+
+    @keyframes float {
+        0% { transform: translate(0, 0) rotate(0deg); }
+        100% { transform: translate(-20px, -20px) rotate(360deg); }
     }
 
     .cuenta-header h2 {
         margin: 0;
-        font-size: 2.5rem;
-        font-weight: 300;
-        letter-spacing: 1px;
+        font-size: 2.8rem;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        position: relative;
     }
 
+    .cuenta-header p {
+        margin: 1rem 0 0 0;
+        font-size: 1.2rem;
+        opacity: 0.9;
+        font-weight: 300;
+        position: relative;
+    }
+
+    /* Tarjeta principal mejorada */
     .cuenta-card {
-        background: #F3F3E0;
-        border-radius: 20px;
-        padding: 2rem;
+        background: linear-gradient(135deg, var(--white) 0%, var(--light) 100%);
+        border-radius: 25px;
+        padding: 2.5rem;
         margin-bottom: 2rem;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        border: 2px solid #CBDCEB;
-        transition: all 0.3s ease;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(255,255,255,0.2);
+        backdrop-filter: blur(10px);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .cuenta-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
     }
 
     .cuenta-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 16px 48px rgba(0, 0, 0, 0.15);
+        transform: translateY(-10px) scale(1.02);
+        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.15);
     }
 
+    /* Grid de información mejorado */
     .user-info {
         display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
         gap: 1.5rem;
+        margin-bottom: 2rem;
     }
 
     .info-item {
         display: flex;
         align-items: center;
-        padding: 1rem;
-        background: white;
-        border-radius: 12px;
-        border-left: 4px solid #608BC1;
+        padding: 1.5rem;
+        background: var(--white);
+        border-radius: 20px;
+        border-left: 6px solid var(--secondary);
         transition: all 0.3s ease;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .info-item::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(96, 139, 193, 0.1), transparent);
+        transition: left 0.6s ease;
+    }
+
+    .info-item:hover::before {
+        left: 100%;
     }
 
     .info-item:hover {
-        transform: translateX(8px);
-        box-shadow: 0 4px 16px rgba(96, 139, 193, 0.2);
+        transform: translateX(8px) translateY(-5px);
+        box-shadow: 0 15px 35px rgba(96, 139, 193, 0.2);
+        border-left-color: var(--primary);
     }
 
     .info-icon {
-        width: 40px;
-        height: 40px;
-        background: linear-gradient(135deg, #608BC1, #CBDCEB);
-        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, var(--secondary), var(--primary));
+        border-radius: 18px;
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-right: 1rem;
-        color: white;
+        margin-right: 1.5rem;
+        color: var(--white);
+        font-size: 1.5rem;
         font-weight: bold;
+        box-shadow: 0 8px 20px rgba(96, 139, 193, 0.3);
+        transition: all 0.3s ease;
+    }
+
+    .info-item:hover .info-icon {
+        transform: scale(1.1) rotate(5deg);
+        box-shadow: 0 12px 30px rgba(96, 139, 193, 0.4);
     }
 
     .info-content {
@@ -80,138 +167,236 @@
     }
 
     .info-label {
-        color: #133E87;
-        font-weight: 600;
-        font-size: 0.9rem;
+        color: var(--primary);
+        font-weight: 700;
+        font-size: 0.85rem;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-bottom: 0.25rem;
-    }
-
-    .info-value {
-        color: #333;
-        font-size: 1.1rem;
-        font-weight: 500;
-    }
-
-    .btn-custom {
-        background: linear-gradient(135deg, #608BC1 0%, #133E87 100%);
-        color: white;
-        border: none;
-        padding: 1rem 2rem;
-        border-radius: 50px;
-        font-size: 1.1rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 16px rgba(19, 62, 135, 0.3);
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 1px;
+        margin-bottom: 0.5rem;
         display: flex;
         align-items: center;
         gap: 0.5rem;
+    }
+
+    .info-label::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: linear-gradient(90deg, var(--primary), transparent);
+        margin-left: 0.5rem;
+    }
+
+    .info-value {
+        color: var(--dark);
+        font-size: 1.3rem;
+        font-weight: 600;
+        line-height: 1.4;
+    }
+
+    /* Botones mejorados */
+    .btn-custom {
+        background: linear-gradient(135deg, var(--secondary) 0%, var(--primary) 100%);
+        color: var(--white);
+        border: none;
+        padding: 1.2rem 2.5rem;
+        border-radius: 15px;
+        font-size: 1.1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        box-shadow: 0 10px 30px rgba(19, 62, 135, 0.4);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
         margin: 2rem auto 0;
         max-width: fit-content;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-custom::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transition: left 0.6s ease;
+    }
+
+    .btn-custom:hover::before {
+        left: 100%;
     }
 
     .btn-custom:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 32px rgba(19, 62, 135, 0.4);
-        background: linear-gradient(135deg, #133E87 0%, #608BC1 100%);
+        transform: translateY(-5px) scale(1.05);
+        box-shadow: 0 20px 50px rgba(19, 62, 135, 0.6);
+        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
     }
 
     .btn-custom:active {
-        transform: translateY(0);
+        transform: translateY(-2px) scale(1.02);
     }
 
     .btn-cancel {
-        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        background: linear-gradient(135deg, var(--danger) 0%, #c82333 100%);
+        box-shadow: 0 10px 30px rgba(220, 53, 69, 0.4);
     }
 
     .btn-cancel:hover {
-        background: linear-gradient(135deg, #c82333 0%, #dc3545 100%);
-        box-shadow: 0 8px 32px rgba(220, 53, 69, 0.4);
+        background: linear-gradient(135deg, #c82333 0%, var(--danger) 100%);
+        box-shadow: 0 20px 50px rgba(220, 53, 69, 0.6);
     }
 
+    /* Formulario de edición mejorado */
     .edit-form-container {
-        background: white;
-        border-radius: 20px;
-        padding: 2rem;
+        background: linear-gradient(135deg, var(--white) 0%, var(--light) 100%);
+        border-radius: 25px;
+        padding: 2.5rem;
         margin-top: 2rem;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        border: 2px solid #608BC1;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        border: 2px solid var(--secondary);
         display: none;
-        animation: slideIn 0.3s ease-out;
+        animation: slideInUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: relative;
+        overflow: hidden;
     }
 
-    @keyframes slideIn {
+    .edit-form-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+    }
+
+    @keyframes slideInUp {
         from {
             opacity: 0;
-            transform: translateY(-20px);
+            transform: translateY(30px) scale(0.95);
         }
         to {
             opacity: 1;
-            transform: translateY(0);
+            transform: translateY(0) scale(1);
         }
     }
 
     .edit-form-header {
         text-align: center;
-        margin-bottom: 2rem;
-        color: #133E87;
+        margin-bottom: 2.5rem;
+        color: var(--primary);
+        position: relative;
     }
 
     .edit-form-header h3 {
         margin: 0;
-        font-size: 1.8rem;
-        font-weight: 600;
+        font-size: 2.2rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .edit-form-header p {
+        margin: 0.5rem 0 0 0;
+        color: var(--gray);
+        font-size: 1.1rem;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
     }
 
     .form-group {
         margin-bottom: 1.5rem;
+        position: relative;
     }
 
     .form-group label {
         display: block;
-        margin-bottom: 0.5rem;
-        color: #133E87;
-        font-weight: 600;
+        margin-bottom: 0.8rem;
+        color: var(--primary);
+        font-weight: 700;
         text-transform: uppercase;
-        font-size: 0.9rem;
-        letter-spacing: 0.5px;
+        font-size: 0.85rem;
+        letter-spacing: 1px;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .form-group label::before {
+        content: '▶';
+        font-size: 0.7rem;
+        color: var(--secondary);
     }
 
     .form-group input,
     .form-group select {
         width: 100%;
-        padding: 1rem;
-        border: 2px solid #CBDCEB;
-        border-radius: 12px;
-        font-size: 1rem;
+        padding: 1.2rem 1.5rem;
+        border: 2px solid var(--accent);
+        border-radius: 15px;
+        font-size: 1.1rem;
         transition: all 0.3s ease;
-        background: #F3F3E0;
+        background: var(--white);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
     }
 
     .form-group input:focus,
     .form-group select:focus {
         outline: none;
-        border-color: #608BC1;
-        box-shadow: 0 0 0 4px rgba(96, 139, 193, 0.1);
+        border-color: var(--secondary);
+        box-shadow: 0 0 0 4px rgba(96, 139, 193, 0.2);
         transform: translateY(-2px);
     }
 
     .btn-submit {
-        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        background: linear-gradient(135deg, var(--success) 0%, #20c997 100%);
         width: 100%;
         margin-top: 1rem;
+        padding: 1.5rem;
+        font-size: 1.2rem;
+        border-radius: 15px;
     }
 
     .btn-submit:hover {
-        background: linear-gradient(135deg, #20c997 0%, #28a745 100%);
-        box-shadow: 0 8px 32px rgba(40, 167, 69, 0.4);
+        background: linear-gradient(135deg, #20c997 0%, var(--success) 100%);
+        box-shadow: 0 20px 50px rgba(40, 167, 69, 0.5);
     }
 
-    /* Responsive Design */
+    /* Efectos de partículas para el header */
+    .particles {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+    }
+
+    .particle {
+        position: absolute;
+        background: rgba(255,255,255,0.3);
+        border-radius: 50%;
+        animation: floatParticle 6s ease-in-out infinite;
+    }
+
+    @keyframes floatParticle {
+        0%, 100% { transform: translateY(0px) rotate(0deg); }
+        50% { transform: translateY(-20px) rotate(180deg); }
+    }
+
+    /* Responsive Design Mejorado */
     @media (max-width: 768px) {
         .mi-cuenta-container {
             margin: 1rem auto;
@@ -219,40 +404,78 @@
         }
 
         .cuenta-header {
-            padding: 1.5rem 1rem;
-            margin-bottom: 1rem;
+            padding: 2rem 1rem;
+            margin-bottom: 2rem;
         }
 
         .cuenta-header h2 {
-            font-size: 2rem;
+            font-size: 2.2rem;
         }
 
         .cuenta-card {
-            padding: 1.5rem;
+            padding: 2rem 1.5rem;
+        }
+
+        .user-info {
+            grid-template-columns: 1fr;
+            gap: 1rem;
         }
 
         .info-item {
             flex-direction: column;
             text-align: center;
-            gap: 0.5rem;
+            gap: 1rem;
+            padding: 1.5rem 1rem;
         }
 
         .info-icon {
             margin-right: 0;
             margin-bottom: 0.5rem;
+            width: 50px;
+            height: 50px;
+            font-size: 1.2rem;
         }
 
         .btn-custom {
             width: 100%;
             justify-content: center;
+            padding: 1.2rem 1.5rem;
+        }
+
+        .edit-form-container {
+            padding: 2rem 1.5rem;
+        }
+
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .cuenta-header h2 {
+            font-size: 1.8rem;
+        }
+
+        .info-value {
+            font-size: 1.1rem;
+        }
+
+        .btn-custom {
+            font-size: 1rem;
+            padding: 1rem 1.2rem;
         }
     }
 </style>
 
 <div class="mi-cuenta-container">
+    <!-- Header con efecto de partículas -->
     <div class="cuenta-header">
-        <h2>Mi Cuenta</h2>
+        <div class="particles" id="particles"></div>
+        <h2>👤 Mi Cuenta</h2>
+        <p>Gestiona tu información personal y preferencias</p>
     </div>
+
+    <!-- Tarjeta principal de información -->
     <div class="cuenta-card">
         <div class="user-info">
             <div class="info-item">
@@ -278,20 +501,31 @@
                     <div class="info-value">{{ usuario.get_tipo_display }}</div>
                 </div>
             </div>
+
+            <div class="info-item">
+                <div class="info-icon">🆔</div>
+                <div class="info-content">
+                    <div class="info-label">ID de Usuario</div>
+                    <div class="info-value">#{{ usuario.id }}</div>
+                </div>
+            </div>
         </div>
 
         <!-- Botón para editar la información -->
         <button id="editar-btn" class="btn-custom" onclick="toggleEditForm()">
-            ✏️ Editar Información
+            <span>✏️</span>
+            <span>Editar Información</span>
         </button>
     </div>
 
     <!-- Formulario de edición de datos -->
     <div id="edit-form" class="edit-form-container">
         <div class="edit-form-header">
-            <h3>✨ Editar Información</h3>
+            <h3>✨ Editar Información Personal</h3>
+            <p>Actualiza tus datos de contacto y preferencias</p>
         </div>
-        <form method="POST">
+        
+        <form method="POST" class="form-grid">
             {% csrf_token %}
             <div class="form-group">
                 {{ form.nombre.label_tag }}
@@ -306,7 +540,8 @@
             <div class="form-group">
                 {{ form.correo.label_tag }}
                 {{ form.correo }}
-            </div>            
+            </div>
+            
             {% for field in form %}
                 {% if field.name not in 'nombre,apellido,correo' %}
                     <div class="form-group">
@@ -317,21 +552,54 @@
             {% endfor %}
             
             <button type="submit" class="btn-custom btn-submit">
-                💾 Actualizar Datos
+                <span>💾</span>
+                <span>Actualizar Datos</span>
             </button>
         </form>
     </div>
 </div>
 
 <script>
+    // Función para crear partículas en el header
+    function createParticles() {
+        const particlesContainer = document.getElementById('particles');
+        const particleCount = 15;
+        
+        for (let i = 0; i < particleCount; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            
+            // Posición aleatoria
+            const size = Math.random() * 6 + 2;
+            const left = Math.random() * 100;
+            const top = Math.random() * 100;
+            const delay = Math.random() * 5;
+            const duration = Math.random() * 3 + 3;
+            
+            particle.style.width = `${size}px`;
+            particle.style.height = `${size}px`;
+            particle.style.left = `${left}%`;
+            particle.style.top = `${top}%`;
+            particle.style.animationDelay = `${delay}s`;
+            particle.style.animationDuration = `${duration}s`;
+            
+            particlesContainer.appendChild(particle);
+        }
+    }
+
     // Función para alternar la visibilidad del formulario de edición
     function toggleEditForm() {
-        var form = document.getElementById('edit-form');
-        var btn = document.getElementById('editar-btn');
+        const form = document.getElementById('edit-form');
+        const btn = document.getElementById('editar-btn');
+        const btnText = btn.querySelector('span:last-child');
+        const btnIcon = btn.querySelector('span:first-child');
+        
         if (form.style.display === 'none' || form.style.display === '') {
             form.style.display = 'block';
-            btn.innerHTML = '❌ Cancelar Edición';
+            btnText.textContent = 'Cancelar Edición';
+            btnIcon.textContent = '❌';
             btn.classList.add('btn-cancel');
+            
             // Scroll suave hacia el formulario
             setTimeout(() => {
                 form.scrollIntoView({ 
@@ -341,7 +609,8 @@
             }, 100);
         } else {
             form.style.display = 'none';
-            btn.innerHTML = '✏️ Editar Información';
+            btnText.textContent = 'Editar Información';
+            btnIcon.textContent = '✏️';
             btn.classList.remove('btn-cancel');
             
             // Scroll suave hacia arriba
@@ -352,19 +621,45 @@
         }
     }
 
-    // Agregar efectos de hover dinámicos
+    // Agregar efectos interactivos mejorados
     document.addEventListener('DOMContentLoaded', function() {
-        const infoItems = document.querySelectorAll('.info-item');
+        createParticles();
         
+        const infoItems = document.querySelectorAll('.info-item');
+        const formInputs = document.querySelectorAll('input, select');
+        
+        // Efectos hover para items de información
         infoItems.forEach(item => {
             item.addEventListener('mouseenter', function() {
-                this.style.borderLeftWidth = '6px';
+                this.style.transform = 'translateX(8px) translateY(-5px)';
+                this.style.borderLeftWidth = '8px';
             });
             
             item.addEventListener('mouseleave', function() {
-                this.style.borderLeftWidth = '4px';
+                this.style.transform = 'translateX(0) translateY(0)';
+                this.style.borderLeftWidth = '6px';
             });
         });
+        
+        // Efectos focus para inputs del formulario
+        formInputs.forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentElement.style.transform = 'translateY(-2px)';
+            });
+            
+            input.addEventListener('blur', function() {
+                this.parentElement.style.transform = 'translateY(0)';
+            });
+        });
+        
+        // Efecto de carga inicial
+        setTimeout(() => {
+            document.body.style.opacity = '1';
+        }, 100);
     });
+
+    // Transición suave al cargar la página
+    document.body.style.opacity = '0';
+    document.body.style.transition = 'opacity 0.5s ease-in-out';
 </script>
 {% endblock %}
