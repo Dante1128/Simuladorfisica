@@ -1,13 +1,8 @@
+{% extends 'administrador/base_admin.html' %}
 {% load static %}
+{% block title %}Bienvenido al Sistema de Laboratorios{% endblock %}
 
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reportes del Sistema</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+{% block content %}
     <style>
         :root {
             --color-crema: #F3F3E0;
@@ -325,3 +320,4 @@ document.addEventListener('DOMContentLoaded', function() {
 
 </body>
 </html>
+{% endblock %}
