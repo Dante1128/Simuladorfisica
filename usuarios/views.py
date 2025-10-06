@@ -962,3 +962,4 @@ def crear_laboratorio(request):
         messages.success(request, 'Laboratorio creado exitosamente.')
         return redirect('panel_admin')
     return render(request, 'laboratorios/crear_laboratorio.html')
+ 
