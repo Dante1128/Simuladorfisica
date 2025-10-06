@@ -18,10 +18,10 @@ urlpatterns = [
     path('panel_admin/', views.panel_admin, name='panel_admin'),
     path('base-admin/', views.base_admin, name='base_admin'),
     path('perfil-admin/', views.perfil_admin, name='perfil_admin'),
-<<<<<<< HEAD
+    path('laboratorios/', views.lista_laboratorios, name='lista_laboratorios'),
     path('laboratorio/crear/', views.crear_laboratorio, name='crear_laboratorio'),
-=======
->>>>>>> abcb9ce19b15d6bb5e65880e0d032613a774bbbd
+    path('laboratorios/editar/<int:id>/', views.editar_laboratorio, name='editar_laboratorio'),
+
 
     # REPORTES
     path('dashboard-reportes/', views.dashboard_reportes, name='dashboard_reportes'),

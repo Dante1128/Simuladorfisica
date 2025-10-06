@@ -1,24 +1,26 @@
 # usuarios/models.py
 from django.db import models
 from django.utils import timezone  
+from django.db import models
+from django.utils import timezone
 
 class Usuario(models.Model):
     TIPO_USUARIO = [
         ('estudiante', 'Estudiante'),
         ('universitario', 'Universitario'),
         ('profesional', 'Profesional'),
+        ('administrador', 'Administrador'),
     ]
 
     nombre = models.CharField(max_length=100)
     apellido = models.CharField(max_length=100)
     correo = models.EmailField(unique=True)
     contrasena = models.CharField(max_length=128)
-    tipo = models.CharField(max_length=20, choices=TIPO_USUARIO, default='estudiante')
-    
+    tipo = models.CharField(max_length=20, choices=TIPO_USUARIO)
+
     def __str__(self):
         return f"{self.nombre} {self.apellido} ({self.correo}) - {self.tipo}"
 
-# ============ NUEVOS MODELOS PARA REPORTES ============
 
 class Membresia(models.Model):
     TIPO_MEMBRESIA = [
@@ -52,7 +54,7 @@ class Laboratorio(models.Model):
     descripcion = models.TextField(blank=True)
     estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='activo')
     fecha_creacion = models.DateTimeField(default=timezone.now)
-    archivo_laboratorio = models.FileField(upload_to='laboratorios/', blank=True)
+    archivo_laboratorio = models.FileField(upload_to='laboratorios/', blank=True ,null=True)
     
     def __str__(self):
         return self.nombre_simulacion
@@ -185,7 +187,7 @@ class Documento(models.Model):
         verbose_name="Estado"
     )
     fecha_creacion = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de creación")
-    fecha_actualizacion = models.DateTimeField(auto_now=True, verbose_name="Fecha de actualización")
+    fecha_actualizacion = models.DateTimeField(auto_now=True, verbose_name="Fecha de actualización", null=True)
     
     class Meta:
         db_table = 'documentos'

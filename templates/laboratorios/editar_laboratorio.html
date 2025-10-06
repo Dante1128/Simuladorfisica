@@ -97,17 +97,30 @@
 
 <div class="card-container">
   <div class="card-header">
-    <h2><i class="fas fa-flask"></i> Agregar Laboratorio</h2>
+    <h2><i class="fas fa-edit"></i> Editar Laboratorio</h2>
   </div>
   <div class="card-body">
     <form method="post" enctype="multipart/form-data">
       {% csrf_token %}
       <div class="form-fields">
-        {{ form.as_p }}
+        <label for="id_nombre_simulacion">Nombre de la simulación</label>
+        <input type="text" name="nombre_simulacion" id="id_nombre_simulacion" maxlength="200" value="{{ laboratorio.nombre_simulacion }}" required>
+
+        <label for="id_descripcion">Descripción</label>
+        <textarea name="descripcion" id="id_descripcion" rows="3">{{ laboratorio.descripcion }}</textarea>
+
+        <label for="id_estado">Estado</label>
+        <select name="estado" id="id_estado">
+          <option value="activo" {% if laboratorio.estado == 'activo' %}selected{% endif %}>Activo</option>
+          <option value="inactivo" {% if laboratorio.estado == 'inactivo' %}selected{% endif %}>Inactivo</option>
+        </select>
+
+        <label for="id_archivo_laboratorio">Archivo del laboratorio</label>
+        <input type="file" name="archivo_laboratorio" id="id_archivo_laboratorio">
       </div>
       <div class="form-actions">
-        <button class="btn primary" type="submit"><i class="fas fa-save"></i> Guardar</button>
-        <a class="btn ghost" href="{% url 'panel_admin' %}"><i class="fas fa-times"></i> Cancelar</a>
+        <button class="btn primary" type="submit"><i class="fas fa-save"></i> Guardar Cambios</button>
+        <a class="btn ghost" href="{% url 'lista_laboratorios' %}"><i class="fas fa-times"></i> Cancelar</a>
       </div>
     </form>
   </div>

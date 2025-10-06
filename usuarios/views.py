@@ -114,7 +114,12 @@ def login(request):
 
         # Si todo es correcto, guardar sesión
         request.session['usuario_id'] = usuario.id
-        return redirect('home_cliente')  
+          # Redirigir según tipo de usuario
+        if usuario.tipo == 'administrador':
+            return redirect('panel_admin')  # URL del panel de administrador
+        else:
+            return redirect('home_cliente')  # URL del cliente normal
+        
 
     return render(request, 'registration/login.html')
 
@@ -963,3 +968,35 @@ def crear_laboratorio(request):
         return redirect('panel_admin')
     return render(request, 'laboratorios/crear_laboratorio.html')
  
+
+
+
+from .models import Laboratorio
+
+def lista_laboratorios(request):
+    laboratorios = Laboratorio.objects.all()
+    return render(request, 'laboratorios/laboratorios.html', {'laboratorios': laboratorios})
+
+# usuarios/views.py
+from django.shortcuts import render, get_object_or_404, redirect
+from .models import Laboratorio
+
+def editar_laboratorio(request, id):  # ← aquí debe estar 'id'
+    laboratorio = get_object_or_404(Laboratorio, id=id)
+
+    if request.method == 'POST':
+        nombre = request.POST.get('nombre_simulacion')
+        descripcion = request.POST.get('descripcion')
+        estado = request.POST.get('estado')
+        archivo = request.FILES.get('archivo_laboratorio')
+
+        laboratorio.nombre_simulacion = nombre
+        laboratorio.descripcion = descripcion
+        laboratorio.estado = estado
+        if archivo:
+            laboratorio.archivo_laboratorio = archivo
+        laboratorio.save()
+        return redirect('lista_laboratorios')
+
+    return render(request, 'laboratorios/editar_laboratorio.html', {'laboratorio': laboratorio})
+
