@@ -1,0 +1,122 @@
+
+{% extends 'administrador/base_admin.html' %}
+{% load static %}
+{% block content %}
+<style>
+  body {
+    background: #f3f3e0;
+  }
+  .card-container {
+    max-width: 500px;
+    margin: 40px auto;
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 4px 24px rgba(19,62,135,0.10);
+    overflow: hidden;
+    border: 2px solid #cbdceb;
+  }
+  .card-header {
+    background: linear-gradient(90deg, #133e87 80%, #608bc1 100%);
+    color: #fff;
+    padding: 24px 32px 16px 32px;
+    text-align: left;
+  }
+  .card-header h2 {
+    margin: 0;
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .card-body {
+    padding: 32px;
+    background: #f3f3e0;
+  }
+  .form-fields p {
+    margin-bottom: 18px;
+  }
+  .form-fields label {
+    font-weight: 600;
+    color: #133e87;
+    margin-bottom: 6px;
+    display: block;
+  }
+  .form-fields input, .form-fields select, .form-fields textarea {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1.5px solid #cbdceb;
+    border-radius: 8px;
+    background: #fff;
+    font-size: 1rem;
+    margin-bottom: 8px;
+    transition: border-color 0.2s;
+  }
+  .form-fields input:focus, .form-fields select:focus, .form-fields textarea:focus {
+    border-color: #133e87;
+    outline: none;
+  }
+  .form-actions {
+    display: flex;
+    gap: 16px;
+    margin-top: 18px;
+    justify-content: flex-end;
+  }
+  .btn.primary {
+    background: #133e87;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 24px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(19,62,135,0.08);
+    transition: background 0.2s;
+  }
+  .btn.primary:hover {
+    background: #608bc1;
+  }
+  .btn.ghost {
+    background: #fff;
+    color: #133e87;
+    border: 2px solid #133e87;
+    border-radius: 8px;
+    padding: 10px 24px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(19,62,135,0.04);
+    transition: background 0.2s, color 0.2s;
+  }
+  .btn.ghost:hover {
+    background: #133e87;
+    color: #fff;
+  }
+</style>
+
+<div class="card-container">
+  <div class="card-header">
+    <h2>{% if form.instance.pk %}<i class="fas fa-edit"></i> Editar componente{% else %}<i class="fas fa-plus"></i> Crear componente{% endif %}</h2>
+  </div>
+  <div class="card-body">
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      {% if form.errors %}
+        <div class="form-errors" style="color: red; margin-bottom: 16px;">
+          {{ form.errors }}
+        </div>
+      {% endif %}
+      <div class="form-fields">
+        {{ form.as_p }}
+      </div>
+      <div class="form-actions">
+        <button class="btn primary" type="submit"><i class="fas fa-save"></i> Guardar</button>
+        <a class="btn ghost" href="{% url 'componentes:admin_list' %}"><i class="fas fa-times"></i> Cancelar</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

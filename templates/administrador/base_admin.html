@@ -311,6 +311,10 @@
                     <i>📊</i>
                     <span class="menu-item-text">Resumen General</span>
                 </a>
+                <a href="{% url 'crear_laboratorio' %}" class="menu-item menu-item-full {% if request.resolver_match.url_name == 'crear_laboratorio' %}active{% endif %}" style="width:calc(100% - 20px);margin:8px 10px;display:block;text-align:center;font-size:1.15rem;padding:18px 0;">
+                    <i style="font-size:1.5rem;margin-right:16px;">🔬</i>
+                    <span class="menu-item-text" style="font-weight:700;">Laboratorios RV</span>
+                    <span class="menu-badge" style="float:right;">15</span>
                 <a href="{% url 'panel_admin' %}" class="menu-item {% if request.resolver_match.url_name == 'laboratorios' %}active{% endif %}">
                     <i>🔬</i>
                     <span class="menu-item-text">Laboratorios RV</span>
@@ -336,6 +340,10 @@
                 <a href="{% url 'dashboard_reportes' %}" class="menu-item {% if request.resolver_match.url_name == 'reportes' %}active{% endif %}">
                     <i>📈</i>
                     <span class="menu-item-text">Reportes</span>
+                </a>
+                <a href="{% url 'componentes:gestion_componentes' %}" class="menu-item {% if request.resolver_match.url_name == 'gestion_componentes' %}active{% endif %}">
+                    <i>🧩</i>
+                    <span class="menu-item-text">Componentes</span>
                 </a>
             </div>
             

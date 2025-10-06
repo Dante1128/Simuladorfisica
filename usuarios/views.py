@@ -938,3 +938,28 @@ def eliminar_usuario(request):
             'success': False, 
             'error': str(e)
         })
+
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from .models import Laboratorio
+from django.utils import timezone
+
+def crear_laboratorio(request):
+    if request.method == 'POST':
+        nombre_simulacion = request.POST.get('nombre_simulacion')
+        descripcion = request.POST.get('descripcion')
+        estado = request.POST.get('estado', 'activo')
+        archivo_laboratorio = request.FILES.get('archivo_laboratorio')
+
+        laboratorio = Laboratorio(
+            nombre_simulacion=nombre_simulacion,
+            descripcion=descripcion,
+            estado=estado,
+            fecha_creacion=timezone.now(),
+            archivo_laboratorio=archivo_laboratorio
+        )
+        laboratorio.save()
+        messages.success(request, 'Laboratorio creado exitosamente.')
+        return redirect('panel_admin')
+    return render(request, 'laboratorios/crear_laboratorio.html')
+ 

@@ -1,0 +1,71 @@
+{% extends 'administrador/base_admin.html' %}
+{% block content %}
+<style>
+    .delete-card {
+        max-width: 500px;
+        margin: 60px auto;
+        background: #fff;
+        border-radius: 18px;
+        box-shadow: 0 4px 24px rgba(19,62,135,0.10);
+        border: 2px solid #cbdceb;
+        padding: 32px 40px;
+        text-align: center;
+    }
+    .delete-title {
+        color: #133e87;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 24px;
+    }
+    .delete-actions {
+        display: flex;
+        gap: 24px;
+        justify-content: center;
+        margin-top: 24px;
+    }
+    .btn.danger {
+        background: #e74c3c;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        padding: 10px 28px;
+        font-weight: 600;
+        font-size: 1rem;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(231,76,60,0.08);
+        transition: background 0.2s;
+    }
+    .btn.danger:hover {
+        background: #c0392b;
+    }
+    .btn.ghost {
+        background: #fff;
+        color: #133e87;
+        border: 2px solid #133e87;
+        border-radius: 8px;
+        padding: 10px 28px;
+        font-weight: 600;
+        font-size: 1rem;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(19,62,135,0.04);
+        transition: background 0.2s, color 0.2s;
+    }
+    .btn.ghost:hover {
+        background: #133e87;
+        color: #fff;
+    }
+</style>
+
+<div class="delete-card">
+    <div class="delete-title">
+        <i class="fas fa-trash" style="color:#e74c3c;"></i> ¿Estás seguro que deseas eliminar este componente?
+    </div>
+    <form method="post">{% csrf_token %}
+        <div class="delete-actions">
+            <button type="submit" class="btn danger"><i class="fas fa-trash"></i> Eliminar</button>
+            <a href="{% url 'componentes:admin_list' %}" class="btn ghost"><i class="fas fa-times"></i> Cancelar</a>
+        </div>
+    </form>
+</div>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+{% endblock %}
