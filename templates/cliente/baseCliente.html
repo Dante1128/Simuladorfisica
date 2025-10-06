@@ -78,6 +78,17 @@
                         <a href="#" class="dropdown-item">Equipos Disponibles</a>
                     </div>
                 </li>
+                
+                <li class="nav-item">
+                    <a href="{% url 'componentes:list_client' %}" class="btn btn-primary">
+                        🧩 Componentes
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'cuenta_cliente' %}" class="btn btn-primary">
+                        👤 Mi Cuenta
+                    </a>
+                </li>    
 
                 <li class="nav-item">
                     <span class="user-info">👋 {{ usuario.nombre }} {{ usuario.apellido }}</span>

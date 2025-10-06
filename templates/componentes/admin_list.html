@@ -1,0 +1,33 @@
+{% extends 'administrador/base_admin.html' %}
+{% load static %}
+{% block content %}
+<link rel="stylesheet" href="{% static 'componentes/css/componentes.css' %}">
+<h2>Panel - Componentes</h2>
+
+<a class="btn primary" href="{% url 'componentes:admin_add' %}">Añadir componente</a>
+
+<table class="admin-table">
+  <thead>
+    <tr>
+      <th>Nombre</th>
+      <th>Laboratorio</th>
+      <th>Creado</th>
+      <th>Acciones</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for c in componentes %}
+      <tr>
+        <td>{{ c.nombre }}</td>
+        <td>{{ c.laboratorio.nombre }}</td>
+        <td>{{ c.created_at|date:"Y-m-d" }}</td>
+        <td>
+          <a href="{% url 'componentes:admin_edit' c.pk %}">Editar</a> |
+          <a href="{% url 'componentes:admin_delete' c.pk %}">Eliminar</a>
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}

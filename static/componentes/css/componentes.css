@@ -1,0 +1,258 @@
+:root{
+  --palette-cream: #f3f3e0;
+  --palette-navy: #133e87;
+  --palette-mid: #608bc1;
+  --palette-light: #cbdceb;
+
+  --card-radius: 14px;
+  --card-shadow: 0 10px 25px rgba(19,62,135,0.08);
+}
+
+.componentes-container{
+  padding: 28px;
+  background: var(--palette-cream);
+}
+
+/* Top search */
+.search-form{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  margin-bottom:18px;
+}
+.search-form input[type="text"]{
+  padding:10px 12px;
+  border-radius:8px;
+  border:1px solid rgba(19,62,135,0.12);
+  width:320px;
+}
+.search-form select, .search-form button{
+  padding:10px 12px;
+  border-radius:8px;
+  border:1px solid rgba(19,62,135,0.12);
+}
+.search-form button{
+  background: linear-gradient(180deg, var(--palette-mid), var(--palette-navy));
+  color:white;
+  border:none;
+}
+
+/* Grid de tarjetas */
+.cards-grid{
+  display:grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px,1fr));
+  gap:18px;
+}
+.card-componente{
+  background: white;
+  border-radius: var(--card-radius);
+  box-shadow: var(--card-shadow);
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+.card-visual{
+  padding:12px;
+  background:linear-gradient(180deg, rgba(97,140,193,0.06), rgba(203,220,235,0.03));
+}
+.card-visual img{ width:100%; height:220px; object-fit:cover; border-radius:12px; }
+
+.card-body{ padding:14px; flex:1; display:flex; flex-direction:column; gap:8px; }
+.card-body h3{ color: var(--palette-navy); margin:0; }
+.card-body .lab-name{ color: var(--palette-mid); font-size:0.9rem; margin:0; }
+.card-body .desc{ color:#333; font-size:0.95rem; }
+.card-body .specs{ margin:0; padding-left:18px; font-size:0.9rem; color:#444; }
+.card-footer{ margin-top:auto; display:flex; gap:8px; }
+.btn{ padding:8px 12px; border-radius:8px; background:var(--palette-navy); color:white; text-decoration:none; }
+.btn.ghost{ background:transparent; border:1px solid var(--palette-mid); color:var(--palette-mid); }
+
+/* Admin table */
+.admin-table{ width:100%; border-collapse:separate; border-spacing:0; background:white; border-radius:12px; margin-top:24px; overflow:hidden; box-shadow:0 2px 12px rgba(19,62,135,0.07); }
+.admin-table th{
+  background: #133e87;
+  color: #f3f3e0;
+  font-weight: 600;
+  padding: 16px 8px;
+  border:none;
+}
+.admin-table td{
+  padding:12px 8px;
+  border-bottom:1px solid #e0e0e0;
+  color: #133e87;
+}
+.admin-table tr:last-child td{ border-bottom:none; }
+.admin-table tr:hover { background: #cbdceb; }
+
+.btn.primary {
+    background: #133e87;
+    color: #f3f3e0;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(19,62,135,0.08);
+    transition: background 0.2s;
+}
+.btn.primary:hover {
+    background: #608bc1;
+    color: #fff;
+}
+
+.btn.ghost {
+    background: transparent;
+    color: #133e87;
+    border: 2px solid #133e87;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-weight: 600;
+    transition: background 0.2s, color 0.2s;
+}
+.btn.ghost:hover {
+    background: #133e87;
+    color: #f3f3e0;
+}
+
+h2 {
+    color: #133e87;
+    margin-top: 0;
+}
+
+/* --- Estilos para gestión de componentes tipo tarjeta --- */
+.gestion-card {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 4px 24px rgba(19,62,135,0.10);
+  padding: 32px 32px 24px 32px;
+  margin: 32px auto;
+  max-width: 1100px;
+}
+.gestion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #133e87;
+  border-radius: 14px 14px 0 0;
+  padding: 18px 24px;
+  margin-bottom: 18px;
+}
+.gestion-header h2 {
+  color: #f3f3e0;
+  font-size: 1.7rem;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.gestion-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.search-input {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid #608bc1;
+  font-size: 1rem;
+}
+.btn.search {
+  background: #608bc1;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 18px;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(19,62,135,0.08);
+  transition: background 0.2s;
+}
+.btn.search:hover {
+  background: #133e87;
+}
+.gestion-summary-row {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+.gestion-summary {
+  background: #133e87;
+  color: #f3f3e0;
+  border-radius: 14px;
+  padding: 18px 32px;
+  box-shadow: 0 2px 12px rgba(19,62,135,0.07);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 180px;
+}
+.summary-title {
+  font-size: 1rem;
+  opacity: 0.8;
+}
+.summary-value {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-top: 8px;
+}
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+.admin-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: #fff;
+    box-shadow: 0 2px 12px rgba(19,62,135,0.07);
+    border-radius: 0 0 12px 12px;
+    margin-top: 8px;
+    overflow: hidden;
+}
+.admin-table th {
+    background: #133e87;
+    color: #f3f3e0;
+    font-weight: 600;
+    padding: 16px 8px;
+    border: none;
+}
+.admin-table td {
+    padding: 12px 8px;
+    border-bottom: 1px solid #e0e0e0;
+    color: #133e87;
+}
+.admin-table tr:last-child td {
+    border-bottom: none;
+}
+.admin-table tr:hover {
+    background: #cbdceb;
+}
+.btn-action {
+    display: inline-block;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    text-align: center;
+    line-height: 36px;
+    font-size: 1.2rem;
+    margin: 0 4px;
+    background: #608bc1;
+    color: #fff;
+    transition: background 0.2s;
+    border: none;
+}
+.btn-action.edit { background: #608bc1; }
+.btn-action.delete { background: #e74c3c; }
+.btn-action:hover { filter: brightness(0.95); }
+@media (max-width: 900px) {
+  .gestion-card { padding: 16px; }
+  .gestion-header { flex-direction: column; gap: 10px; }
+  .gestion-header h2 { font-size: 1.2rem; }
+  .gestion-summary-row { flex-direction: column; gap: 12px; }
+}
+@media (max-width: 700px) {
+    .admin-table th, .admin-table td {
+        padding: 8px 4px;
+    }
+    .btn.primary, .btn.ghost {
+        padding: 8px 12px;
+    }
+}

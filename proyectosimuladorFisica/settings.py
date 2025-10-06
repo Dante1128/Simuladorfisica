@@ -40,7 +40,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',      # para mensajes
     'django.contrib.staticfiles',   # para archivos estáticos
     'django.contrib.humanize',      # ✅ AGREGADO: Para formatear números en templates
-    'usuarios',                     # Quitar temporalmente para poder crear la app
+    'usuarios',
+    'componentes',                      # Quitar temporalmente para poder crear la app
 ]
 
 MIDDLEWARE = [
