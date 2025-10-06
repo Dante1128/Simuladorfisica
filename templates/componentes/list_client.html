@@ -1,0 +1,79 @@
+{% extends 'cliente/baseCliente.html' %}
+{% load static %}
+{% load youtube_tags %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'componentes/css/componentes.css' %}">
+<script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+
+<section class="componentes-container">
+  <div class="top-bar">
+    <form method="get" class="search-form">
+      <input type="text" name="q" placeholder="Buscar componente..." value="{{ q }}">
+      <select name="lab">
+        <option value="">Todos los laboratorios</option>
+        {% for lab in laboratorios %}
+          <option value="{{ lab.id }}" {% if lab_selected|default:'' == lab.id|stringformat:"s" %}selected{% endif %}>{{ lab.nombre }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit">Buscar</button>
+    </form>
+  </div>
+
+  <div class="cards-grid">
+    {% for c in componentes %}
+      <article class="card-componente">
+        <div class="card-visual">
+          {% if c.modelo_3d %}
+            <model-viewer src="{{ c.modelo_3d.url }}" alt="{{ c.nombre }}" interaction-prompt="auto"
+                camera-controls auto-rotate ar
+                style="width:100%; height:220px; border-radius: 12px; background: white;">
+            </model-viewer>
+          {% elif c.imagen %}
+            <img src="{{ c.imagen.url }}" alt="{{ c.nombre }}">
+          {% else %}
+            <div class="placeholder-3d">Sin modelo</div>
+          {% endif %}
+        </div>
+
+        <div class="card-body">
+          <h3>{{ c.nombre }}</h3>
+          <p class="lab-name">Laboratorio: {{ c.laboratorio.nombre }}</p>
+          <p class="desc">{{ c.descripcion|truncatechars:140 }}</p>
+
+          {% if c.especificaciones %}
+            <ul class="specs">
+              {% for key, val in c.especificaciones.items %}
+                <li><strong>{{ key }}:</strong> {{ val }}</li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+
+          <div class="card-footer">
+            <a class="btn" href="{% url 'componentes:detail' c.pk %}">Ver</a>
+            {% if c.video_youtube %}
+              <a class="btn ghost" href="#video-{{ c.pk }}" onclick="document.getElementById('video-{{ c.pk }}').scrollIntoView({behavior:'smooth'})">Video</a>
+            {% endif %}
+          </div>
+        </div>
+      </article>
+    {% empty %}
+      <p>No hay componentes que coincidan.</p>
+    {% endfor %}
+  </div>
+
+  <div class="paginacion">
+    {% if is_paginated %}
+      {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}{% if lab_selected %}&lab={{ lab_selected }}{% endif %}">Anterior</a>
+      {% endif %}
+      <span>Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+      {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}{% if lab_selected %}&lab={{ lab_selected }}{% endif %}">Siguiente</a>
+      {% endif %}
+    {% endif %}
+  </div>
+</section>
+
+<script src="{% static 'componentes/js/componentes.js' %}"></script>
+{% endblock %}

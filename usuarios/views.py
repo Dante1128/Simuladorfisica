@@ -12,6 +12,38 @@ def index(request):
     return render(request, 'paginaWeb/index.html')
 def base_cliente(request):
     return render(request, 'cliente/baseCliente.html')
+def panel_admin(request):
+    """Vista básica para panel de administración"""
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        return redirect('login')
+    
+    try:
+        usuario = Usuario.objects.get(id=usuario_id)
+        return render(request, 'administrador/panel_admin.html', {"usuario": usuario})
+    except Usuario.DoesNotExist:
+        return redirect('login')
+
+def base_admin(request):
+    """Vista básica para base de administración"""
+    return render(request, 'administrador/base_admin.html')
+
+def perfil_admin(request):
+    """Vista básica para perfil de administración"""
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        return redirect('login')
+    
+    try:
+        usuario = Usuario.objects.get(id=usuario_id)
+        return render(request, 'administrador/perfil_admin.html', {"usuario": usuario})
+    except Usuario.DoesNotExist:
+        return redirect('login')
+
+def gestion_usuarios(request):
+    """Vista básica para gestión de usuarios"""
+    usuarios = Usuario.objects.all()
+    return render(request, 'administrador/gestion_usuarios.html', {"usuarios": usuarios})
 
 def registro_usuario(request):
     if request.method == "POST":
@@ -36,9 +68,6 @@ from django.contrib.auth.hashers import check_password
 from django.contrib import messages
 from django.shortcuts import render, redirect
 from .models import Usuario 
-
-
-
 
 
 def home_cliente(request):
@@ -85,11 +114,15 @@ def login(request):
 
         # Si todo es correcto, guardar sesión
         request.session['usuario_id'] = usuario.id
-        return redirect('home_cliente')  
+          # Redirigir según tipo de usuario
+        if usuario.tipo == 'administrador':
+            return redirect('panel_admin')  # URL del panel de administrador
+        else:
+            return redirect('home_cliente')  # URL del cliente normal
+        
 
     return render(request, 'registration/login.html')
 
-@login_required(login_url='/login/')
 def cuenta_cliente(request):
     # Obtener usuario de la sesión
     usuario_id = request.session.get('usuario_id')
@@ -524,7 +557,6 @@ from django.contrib.admin.views.decorators import staff_member_required
 import json
 
 # Cambiar esta función:
-@login_required  # ← En lugar de @staff_member_required
  
 def gestion_documentos(request):
     """
@@ -741,3 +773,230 @@ def preview_documento(request, documento_id):
         
     except Exception as e:
         return HttpResponse(f'Error al visualizar el documento: {str(e)}', status=500)
+    
+
+
+
+# ============ VISTAS PARA GESTIÓN DE USUARIOS ============
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.hashers import make_password
+from django.db import IntegrityError
+from .models import Usuario
+import json
+
+
+def gestion_usuarios(request):
+    """
+    Vista principal para gestión de usuarios
+    """
+    usuarios = Usuario.objects.all().order_by('-id')
+    
+    # Manejar acciones del formulario
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        
+        print(f"Acción recibida: {action}")  # Debug
+        print(f"Datos POST: {request.POST}")  # Debug
+        
+        if action == 'crear':
+            return crear_usuario(request)
+        elif action == 'editar':
+            return editar_usuario(request)
+        elif action == 'eliminar':
+            return eliminar_usuario(request)
+    
+    return render(request, 'administrador/gestion_usuarios.html', {
+        'usuarios': usuarios
+    })
+
+def crear_usuario(request):
+    """Crear nuevo usuario"""
+    try:
+        nombre = request.POST.get('nombre', '').strip()
+        apellido = request.POST.get('apellido', '').strip()
+        correo = request.POST.get('correo', '').strip()
+        tipo = request.POST.get('tipo', 'estudiante')
+        contrasena = request.POST.get('contrasena', '').strip()
+        
+        print(f"Intentando crear usuario: {nombre} {apellido}, {correo}")  # Debug
+        
+        # Validaciones
+        if not all([nombre, apellido, correo, contrasena]):
+            return JsonResponse({
+                'success': False, 
+                'error': 'Todos los campos son obligatorios'
+            })
+        
+        # Verificar si el correo ya existe
+        if Usuario.objects.filter(correo=correo).exists():
+            return JsonResponse({
+                'success': False, 
+                'error': 'El correo electrónico ya está registrado'
+            })
+        
+        # Crear usuario
+        usuario = Usuario(
+            nombre=nombre,
+            apellido=apellido,
+            correo=correo,
+            tipo=tipo,
+            contrasena=make_password(contrasena)
+        )
+        usuario.save()
+        
+        print(f"Usuario creado exitosamente: {usuario.id}")  # Debug
+        
+        return JsonResponse({
+            'success': True, 
+            'message': 'Usuario creado correctamente',
+            'user_id': usuario.id
+        })
+        
+    except IntegrityError as e:
+        print(f"Error de integridad: {e}")  # Debug
+        return JsonResponse({
+            'success': False, 
+            'error': 'Error de base de datos: El correo ya existe'
+        })
+    except Exception as e:
+        print(f"Error general: {e}")  # Debug
+        return JsonResponse({
+            'success': False, 
+            'error': f'Error al crear usuario: {str(e)}'
+        })
+
+def editar_usuario(request):
+    """Editar usuario existente"""
+    try:
+        user_id = request.POST.get('user_id')
+        if not user_id:
+            return JsonResponse({
+                'success': False, 
+                'error': 'ID de usuario requerido'
+            })
+        
+        usuario = Usuario.objects.get(id=user_id)
+        
+        print(f"Editando usuario: {usuario.nombre} {usuario.apellido}")  # Debug
+        
+        # Actualizar campos
+        usuario.nombre = request.POST.get('nombre', usuario.nombre).strip()
+        usuario.apellido = request.POST.get('apellido', usuario.apellido).strip()
+        usuario.correo = request.POST.get('correo', usuario.correo).strip()
+        usuario.tipo = request.POST.get('tipo', usuario.tipo)
+        
+        # Si se proporciona nueva contraseña, actualizarla
+        nueva_contrasena = request.POST.get('contrasena', '').strip()
+        if nueva_contrasena:
+            usuario.contrasena = make_password(nueva_contrasena)
+        
+        usuario.save()
+        
+        print(f"Usuario editado exitosamente: {usuario.id}")  # Debug
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Usuario actualizado correctamente'
+        })
+        
+    except Usuario.DoesNotExist:
+        return JsonResponse({
+            'success': False, 
+            'error': 'Usuario no encontrado'
+        })
+    except Exception as e:
+        print(f"Error al editar: {e}")  # Debug
+        return JsonResponse({
+            'success': False, 
+            'error': f'Error al editar usuario: {str(e)}'
+        })
+
+def eliminar_usuario(request):
+    """Eliminar usuario"""
+    try:
+        user_id = request.POST.get('id')
+        if not user_id:
+            return JsonResponse({
+                'success': False, 
+                'error': 'ID de usuario requerido'
+            })
+        
+        usuario = Usuario.objects.get(id=user_id)
+        usuario_nombre = f"{usuario.nombre} {usuario.apellido}"
+        usuario.delete()
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Usuario "{usuario_nombre}" eliminado correctamente'
+        })
+        
+    except Usuario.DoesNotExist:
+        return JsonResponse({
+            'success': False, 
+            'error': 'Usuario no encontrado'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False, 
+            'error': str(e)
+        })
+
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from .models import Laboratorio
+from django.utils import timezone
+
+def crear_laboratorio(request):
+    if request.method == 'POST':
+        nombre_simulacion = request.POST.get('nombre_simulacion')
+        descripcion = request.POST.get('descripcion')
+        estado = request.POST.get('estado', 'activo')
+        archivo_laboratorio = request.FILES.get('archivo_laboratorio')
+
+        laboratorio = Laboratorio(
+            nombre_simulacion=nombre_simulacion,
+            descripcion=descripcion,
+            estado=estado,
+            fecha_creacion=timezone.now(),
+            archivo_laboratorio=archivo_laboratorio
+        )
+        laboratorio.save()
+        messages.success(request, 'Laboratorio creado exitosamente.')
+        return redirect('panel_admin')
+    return render(request, 'laboratorios/crear_laboratorio.html')
+ 
+
+
+
+from .models import Laboratorio
+
+def lista_laboratorios(request):
+    laboratorios = Laboratorio.objects.all()
+    return render(request, 'laboratorios/laboratorios.html', {'laboratorios': laboratorios})
+
+# usuarios/views.py
+from django.shortcuts import render, get_object_or_404, redirect
+from .models import Laboratorio
+
+def editar_laboratorio(request, id):  # ← aquí debe estar 'id'
+    laboratorio = get_object_or_404(Laboratorio, id=id)
+
+    if request.method == 'POST':
+        nombre = request.POST.get('nombre_simulacion')
+        descripcion = request.POST.get('descripcion')
+        estado = request.POST.get('estado')
+        archivo = request.FILES.get('archivo_laboratorio')
+
+        laboratorio.nombre_simulacion = nombre
+        laboratorio.descripcion = descripcion
+        laboratorio.estado = estado
+        if archivo:
+            laboratorio.archivo_laboratorio = archivo
+        laboratorio.save()
+        return redirect('lista_laboratorios')
+
+    return render(request, 'laboratorios/editar_laboratorio.html', {'laboratorio': laboratorio})
+
