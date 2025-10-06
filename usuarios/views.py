@@ -8,6 +8,11 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect
 from django.utils.decorators import method_decorator
 
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from .models import Laboratorio
+from django.utils import timezone
+
 def index(request):
     return render(request, 'paginaWeb/index.html')
 def base_cliente(request):
@@ -944,10 +949,7 @@ def eliminar_usuario(request):
             'error': str(e)
         })
 
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from .models import Laboratorio
-from django.utils import timezone
+
 
 def crear_laboratorio(request):
     if request.method == 'POST':
