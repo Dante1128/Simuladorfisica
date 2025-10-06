@@ -1,9 +1,6 @@
 from django import forms
-from .models import Usuario
+from .models import Usuario, Laboratorio
 import re
-
-from django import forms
-from .models import Usuario
 
 class RegistroUsuarioForm(forms.ModelForm):
     contrasena = forms.CharField(

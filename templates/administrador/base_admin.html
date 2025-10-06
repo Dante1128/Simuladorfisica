@@ -1,0 +1,398 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Laboratorios RV{% endblock %}</title>
+    <style>
+        :root {
+            --primary: #133E87;
+            --secondary: #608BC1;
+            --accent: #608BC1;
+            --light: #F3F3E0;
+            --success: #2ecc71;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --dark: #133E87;
+            --gray: #95a5a6;
+            --pale-blue: #CBDCEB;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--light);
+            color: #333;
+            line-height: 1.6;
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            background: linear-gradient(180deg, var(--primary) 0%, #0a2347 100%);
+            color: white;
+            padding: 0;
+            box-shadow: 4px 0 15px rgba(0,0,0,0.1);
+            position: fixed;
+            left: 0;
+            top: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            width: 280px;
+            height: 100vh;
+            z-index: 1000;
+        }
+        
+        .sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+            opacity: 0.5;
+        }
+        
+        .logo {
+            padding: 30px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 10px;
+            position: relative;
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+        }
+        
+        .logo h1 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .logo span {
+            color: var(--pale-blue);
+            text-shadow: 0 0 10px rgba(203, 220, 235, 0.5);
+        }
+        
+        .logo-subtitle {
+            font-size: 0.75rem;
+            color: var(--pale-blue);
+            margin-top: 5px;
+            opacity: 0.8;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        
+        .menu {
+            list-style: none;
+            padding: 20px 0 100px 0;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .menu-section {
+            margin-bottom: 25px;
+        }
+        
+        .menu-section-title {
+            padding: 10px 20px;
+            font-size: 0.75rem;
+            color: var(--pale-blue);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+            opacity: 0.7;
+        }
+        
+        .menu-item {
+            padding: 14px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            position: relative;
+            margin: 4px 10px;
+            border-radius: 8px;
+            text-decoration: none;
+            color: white;
+        }
+        
+        .menu-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 3px;
+            background: var(--pale-blue);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            border-radius: 0 3px 3px 0;
+        }
+        
+        .menu-item:hover {
+            background-color: rgba(255,255,255,0.1);
+            transform: translateX(5px);
+        }
+        
+        .menu-item:hover::before {
+            opacity: 1;
+        }
+        
+        .menu-item.active {
+            background: linear-gradient(90deg, rgba(96, 139, 193, 0.3), rgba(96, 139, 193, 0.1));
+            border-left: 3px solid var(--pale-blue);
+            border-radius: 0 8px 8px 0;
+            box-shadow: 0 2px 8px rgba(96, 139, 193, 0.2);
+        }
+        
+        .menu-item.active::before {
+            opacity: 0;
+        }
+        
+        .menu-item i {
+            margin-right: 12px;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        
+        .menu-item-text {
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+        
+        .menu-badge {
+            margin-left: auto;
+            background-color: var(--danger);
+            color: white;
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+        
+        .sidebar-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 280px;
+            padding: 20px;
+            background: rgba(0,0,0,0.2);
+            border-top: 1px solid rgba(255,255,255,0.1);
+            z-index: 1001;
+        }
+        
+        .user-profile-mini {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: white;
+        }
+        
+        .user-profile-mini:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .user-avatar-mini {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--secondary), var(--pale-blue));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        
+        .user-info-mini {
+            flex: 1;
+        }
+        
+        .user-name-mini {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+        
+        .user-role-mini {
+            font-size: 0.75rem;
+            opacity: 0.7;
+        }
+        
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 30px;
+            min-height: 100vh;
+        }
+        
+        /* Responsive */
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .sidebar-footer {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            
+            .sidebar.active + .sidebar-footer,
+            .sidebar-footer.active {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .mobile-menu-btn {
+                display: block;
+                position: fixed;
+                top: 20px;
+                left: 20px;
+                z-index: 999;
+                background: var(--primary);
+                color: white;
+                border: none;
+                padding: 12px 16px;
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 1.2rem;
+                box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            }
+        }
+        
+        .mobile-menu-btn {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Menu Button -->
+    <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="logo">
+            <h1>Laboratorios <span>RV</span></h1>
+            <div class="logo-subtitle">Virtual Reality Labs</div>
+        </div>
+        <ul class="menu">
+            <div class="menu-section">
+                <div class="menu-section-title">Principal</div>
+                <a href="{% url 'panel_admin' %}" class="menu-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    <i>📊</i>
+                    <span class="menu-item-text">Resumen General</span>
+                </a>
+                <a href="{% url 'crear_laboratorio' %}" class="menu-item menu-item-full {% if request.resolver_match.url_name == 'crear_laboratorio' %}active{% endif %}" style="width:calc(100% - 20px);margin:8px 10px;display:block;text-align:center;font-size:1.15rem;padding:18px 0;">
+                    <i style="font-size:1.5rem;margin-right:16px;">🔬</i>
+                    <span class="menu-item-text" style="font-weight:700;">Laboratorios RV</span>
+                    <span class="menu-badge" style="float:right;">15</span>
+                </a>
+                <a href="{% url 'gestion_documentos' %}" class="menu-item {% if request.resolver_match.url_name == 'contenido' %}active{% endif %}">
+                    <i>📚</i>
+                    <span class="menu-item-text">Contenido Teórico</span>
+                </a>
+            </div>
+            
+            <div class="menu-section">
+                <div class="menu-section-title">Administración</div>
+                <a href="{% url 'gestion_usuarios' %}" class="menu-item {% if request.resolver_match.url_name == 'usuarios' %}active{% endif %}">
+                    <i>👥</i>
+                    <span class="menu-item-text">Gestión de Usuarios</span>
+                    <span class="menu-badge">3</span>
+                </a>
+                <a href="{% url 'panel_admin' %}" class="menu-item {% if request.resolver_match.url_name == 'membresias' %}active{% endif %}">
+                    <i>💳</i>
+                    <span class="menu-item-text">Membresías</span>
+                </a>
+                <a href="{% url 'dashboard_reportes' %}" class="menu-item {% if request.resolver_match.url_name == 'reportes' %}active{% endif %}">
+                    <i>📈</i>
+                    <span class="menu-item-text">Reportes</span>
+                </a>
+                <a href="{% url 'componentes:gestion_componentes' %}" class="menu-item {% if request.resolver_match.url_name == 'gestion_componentes' %}active{% endif %}">
+                    <i>🧩</i>
+                    <span class="menu-item-text">Componentes</span>
+                </a>
+            </div>
+            
+            <div class="menu-section">
+                <div class="menu-section-title">Cuenta</div>
+                <a href="{% url 'perfil_admin' %}" class="menu-item {% if request.resolver_match.url_name == 'perfil' %}active{% endif %}">
+                    <i>👤</i>
+                    <span class="menu-item-text">Mi Perfil</span>
+                </a>
+                <a href="{% url 'panel_admin' %}" class="menu-item {% if request.resolver_match.url_name == 'configuracion' %}active{% endif %}">
+                    <i>⚙️</i>
+                    <span class="menu-item-text">Configuración</span>
+                </a>
+            </div>
+        </ul>
+    </div>
+    
+    <div class="sidebar-footer">
+        <a href="{% url 'perfil_admin' %}" class="user-profile-mini">
+            <div class="user-avatar-mini">{{ user.initials|default:"AD" }}</div>
+            <div class="user-info-mini">
+                <div class="user-name-mini">{{ user.first_name|default:"Admin" }}</div>
+                <div class="user-role-mini">En línea</div>
+            </div>
+        </a>
+    </div>
+
+    <!-- CONTENIDO -->
+    <main class="main-content">
+        {% block content %} 
+        {% endblock %}
+    </main>
+
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const footer = document.querySelector('.sidebar-footer');
+            sidebar.classList.toggle('active');
+            footer.classList.toggle('active');
+        }
+
+        // Cerrar sidebar al hacer clic fuera en móvil
+        document.addEventListener('click', function(event) {
+            const sidebar = document.getElementById('sidebar');
+            const menuBtn = document.querySelector('.mobile-menu-btn');
+            
+            if (window.innerWidth <= 992) {
+                if (!sidebar.contains(event.target) && !menuBtn.contains(event.target)) {
+                    sidebar.classList.remove('active');
+                    document.querySelector('.sidebar-footer').classList.remove('active');
+                }
+            }
+        });
+    </script>
+</body>
+</html>

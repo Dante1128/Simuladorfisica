@@ -1,11 +1,841 @@
-<!-- homeCliente.html -->
-
-
 {% extends 'cliente/baseCliente.html' %}
 {% load static %}
 {% block title %}Bienvenido al Sistema de Laboratorios{% endblock %}
 
 {% block content %}
-    <h2>Bienvenido, {{ usuario.nombre }}</h2>
-    <p>Aquí puedes  explorar los laboratorios disponibles.</p>
+<style>
+    :root {
+        --primary: #133E87;
+        --secondary: #608BC1;
+        --accent: #CBDCEB;
+        --light: #F3F3E0;
+        --success: #10b981;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --dark: #1e293b;
+        --glass-bg: rgba(255, 255, 255, 0.1);
+        --glass-border: rgba(255, 255, 255, 0.2);
+        --shadow-soft: 0 8px 32px rgba(31, 38, 135, 0.1);
+        --shadow-medium: 0 15px 35px rgba(31, 38, 135, 0.15);
+        --shadow-heavy: 0 25px 50px rgba(31, 38, 135, 0.25);
+        --gradient-primary: linear-gradient(135deg, #133E87 0%, #608BC1 100%);
+        --gradient-secondary: linear-gradient(135deg, #608BC1 0%, #CBDCEB 100%);
+        --gradient-gold: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+        --gradient-success: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+        background: linear-gradient(-45deg, #F3F3E0, #e8f4f8, #f0f7ff, #F3F3E0);
+        background-size: 400% 400%;
+        animation: gradientShift 15s ease infinite;
+        min-height: 100vh;
+        overflow-x: hidden;
+        color: var(--dark);
+        line-height: 1.6;
+    }
+
+    @keyframes gradientShift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    /* Partículas de fondo mejoradas */
+    .background-particles {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: -1;
+        opacity: 0.6;
+    }
+
+    .particle {
+        position: absolute;
+        border-radius: 50%;
+        background: var(--secondary);
+        animation: float 8s ease-in-out infinite;
+        filter: blur(1px);
+    }
+
+    @keyframes float {
+        0%, 100% {
+            transform: translateY(0px) rotate(0deg) scale(1);
+            opacity: 0.3;
+        }
+        50% {
+            transform: translateY(-40px) rotate(180deg) scale(1.1);
+            opacity: 0.6;
+        }
+    }
+
+    /* Layout Principal */
+    .dashboard-container {
+        display: flex;
+        min-height: 100vh;
+        position: relative;
+    }
+
+    /* Sidebar Mejorado */
+    .sidebar {
+        width: 300px;
+        background: linear-gradient(180deg, var(--primary) 0%, #1e4a8c 100%);
+        backdrop-filter: blur(20px);
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+        height: 100vh;
+        overflow-y: auto;
+        flex-shrink: 0;
+        position: sticky;
+        top: 0;
+        box-shadow: 8px 0 40px rgba(19, 62, 135, 0.3);
+        z-index: 1000;
+    }
+
+    .sidebar::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23608BC1' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E");
+        pointer-events: none;
+    }
+
+    .logo {
+        padding: 2.5rem 1.5rem;
+        text-align: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+        position: relative;
+        z-index: 2;
+    }
+
+    .logo h1 {
+        color: white;
+        font-size: 1.8rem;
+        font-weight: 800;
+        margin-bottom: 0.5rem;
+        background: linear-gradient(135deg, white 0%, var(--accent) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .logo p {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    .user-profile {
+        display: flex;
+        align-items: center;
+        padding: 1.5rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        margin-bottom: 1rem;
+    }
+
+    .user-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: var(--gradient-secondary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 1.2rem;
+        margin-right: 1rem;
+        box-shadow: 0 8px 25px rgba(96, 139, 193, 0.4);
+    }
+
+    .user-info h3 {
+        color: white;
+        font-size: 1.1rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .user-info p {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.85rem;
+    }
+
+    .menu {
+        padding: 0;
+        list-style: none;
+        position: relative;
+        z-index: 2;
+    }
+
+    .menu-item {
+        margin: 0.5rem 1rem;
+        padding: 1.2rem 1.5rem;
+        border-radius: 16px;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        color: rgba(255, 255, 255, 0.9);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .menu-item::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 4px;
+        background: var(--accent);
+        transform: scaleY(0);
+        transition: transform 0.3s ease;
+    }
+
+    .menu-item i {
+        font-size: 1.3rem;
+        margin-right: 1rem;
+        width: 24px;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+
+    .menu-item span {
+        font-weight: 600;
+        letter-spacing: 0.3px;
+        transition: all 0.3s ease;
+    }
+
+    .menu-item:hover {
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateX(8px);
+        color: white;
+    }
+
+    .menu-item:hover::before {
+        transform: scaleY(1);
+    }
+
+    .menu-item:hover i {
+        transform: scale(1.2);
+    }
+
+    .menu-item.active {
+        background: rgba(255, 255, 255, 0.15);
+        color: white;
+        transform: translateX(8px);
+        box-shadow: 0 8px 25px rgba(96, 139, 193, 0.3);
+    }
+
+    .menu-item.active::before {
+        transform: scaleY(1);
+    }
+
+    /* Contenido Principal */
+    .main-content {
+        flex: 1;
+        padding: 2.5rem;
+        overflow-y: auto;
+        position: relative;
+    }
+
+    /* Header Mejorado */
+    .header {
+        margin-bottom: 3rem;
+        text-align: center;
+        position: relative;
+    }
+
+    .header h1 {
+        font-size: 3rem;
+        font-weight: 900;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.5rem;
+        text-shadow: 0 8px 32px rgba(19, 62, 135, 0.2);
+        animation: titlePulse 4s ease-in-out infinite;
+    }
+
+    @keyframes titlePulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.02); }
+    }
+
+    .header p {
+        color: var(--primary);
+        font-size: 1.3rem;
+        font-weight: 500;
+        opacity: 0.9;
+    }
+
+    /* Stats Grid Mejorado */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 2.5rem;
+        margin-bottom: 3.5rem;
+    }
+
+    .stat-card {
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 25px;
+        padding: 2.5rem;
+        box-shadow: var(--shadow-soft);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        overflow: hidden;
+        position: relative;
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--gradient-primary);
+        transform: scaleX(0);
+        transition: transform 0.3s ease;
+    }
+
+    .stat-card:hover::before {
+        transform: scaleX(1);
+    }
+
+    .stat-card:hover {
+        transform: translateY(-10px);
+        box-shadow: var(--shadow-heavy);
+    }
+
+    .stat-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 2rem;
+        font-size: 2.2rem;
+        color: white;
+        background: var(--gradient-primary);
+        box-shadow: 0 12px 30px rgba(19, 62, 135, 0.4);
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover .stat-icon {
+        transform: scale(1.1) rotate(5deg);
+    }
+
+    .stat-title {
+        color: var(--primary);
+        font-size: 1rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        margin-bottom: 1.2rem;
+        letter-spacing: 1px;
+    }
+
+    .stat-value {
+        font-size: 3.5rem;
+        font-weight: 900;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        line-height: 1;
+        margin-bottom: 1.2rem;
+    }
+
+    .stat-btn {
+        background: var(--gradient-secondary);
+        color: var(--primary);
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 15px;
+        font-weight: 700;
+        cursor: pointer;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        transition: all 0.3s ease;
+        box-shadow: 0 8px 25px rgba(96, 139, 193, 0.3);
+    }
+
+    .stat-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 35px rgba(96, 139, 193, 0.4);
+    }
+
+    /* Activity Section Mejorada */
+    .activity-section {
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 25px;
+        padding: 2.5rem;
+        margin-bottom: 3.5rem;
+        box-shadow: var(--shadow-soft);
+        position: relative;
+    }
+
+    .section-title {
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: var(--primary);
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .section-title i {
+        margin-right: 1rem;
+        font-size: 1.8rem;
+    }
+
+    .activity-item {
+        padding: 1.8rem;
+        border-radius: 20px;
+        margin-bottom: 1.2rem;
+        background: rgba(255, 255, 255, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.6);
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .activity-item::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 4px;
+        background: var(--gradient-primary);
+        transform: scaleY(0);
+        transition: transform 0.3s ease;
+    }
+
+    .activity-item:hover::before {
+        transform: scaleY(1);
+    }
+
+    .activity-item:hover {
+        transform: translateX(10px);
+        box-shadow: 0 15px 40px rgba(19, 62, 135, 0.15);
+    }
+
+    .activity-title {
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: var(--primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .activity-meta {
+        display: flex;
+        gap: 1.5rem;
+        align-items: center;
+        color: var(--primary);
+        font-weight: 600;
+        font-size: 0.95rem;
+        opacity: 0.85;
+    }
+
+    .activity-tag {
+        background: var(--gradient-success);
+        color: white;
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 700;
+    }
+
+    /* Membership Card Mejorada */
+    .membership-section {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+
+    .membership-card {
+        background: var(--gradient-primary);
+        border-radius: 25px;
+        padding: 3rem;
+        color: white;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+        box-shadow: var(--shadow-heavy);
+    }
+
+    .membership-card::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+        background-size: 30px 30px;
+        animation: shine 20s linear infinite;
+    }
+
+    @keyframes shine {
+        0% { transform: translate(0, 0) rotate(0deg); }
+        100% { transform: translate(-30px, -30px) rotate(360deg); }
+    }
+
+    .membership-title {
+        font-size: 1.5rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+    }
+
+    .days-remaining {
+        font-size: 5rem;
+        font-weight: 900;
+        margin-bottom: 0.5rem;
+        text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .days-label {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        margin-bottom: 2rem;
+        font-weight: 600;
+    }
+
+    .renew-btn {
+        background: rgba(255, 255, 255, 0.95);
+        color: var(--primary);
+        border: none;
+        padding: 1.2rem 2.5rem;
+        border-radius: 15px;
+        font-weight: 800;
+        cursor: pointer;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: all 0.3s ease;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    .renew-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Secciones de página */
+    .page-section {
+        display: none;
+        animation: fadeInUp 0.6s ease forwards;
+    }
+
+    .page-section.active {
+        display: block;
+    }
+
+    /* Animaciones */
+    .fade-in {
+        opacity: 0;
+        transform: translateY(30px);
+        animation: fadeInUp 0.8s ease forwards;
+    }
+
+    @keyframes fadeInUp {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .fade-in-delay-1 { animation-delay: 0.2s; }
+    .fade-in-delay-2 { animation-delay: 0.4s; }
+    .fade-in-delay-3 { animation-delay: 0.6s; }
+
+    /* Footer */
+    footer {
+        position: fixed;
+        right: 2rem;
+        bottom: 2rem;
+        font-size: 0.9rem;
+        color: rgba(0, 0, 0, 0.6);
+        background: rgba(255, 255, 255, 0.8);
+        padding: 0.8rem 1.5rem;
+        border-radius: 15px;
+        backdrop-filter: blur(10px);
+        box-shadow: var(--shadow-soft);
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .sidebar {
+            width: 250px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .dashboard-container {
+            flex-direction: column;
+        }
+        
+        .sidebar {
+            width: 100%;
+            height: auto;
+            position: relative;
+        }
+        
+        .main-content {
+            padding: 1.5rem;
+        }
+        
+        .header h1 {
+            font-size: 2.2rem;
+        }
+        
+        .stat-value {
+            font-size: 2.8rem;
+        }
+        
+        .days-remaining {
+            font-size: 3.5rem;
+        }
+        
+        footer {
+            position: relative;
+            right: auto;
+            bottom: auto;
+            margin-top: 2rem;
+            text-align: center;
+        }
+    }
+</style>
+
+<!-- Partículas de fondo -->
+<div class="background-particles" aria-hidden="true"></div>
+
+<div class="dashboard-container">
+    <!-- Main Content -->
+    <main class="main-content" id="main" role="main">
+        <!-- Header -->
+        <header class="header fade-in">
+            <h1 id="welcomeTitle">¡Bienvenid@, {{ usuario.nombre }}!</h1>
+            <p id="welcomeSubtitle">Explora el futuro de la educación científica</p>
+        </header>
+
+        <!-- Sección Inicio -->
+        <section id="inicio" class="page-section active">
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card fade-in fade-in-delay-1">
+                    <div class="stat-icon"><i class="fas fa-microscope"></i></div>
+                    <div class="stat-title">Simulaciones Completadas</div>
+                    <div class="stat-value" id="simCount">142</div>
+                    <button class="stat-btn" onclick="navigateTo('historial')">
+                        <i class="fas fa-chart-bar"></i> Ver Historial
+                    </button>
+                </div>
+
+                <div class="stat-card fade-in fade-in-delay-2">
+                    <div class="stat-icon"><i class="fas fa-download"></i></div>
+                    <div class="stat-title">Documentos Descargados</div>
+                    <div class="stat-value" id="docCount">15</div>
+                    <button class="stat-btn" onclick="navigateTo('documentos')">
+                        <i class="fas fa-folder-open"></i> Ver Documentos
+                    </button>
+                </div>
+
+                <div class="stat-card fade-in fade-in-delay-3">
+                    <div class="stat-icon"><i class="fas fa-trophy"></i></div>
+                    <div class="stat-title">Puntuación Promedio</div>
+                    <div class="stat-value">96%</div>
+                    <button class="stat-btn" onclick="navigateTo('reportes')">
+                        <i class="fas fa-award"></i> Ver Logros
+                    </button>
+                </div>
+            </div>
+
+            <!-- Activity Section -->
+            <div class="activity-section fade-in">
+                <h3 class="section-title">
+                    <i class="fas fa-clock"></i>
+                    Actividad Reciente
+                </h3>
+
+                <div class="activity-item" onclick="navigateTo('simulation-detail')">
+                    <div>
+                        <div class="activity-title">Movimiento Parabólico</div>
+                        <div class="activity-meta">
+                            <span class="activity-tag">RV</span>
+                            <span><i class="fas fa-calendar"></i> 12/10/2023</span>
+                            <span><i class="fas fa-clock"></i> 24 min</span>
+                            <span><i class="fas fa-star"></i> 98%</span>
+                        </div>
+                    </div>
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+
+                <div class="activity-item" onclick="navigateTo('simulation-detail')">
+                    <div>
+                        <div class="activity-title">Electromagnetismo Avanzado</div>
+                        <div class="activity-meta">
+                            <span class="activity-tag">RV</span>
+                            <span><i class="fas fa-calendar"></i> 08/10/2023</span>
+                            <span><i class="fas fa-clock"></i> 50 min</span>
+                            <span><i class="fas fa-star"></i> 94%</span>
+                        </div>
+                    </div>
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+
+                <div class="activity-item" onclick="navigateTo('simulation-detail')">
+                    <div>
+                        <div class="activity-title">Óptica y Lentes</div>
+                        <div class="activity-meta">
+                            <span class="activity-tag">3D</span>
+                            <span><i class="fas fa-calendar"></i> 05/10/2023</span>
+                            <span><i class="fas fa-clock"></i> 35 min</span>
+                            <span><i class="fas fa-star"></i> 91%</span>
+                        </div>
+                    </div>
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </div>
+
+            <!-- Membership -->
+            <div class="membership-section fade-in">
+                <div class="membership-card">
+                    <div class="membership-title">Membresía Premium Activa</div>
+                    <div class="days-remaining" id="daysLeft">18</div>
+                    <div class="days-label">Días Restantes</div>
+                    <button class="renew-btn" onclick="renewMembership()">
+                        <i class="fas fa-sync-alt"></i> Renovar Membresía
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Otras secciones (simplificadas para el ejemplo) -->
+        <section id="laboratorios" class="page-section">
+            <h2 style="margin-bottom:1.5rem; color:var(--primary)">🏗️ Laboratorios Disponibles</h2>
+            <p style="margin-bottom:2rem; font-size:1.1rem;">Accede a nuestros laboratorios virtuales especializados</p>
+            <!-- Contenido de laboratorios... -->
+        </section>
+
+        <section id="simulaciones" class="page-section">
+            <h2 style="margin-bottom:1.5rem; color:var(--primary)">🕶️ Simulaciones VR</h2>
+            <p style="margin-bottom:2rem; font-size:1.1rem;">Experiencias inmersivas en realidad virtual</p>
+            <!-- Contenido de simulaciones... -->
+        </section>
+
+        <!-- Resto de secciones... -->
+    </main>
+</div>
+
+<footer>
+    © <span id="year"></span> SciLab Pro - Sistema de Laboratorios Virtuales
+</footer>
+
+<script>
+    // Navegación
+    function navigateTo(sectionId, menuItemEl) {
+        // Actualizar menú activo
+        document.querySelectorAll('.menu-item').forEach(mi => mi.classList.remove('active'));
+        if (menuItemEl) menuItemEl.classList.add('active');
+
+        // Mostrar sección
+        document.querySelectorAll('.page-section').forEach(sec => {
+            if (sec.id === sectionId) {
+                sec.classList.add('active');
+                sec.setAttribute('aria-hidden', 'false');
+                document.getElementById('main').scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+                sec.classList.remove('active');
+                sec.setAttribute('aria-hidden', 'true');
+            }
+        });
+
+        // Actualizar header
+        const titles = {
+            'inicio': [`¡Bienvenid@, {{ usuario.nombre }}!`, 'Explora el futuro de la educación científica'],
+            'laboratorios': ['🔬 Laboratorios Virtuales', 'Accede a experimentos especializados'],
+            'simulaciones': ['🕶️ Simulaciones VR', 'Experiencias inmersivas en realidad virtual'],
+            'historial': ['📊 Mi Historial', 'Registro detallado de tu progreso'],
+            'documentos': ['📚 Documentos', 'Material de apoyo y recursos descargables'],
+            'reportes': ['📈 Reportes', 'Estadísticas y análisis de tu rendimiento'],
+            'configuracion': ['⚙️ Configuración', 'Personaliza tu experiencia'],
+            'ayuda': ['❓ Ayuda & Soporte', 'Centro de ayuda y preguntas frecuentes']
+        };
+        
+        const t = titles[sectionId] || titles['inicio'];
+        document.getElementById('welcomeTitle').textContent = t[0];
+        document.getElementById('welcomeSubtitle').textContent = t[1];
+    }
+
+    // Generar partículas
+    function generateParticles() {
+        const container = document.querySelector('.background-particles');
+        const count = 20;
+        
+        for(let i = 0; i < count; i++) {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            
+            const size = Math.random() * 100 + 20;
+            const left = Math.random() * 100;
+            const top = Math.random() * 100;
+            const delay = Math.random() * 8;
+            const duration = 8 + Math.random() * 8;
+            
+            p.style.width = `${size}px`;
+            p.style.height = `${size}px`;
+            p.style.left = `${left}%`;
+            p.style.top = `${top}%`;
+            p.style.opacity = 0.1 + Math.random() * 0.2;
+            p.style.animationDelay = `${delay}s`;
+            p.style.animationDuration = `${duration}s`;
+            p.style.background = `hsl(${Math.random() * 60 + 200}, 70%, 65%)`;
+            
+            container.appendChild(p);
+        }
+    }
+
+    // Inicialización
+    document.addEventListener('DOMContentLoaded', function() {
+        generateParticles();
+        document.getElementById('year').textContent = new Date().getFullYear();
+        
+        // Efectos de entrada
+        setTimeout(() => {
+            document.body.style.opacity = '1';
+        }, 100);
+    });
+
+    document.body.style.opacity = '0';
+    document.body.style.transition = 'opacity 0.8s ease-in-out';
+
+    // Funciones de ejemplo
+    function renewMembership() {
+        alert('🚀 Redirigiendo al proceso de renovación de membresía...');
+    }
+</script>
 {% endblock %}
