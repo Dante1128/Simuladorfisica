@@ -309,17 +309,17 @@
         <ul class="menu">
             <div class="menu-section">
                 <div class="menu-section-title">Principal</div>
-                <a href="{% url 'panel_admin' %}" class="menu-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                <a href="#" class="menu-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
                     <i>📊</i>
                     <span class="menu-item-text">Resumen General</span>
                 </a>
                
-                <a href="{% url 'lista_laboratorios' %}" class="menu-item {% if request.resolver_match.url_name == 'laboratorios' %}active{% endif %}">
+                <a href="#" class="menu-item {% if request.resolver_match.url_name == 'laboratorios' %}active{% endif %}">
                     <i>🔬</i>
                     <span class="menu-item-text">Laboratorios RV</span>
                     <span class="menu-badge">15</span>
                 </a>
-                <a href="{% url 'gestion_documentos' %}" class="menu-item {% if request.resolver_match.url_name == 'contenido' %}active{% endif %}">
+                <a href="#" class="menu-item {% if request.resolver_match.url_name == 'contenido' %}active{% endif %}">
                     <i>📚</i>
                     <span class="menu-item-text">Contenido Teórico</span>
                 </a>
@@ -327,7 +327,7 @@
             
             <div class="menu-section">
                 <div class="menu-section-title">Administración</div>
-                <a href="{% url 'gestion_usuarios' %}" class="menu-item {% if request.resolver_match.url_name == 'usuarios' %}active{% endif %}">
+                <a href="#" class="menu-item {% if request.resolver_match.url_name == 'usuarios' %}active{% endif %}">
                     <i>👥</i>
                     <span class="menu-item-text">Gestión de Usuarios</span>
                     <span class="menu-badge">3</span>
@@ -336,11 +336,11 @@
                     <i>💳</i>
                     <span class="menu-item-text">Membresías</span>
                 </a>
-                <a href="{% url 'dashboard_reportes' %}" class="menu-item {% if request.resolver_match.url_name == 'reportes' %}active{% endif %}">
+                <a href="#" class="menu-item {% if request.resolver_match.url_name == 'reportes' %}active{% endif %}">
                     <i>📈</i>
                     <span class="menu-item-text">Reportes</span>
                 </a>
-                <a href="{% url 'componentes:gestion_componentes' %}" class="menu-item {% if request.resolver_match.url_name == 'gestion_componentes' %}active{% endif %}">
+                <a href="#" class="menu-item {% if request.resolver_match.url_name == 'gestion_componentes' %}active{% endif %}">
                     <i>🧩</i>
                     <span class="menu-item-text">Componentes</span>
                 </a>
@@ -348,11 +348,11 @@
             
             <div class="menu-section">
                 <div class="menu-section-title">Cuenta</div>
-                <a href="{% url 'perfil_admin' %}" class="menu-item {% if request.resolver_match.url_name == 'perfil' %}active{% endif %}">
+                <a href="#" class="menu-item {% if request.resolver_match.url_name == 'perfil' %}active{% endif %}">
                     <i>👤</i>
                     <span class="menu-item-text">Mi Perfil</span>
                 </a>
-                <a href="{% url 'panel_admin' %}" class="menu-item {% if request.resolver_match.url_name == 'configuracion' %}active{% endif %}">
+                <a href="#" class="menu-item {% if request.resolver_match.url_name == 'configuracion' %}active{% endif %}">
                     <i>⚙️</i>
                     <span class="menu-item-text">Configuración</span>
                 </a>
@@ -361,7 +361,7 @@
     </div>
     
     <div class="sidebar-footer">
-        <a href="{% url 'perfil_admin' %}" class="user-profile-mini">
+        <a href="#" class="user-profile-mini">
             <div class="user-avatar-mini">{{ user.initials|default:"AD" }}</div>
             <div class="user-info-mini">
                 <div class="user-name-mini">{{ user.first_name|default:"Admin" }}</div>
@@ -372,7 +372,7 @@
 
     <!-- CONTENIDO -->
     <main class="main-content">
-        {% block content %} 
+        {% block content %}  
         {% endblock %}
     </main>
 
