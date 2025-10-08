@@ -5,8 +5,7 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls), 
-    path('', include('usuarios.urls')),  # rutas de tu app usuarios
-    path('componentes/', include('componentes.urls', namespace='componentes')),  # rutas de la app componentes
+    path('', include('usuarios.urls')),  
 ]
 
 # Archivos estáticos y media en modo DEBUG

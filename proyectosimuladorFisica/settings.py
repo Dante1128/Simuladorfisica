@@ -34,14 +34,13 @@ ALLOWED_HOSTS = ['.vercel.app','localhost','127.0.0.1']
 INSTALLED_APPS = [
     'django.contrib.admin',  
     'whitenoise.runserver_nostatic',
-    'django.contrib.auth',          # para usuarios y permisos
-    'django.contrib.contenttypes',  # necesario para modelos del sistema
-    'django.contrib.sessions',      # para sesiones
-    'django.contrib.messages',      # para mensajes
-    'django.contrib.staticfiles',   # para archivos estáticos
-    'django.contrib.humanize',      # ✅ AGREGADO: Para formatear números en templates
+    'django.contrib.auth',          
+    'django.contrib.contenttypes',  
+    'django.contrib.sessions',      
+    'django.contrib.messages',      
+    'django.contrib.staticfiles',   
+    'django.contrib.humanize',     
     'usuarios',
-    'componentes',                      # Quitar temporalmente para poder crear la app
 ]
 
 MIDDLEWARE = [
@@ -83,7 +82,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'simuladordefisica',  
         'USER': 'postgres',         
-        'PASSWORD': 'contra',
+        'PASSWORD': '2811',
         'HOST': 'localhost',        
         'PORT': '5432',              
     }
