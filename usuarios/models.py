@@ -303,3 +303,6 @@ class Pago(models.Model):
 
     def __str__(self):
         return f"Pago {self.id} - {self.usuario.username} - ${self.monto}"
+
+
+

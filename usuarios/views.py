@@ -48,33 +48,31 @@ def perfil_admin(request):
 def login(request):
     if request.method == 'POST':
         correo = request.POST.get('correo')
-        contrasena = request.POST.get('contrasena')
+        contrasenia = request.POST.get('contrasenia')
 
         # Validar campos vacíos
-        if not correo or not contrasena:
+        if not correo or not contrasenia:
             messages.error(request, "Todos los campos son obligatorios")
-            return render(request, 'registration/login.html', {'correo': correo}) 
+            return render(request, 'registration/login.html', {'correo': correo})
 
-        # Validar si el correo existe
-        usuario = Usuario.objects.filter(correo=correo).first()
+        # Buscar usuario por correo
+        usuario = Usuario.objects.filter(correo=correo, estado='A').first()
         if not usuario:
-            messages.error(request, "El correo ingresado no está registrado")
+            messages.error(request, "El correo ingresado no está registrado o está inactivo")
             return render(request, 'registration/login.html', {'correo': correo})
 
         # Validar contraseña
-        if not check_password(contrasena, usuario.contrasena):
+        if not check_password(contrasenia, usuario.contrasenia):
             messages.error(request, "La contraseña es incorrecta")
             return render(request, 'registration/login.html', {'correo': correo})
 
-        # Si todo es correcto, guardar sesión
+        # Guardar sesión
         request.session['usuario_id'] = usuario.id
-          # Redirigir según tipo de usuario
-        if usuario.tipo == 'administrador':
-            return redirect('panel_admin')  # URL del panel de administrador
+
+        # Redirigir según rol
+        if usuario.rol and usuario.rol.tipo.lower() == 'administrador':
+            return redirect('panel_admin')  # Panel administrador
         else:
-            return redirect('panel_admin')  # URL del cliente normal
-        
+            return redirect('panel_cliente')  # Panel cliente normal
 
     return render(request, 'registration/login.html')
-
-
