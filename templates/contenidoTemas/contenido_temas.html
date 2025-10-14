@@ -1,0 +1,98 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contenido Teórico - Laboratorios VR</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'usuarios/css/contenidoTemas/contenido_temas.css'%}">
+    
+</head>
+<body>
+    <div class="header">
+        <h1><i class="fas fa-book-open"></i> Contenido Teórico</h1>
+        <p>Explora nuestra biblioteca de documentos y materiales de estudio</p>
+    </div>
+
+    <div class="search-container">
+        <input type="text" class="search-input" id="searchInput" placeholder="Buscar documentos por nombre, categoría o descripción...">
+        <button class="search-button" id="searchButton">
+            <i class="fas fa-search"></i> Buscar
+        </button>
+    </div>
+
+    <div class="categories-grid" id="categoriesContainer">
+        <!-- Las categorías se cargarán dinámicamente -->
+        {% for categoria, documentos in categorias.items %}
+        <div class="category-card" data-category="{{ categoria }}">
+            <div class="category-header">
+                <h3 class="category-title">
+                    <i class="fas fa-folder"></i> {{ categoria|title }}
+                </h3>
+                <span class="documents-count">{{ documentos|length }} documentos</span>
+            </div>
+            
+            <ul class="documents-list">
+                <!-- En la parte de los documentos, cambia esta sección: -->
+{% for documento in documentos %}
+<li class="document-item" data-name="{{ documento.nombre|lower }}" data-desc="{{ documento.descripcion|lower }}" data-id="{{ documento.id }}">
+    <div class="document-info">
+        <div class="document-name">{{ documento.nombre }}</div>
+        <div class="document-meta">
+            <i class="fas fa-file-pdf" style="color: #e74c3c;"></i> 
+            {{ documento.get_tamaño_formateado }} • 
+            {{ documento.fecha_actualizacion|date:"d/m/Y" }}
+        </div>
+        {% if documento.descripcion %}
+        <div class="document-meta">{{ documento.descripcion|truncatewords:10 }}</div>
+        {% endif %}
+    </div>
+    <div class="document-actions">
+        <a href="{% url 'descargar_documento' documento.id %}" class="btn-download" title="Descargar PDF">
+            <i class="fas fa-download"></i> Descargar
+        </a>
+        <!-- En lugar de onclick, usa data attributes -->
+        <button class="btn-preview preview-btn" data-doc-id="{{ documento.id }}" title="Vista previa">
+            <i class="fas fa-eye"></i> Ver
+        </button>
+    </div>
+</li>
+{% empty %}
+<li class="empty-state">
+    <i class="fas fa-inbox"></i>
+    <p>No hay documentos en esta categoría</p>
+</li>
+{% endfor %}
+            </ul>
+        </div>
+        {% empty %}
+        <div class="empty-state" style="grid-column: 1 / -1;">
+            <i class="fas fa-inbox"></i>
+            <h3>No hay documentos disponibles</h3>
+            <p>Los documentos aparecerán aquí una vez que sean cargados por los administradores.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Modal para vista previa de PDF -->
+    <div class="pdf-viewer-modal" id="pdfViewerModal">
+        <div class="pdf-viewer-content">
+            <div class="pdf-viewer-header">
+                <h3 id="pdfViewerTitle">Vista previa del documento</h3>
+                <button class="close-modal" onclick="closePDFViewer()">
+                    <i class="fas fa-times"></i> Cerrar
+                </button>
+            </div>
+            <div class="pdf-viewer-body">
+                <iframe id="pdfFrame" src=""></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notificación -->
+    <div class="notification" id="notification"></div>
+
+    <script src="{% static 'usuarios/js/contenidoTemas/contenido_temas.js' %}"></script>
+</body>
+</html>
