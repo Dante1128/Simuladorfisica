@@ -1,0 +1,724 @@
+{% extends 'estudiante/base_estudiante.html' %}
+{% load static %}
+{% block title %}Bienvenido al Sistema de Laboratorios{% endblock %}
+
+{% block content %}
+<style>
+:root {
+    --color-bg: #F3F3E0;
+    --color-primary: #133E87;
+    --color-secondary: #608BC1;
+    --color-accent: #CBDCEB;
+    --color-success: #2E8B57;
+    --color-warning: #FFA500;
+    --color-card: #FFFFFF;
+    --color-text-secondary: #5A7AAD;
+    --color-shadow: rgba(19, 62, 135, 0.15);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+body {
+    background: linear-gradient(135deg, #F3F3E0 0%, #E8E8D0 100%);
+    color: var(--color-text);
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* Partículas de fondo animadas */
+.particles {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.particle {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    background: var(--color-secondary);
+    border-radius: 50%;
+    opacity: 0.4;
+    animation: float 15s infinite ease-in-out;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0) translateX(0); }
+    25% { transform: translateY(-100px) translateX(50px); }
+    50% { transform: translateY(-200px) translateX(-50px); }
+    75% { transform: translateY(-100px) translateX(100px); }
+}
+
+/* Contenido principal */
+.main-content {
+    padding: 2rem;
+    position: relative;
+    z-index: 1;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.welcome-section {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(203, 220, 235, 0.5));
+    padding: 2.5rem;
+    border-radius: 20px;
+    margin-bottom: 2rem;
+    border: 2px solid var(--color-accent);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 30px var(--color-shadow);
+    backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
+.welcome-section::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(96, 139, 193, 0.1) 0%, transparent 70%);
+    animation: rotate 20s linear infinite;
+}
+
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.welcome-content {
+    position: relative;
+    z-index: 1;
+    flex: 1;
+}
+
+.welcome-title {
+    font-size: 2.2rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 2px 10px rgba(19, 62, 135, 0.1);
+}
+
+.welcome-image {
+    width: 200px;
+    height: 150px;
+    border-radius: 15px;
+    object-fit: cover;
+    box-shadow: 0 8px 20px rgba(19, 62, 135, 0.3);
+    transition: transform 0.3s;
+}
+
+.welcome-image:hover {
+    transform: scale(1.05);
+}
+
+.progress-stats {
+    display: flex;
+    gap: 2rem;
+    margin-top: 1.5rem;
+}
+
+.stat {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    background: rgba(255, 255, 255, 0.7);
+    padding: 1rem;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px var(--color-shadow);
+    transition: all 0.3s;
+}
+
+.stat:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(19, 62, 135, 0.2);
+}
+
+.stat-icon {
+    font-size: 1.8rem;
+}
+
+.stat-value {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--color-primary);
+}
+
+/* Cards Grid */
+.cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.8rem;
+    margin-bottom: 2rem;
+}
+
+.card {
+    background: var(--color-card);
+    border-radius: 20px;
+    padding: 1.8rem;
+    border: 2px solid var(--color-accent);
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 6px 20px var(--color-shadow);
+}
+
+.card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(19, 62, 135, 0.05), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 12px 30px rgba(19, 62, 135, 0.25);
+    border-color: var(--color-secondary);
+}
+
+.card:hover::before {
+    opacity: 1;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    position: relative;
+    z-index: 1;
+}
+
+.card-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--color-primary);
+}
+
+.card-icon {
+    font-size: 2rem;
+    animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+
+/* Experimentos */
+.experiment-item {
+    background: rgba(203, 220, 235, 0.4);
+    padding: 1.2rem;
+    border-radius: 15px;
+    margin-bottom: 1rem;
+    border-left: 5px solid var(--color-primary);
+    transition: all 0.3s;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(19, 62, 135, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.experiment-item:hover {
+    background: rgba(96, 139, 193, 0.25);
+    transform: translateX(10px);
+    border-left-color: var(--color-secondary);
+    box-shadow: 0 6px 15px rgba(19, 62, 135, 0.2);
+}
+
+.experiment-image {
+    width: 60px;
+    height: 60px;
+    border-radius: 10px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.experiment-info {
+    flex: 1;
+}
+
+.experiment-name {
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+    font-size: 1.1rem;
+    color: var(--color-primary);
+}
+
+.experiment-date {
+    color: var(--color-text-secondary);
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Informes */
+.report-item {
+    background: rgba(203, 220, 235, 0.4);
+    padding: 1.2rem;
+    border-radius: 15px;
+    margin-bottom: 1rem;
+    transition: all 0.3s;
+    box-shadow: 0 4px 10px rgba(19, 62, 135, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.report-item:hover {
+    background: rgba(96, 139, 193, 0.3);
+    transform: scale(1.02);
+    box-shadow: 0 6px 15px rgba(19, 62, 135, 0.2);
+}
+
+.report-image {
+    width: 60px;
+    height: 60px;
+    border-radius: 10px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.report-content {
+    flex: 1;
+}
+
+.report-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.report-name {
+    font-weight: 600;
+    font-size: 1.05rem;
+    color: var(--color-primary);
+}
+
+.report-badge {
+    background: var(--color-warning);
+    color: #000;
+    padding: 0.3rem 0.8rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.progress-bar {
+    height: 10px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 0.8rem;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.progress {
+    height: 100%;
+    background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+    border-radius: 10px;
+    transition: width 1s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.progress::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+/* Calificaciones */
+.grade-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.2rem;
+    background: rgba(203, 220, 235, 0.4);
+    border-radius: 15px;
+    margin-bottom: 1rem;
+    transition: all 0.3s;
+    box-shadow: 0 4px 10px rgba(19, 62, 135, 0.1);
+}
+
+.grade-item:hover {
+    background: rgba(96, 139, 193, 0.3);
+    transform: translateX(5px);
+    box-shadow: 0 6px 15px rgba(19, 62, 135, 0.2);
+}
+
+.grade-value {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--color-success);
+    text-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Botón principal RV */
+.vr-button {
+    width: 100%;
+    padding: 2rem;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    background-size: 200% 200%;
+    border: none;
+    border-radius: 20px;
+    color: white;
+    font-size: 1.5rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+    animation: gradient 3s ease infinite;
+    box-shadow: 0 10px 40px rgba(19, 62, 135, 0.4);
+    margin-top: 1rem;
+}
+
+@keyframes gradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.vr-button::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.vr-button:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+.vr-button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 15px 50px rgba(19, 62, 135, 0.6);
+}
+
+.vr-button:active {
+    transform: scale(0.98);
+}
+
+.button-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+}
+
+/* Avisos */
+.notice-item {
+    background: linear-gradient(135deg, rgba(203, 220, 235, 0.5), rgba(96, 139, 193, 0.2));
+    padding: 1.2rem;
+    border-radius: 15px;
+    margin-bottom: 1rem;
+    border-left: 5px solid var(--color-secondary);
+    transition: all 0.3s;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(19, 62, 135, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.notice-item:hover {
+    transform: translateX(10px);
+    box-shadow: 0 6px 15px rgba(19, 62, 135, 0.2);
+    border-left-color: var(--color-primary);
+}
+
+.notice-image {
+    width: 60px;
+    height: 60px;
+    border-radius: 10px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.notice-content {
+    flex: 1;
+}
+
+.notice-title {
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+    color: var(--color-primary);
+}
+
+.notice-date {
+    color: var(--color-text-secondary);
+    font-size: 0.85rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .cards-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .progress-stats {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .welcome-section {
+        padding: 1.5rem;
+        flex-direction: column;
+    }
+    
+    .welcome-title {
+        font-size: 1.8rem;
+    }
+    
+    .welcome-image {
+        width: 100%;
+        max-width: 300px;
+    }
+}
+</style>
+    <!-- Partículas de fondo -->
+    <div class="particles" id="particles"></div>
+
+    <!-- Contenido Principal -->
+    <main class="main-content">
+        <!-- Sección de Bienvenida -->
+        <div class="welcome-section">
+            <div class="welcome-content">
+                <h1 class="welcome-title">¡Bienvenido de nuevo, {{ usuario.nombre }}! 🚀</h1>
+                <p style="color: var(--color-text-secondary); font-size: 1.1rem; margin-bottom: 1rem;">Continúa tu viaje en el fascinante mundo de la física virtual</p>
+                <div class="progress-stats">
+                    <div class="stat">
+                        <span class="stat-icon">🎯</span>
+                        <div>
+                            <div class="stat-value">12</div>
+                            <div style="font-size: 0.9rem; color: var(--color-text-secondary);">Experimentos completados</div>
+                        </div>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-icon">⭐</span>
+                        <div>
+                            <div class="stat-value">8.5</div>
+                            <div style="font-size: 0.9rem; color: var(--color-text-secondary);">Promedio general</div>
+                        </div>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-icon">🏆</span>
+                        <div>
+                            <div class="stat-value">7</div>
+                            <div style="font-size: 0.9rem; color: var(--color-text-secondary);">Logros desbloqueados</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <img src="https://images.unsplash.com/photo-1635070041078-e363dbe005cb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80" alt="Laboratorio de física" class="welcome-image">
+        </div>
+
+        <!-- Grid de Cards -->
+        <div class="cards-grid">
+            <!-- Próximos Experimentos -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">⚡ Próximos Experimentos</h3>
+                    <div class="card-icon">🔮</div>
+                </div>
+                <div class="experiment-item">
+                    <img src="https://images.unsplash.com/photo-1581094794329-c8112a89af12?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&q=80" alt="Ley de Hooke" class="experiment-image">
+                    <div class="experiment-info">
+                        <div class="experiment-name">Ley de Hooke - Resortes</div>
+                        <div class="experiment-date">⏰ Hoy, 10:00 AM</div>
+                    </div>
+                </div>
+                <div class="experiment-item">
+                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&q=80" alt="Óptica" class="experiment-image">
+                    <div class="experiment-info">
+                        <div class="experiment-name">Óptica - Lentes y Espejos</div>
+                        <div class="experiment-date">⏰ Mañana, 2:00 PM</div>
+                    </div>
+                </div>
+                <div class="experiment-item">
+                    <img src="https://images.unsplash.com/photo-1504608524841-42fe6f032b4b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&q=80" alt="Péndulo" class="experiment-image">
+                    <div class="experiment-info">
+                        <div class="experiment-name">Péndulo Simple</div>
+                        <div class="experiment-date">⏰ 15 Oct, 9:30 AM</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Informes Pendientes -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">📝 Informes Pendientes</h3>
+                    <div class="card-icon">✨</div>
+                </div>
+                <div class="report-item">
+                    <img src="https://images.unsplash.com/photo-1507146426996-ef05306b995a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&q=80" alt="Movimiento Parabólico" class="report-image">
+                    <div class="report-content">
+                        <div class="report-header">
+                            <div class="report-name">Movimiento Parabólico</div>
+                            <div class="report-badge">65%</div>
+                        </div>
+                        <div style="font-size: 0.85rem; color: var(--color-text-secondary); margin-bottom: 0.3rem;">Vence: 12 Oct</div>
+                        <div class="progress-bar">
+                            <div class="progress" style="width: 65%"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="report-item">
+                    <img src="https://images.unsplash.com/photo-1635070041078-e363dbe005cb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&q=80" alt="Conservación de Energía" class="report-image">
+                    <div class="report-content">
+                        <div class="report-header">
+                            <div class="report-name">Conservación de Energía</div>
+                            <div class="report-badge">30%</div>
+                        </div>
+                        <div style="font-size: 0.85rem; color: var(--color-text-secondary); margin-bottom: 0.3rem;">Vence: 18 Oct</div>
+                        <div class="progress-bar">
+                            <div class="progress" style="width: 30%"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="report-item">
+                    <img src="https://images.unsplash.com/photo-1628595351029-c2bf17511435?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&q=80" alt="Circuitos Eléctricos" class="report-image">
+                    <div class="report-content">
+                        <div class="report-header">
+                            <div class="report-name">Circuitos Eléctricos</div>
+                            <div class="report-badge">10%</div>
+                        </div>
+                        <div style="font-size: 0.85rem; color: var(--color-text-secondary); margin-bottom: 0.3rem;">Vence: 25 Oct</div>
+                        <div class="progress-bar">
+                            <div class="progress" style="width: 10%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Avisos -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">📢 Avisos Importantes</h3>
+                    <div class="card-icon">🔔</div>
+                </div>
+                <div class="notice-item">
+                    <img src="https://images.unsplash.com/photo-1581094794329-c8112a89af12?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&q=80" alt="Mantenimiento" class="notice-image">
+                    <div class="notice-content">
+                        <div class="notice-title">🛠️ Mantenimiento del Sistema RV</div>
+                        <div class="notice-date">Publicado: 5 Oct - El sistema estará en mantenimiento el próximo sábado</div>
+                    </div>
+                </div>
+                <div class="notice-item">
+                    <img src="https://images.unsplash.com/photo-1636466497217-26a8cbeaf0aa?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&q=80" alt="Nuevos Experimentos" class="notice-image">
+                    <div class="notice-content">
+                        <div class="notice-title">🆕 Nuevos Experimentos Disponibles</div>
+                        <div class="notice-date">Publicado: 3 Oct - Explora los nuevos laboratorios de electromagnetismo</div>
+                    </div>
+                </div>
+                <div class="notice-item">
+                    <img src="https://images.unsplash.com/photo-1532094349884-543bc11b234d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&q=80" alt="Concurso" class="notice-image">
+                    <div class="notice-content">
+                        <div class="notice-title">🏆 Concurso de Física Virtual</div>
+                        <div class="notice-date">Publicado: 1 Oct - Participa y gana premios increíbles</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botón Principal -->
+        <button class="vr-button" id="vrButton">
+            <div class="button-content">
+                <span style="font-size: 2rem;">🥽</span>
+                <span>ENTRAR AL LABORATORIO VIRTUAL</span>
+                <span style="font-size: 2rem;">✨</span>
+            </div>
+        </button>
+    </main>
+<script>
+// Crear partículas de fondo
+const particlesContainer = document.getElementById('particles');
+for (let i = 0; i < 50; i++) {
+    const particle = document.createElement('div');
+    particle.className = 'particle';
+    particle.style.left = Math.random() * 100 + '%';
+    particle.style.top = Math.random() * 100 + '%';
+    particle.style.animationDelay = Math.random() * 20 + 's';
+    particle.style.animationDuration = (Math.random() * 10 + 15) + 's';
+    particlesContainer.appendChild(particle);
+}
+
+// Botón VR principal
+const vrButton = document.getElementById('vrButton');
+vrButton.addEventListener('click', function() {
+    this.style.transform = 'scale(0.95)';
+    setTimeout(() => {
+        this.style.transform = 'scale(1.05)';
+    }, 100);
+    setTimeout(() => {
+        this.style.transform = 'scale(1)';
+        alert('🚀 Iniciando experiencia de Realidad Virtual...\n\n¡Prepárate para explorar el mundo de la física!');
+    }, 200);
+});
+
+// Hacer experimentos clickeables
+const experimentItems = document.querySelectorAll('.experiment-item');
+experimentItems.forEach(item => {
+    item.addEventListener('click', function() {
+        const name = this.querySelector('.experiment-name').textContent;
+        alert(`📚 Información sobre: ${name}\n\n¡Haz clic en "ENTRAR AL LABORATORIO VIRTUAL" para comenzar!`);
+    });
+});
+
+// Animar barras de progreso al cargar
+window.addEventListener('load', function() {
+    const progressBars = document.querySelectorAll('.progress');
+    progressBars.forEach(bar => {
+        const width = bar.style.width;
+        bar.style.width = '0%';
+        setTimeout(() => {
+            bar.style.width = width;
+        }, 100);
+    });
+});
+</script>
+{% endblock %}

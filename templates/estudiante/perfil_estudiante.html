@@ -1,0 +1,889 @@
+{% extends 'estudiante/base_estudiante.html' %}
+{% load static %}
+{% block title %}Bienvenido al Sistema de Laboratorios{% endblock %}
+
+{% block content %}
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --secondary: #8b5cf6;
+            --accent: #06b6d4;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --dark: #1e293b;
+            --gray: #64748b;
+            --light-gray: #f1f5f9;
+            --white: #ffffff;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            min-height: 100vh;
+
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Header minimalista */
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            color: var(--white);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        /* Grid Layout */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Sidebar con perfil */
+        .profile-sidebar {
+            background: var(--white);
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            height: fit-content;
+            position: sticky;
+            top: 2rem;
+        }
+
+        .profile-image {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            margin: 0 auto 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: var(--white);
+            font-weight: 700;
+            position: relative;
+        }
+
+        .profile-image::after {
+            content: '🎓';
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            width: 36px;
+            height: 36px;
+            background: var(--success);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            border: 3px solid var(--white);
+        }
+
+        .profile-name {
+            text-align: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-name h2 {
+            font-size: 1.5rem;
+            color: var(--dark);
+            margin-bottom: 0.25rem;
+        }
+
+        .profile-name .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--white);
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .profile-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin: 2rem 0;
+            padding: 1.5rem 0;
+            border-top: 1px solid var(--light-gray);
+            border-bottom: 1px solid var(--light-gray);
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--gray);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .quick-actions {
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .quick-action-btn {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            background: var(--light-gray);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            gap: 1rem;
+        }
+
+        .quick-action-btn:hover {
+            background: var(--primary);
+            color: var(--white);
+            transform: translateX(5px);
+        }
+
+        .quick-action-btn .icon {
+            font-size: 1.25rem;
+        }
+
+        .quick-action-btn .text {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        /* Main Content */
+        .main-content {
+            display: grid;
+            gap: 2rem;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--white);
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        .edit-toggle {
+            padding: 0.75rem 1.5rem;
+            background: var(--primary);
+            color: var(--white);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .edit-toggle:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        /* Info Grid */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+
+        .info-field {
+            padding: 1.25rem;
+            background: var(--light-gray);
+            border-radius: 16px;
+            transition: all 0.2s;
+        }
+
+        .info-field:hover {
+            background: #e2e8f0;
+        }
+
+        .info-label {
+            font-size: 0.75rem;
+            color: var(--gray);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .info-value {
+            font-size: 1.1rem;
+            color: var(--dark);
+            font-weight: 600;
+        }
+
+        /* Edit Form */
+        .edit-form {
+            display: none;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 2px solid var(--light-gray);
+        }
+
+        .edit-form.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-field {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-field label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-field input,
+        .form-field select {
+            padding: 1rem;
+            border: 2px solid var(--light-gray);
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .form-field input:focus,
+        .form-field select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--light-gray);
+            color: var(--dark);
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        /* Progress Section */
+        .progress-section {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+
+        .progress-card {
+            padding: 1.5rem;
+            background: var(--light-gray);
+            border-radius: 16px;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .progress-title {
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .progress-percentage {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+
+        /* Activity Card */
+        .activity-list {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .activity-item {
+            display: flex;
+            gap: 1rem;
+            padding: 1.25rem;
+            background: var(--light-gray);
+            border-radius: 16px;
+            transition: all 0.2s;
+        }
+
+        .activity-item:hover {
+            background: #e2e8f0;
+            transform: translateX(5px);
+        }
+
+        .activity-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-title {
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 0.25rem;
+        }
+
+        .activity-time {
+            font-size: 0.85rem;
+            color: var(--gray);
+        }
+
+        /* Courses Grid */
+        .courses-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .course-card {
+            padding: 1.5rem;
+            background: var(--light-gray);
+            border-radius: 16px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .course-card:hover {
+            background: #e2e8f0;
+            transform: translateY(-5px);
+        }
+
+        .course-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .course-name {
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .course-details {
+            font-size: 0.85rem;
+            color: var(--gray);
+            margin-bottom: 1rem;
+        }
+
+        .course-progress {
+            font-size: 0.75rem;
+            color: var(--gray);
+            margin-bottom: 0.5rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .profile-sidebar {
+                position: static;
+            }
+
+            .info-grid,
+            .form-grid,
+            .progress-section {
+                grid-template-columns: 1fr;
+            }
+
+            .courses-grid {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            }
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 1rem;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .card {
+                padding: 1.5rem;
+            }
+
+            .profile-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .courses-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>Mi Perfil Académico</h1>
+            <p>Gestiona tu información y revisa tu progreso</p>
+        </div>
+
+        <!-- Dashboard Grid -->
+        <div class="dashboard-grid">
+            <!-- Sidebar -->
+            <div class="profile-sidebar">
+                <div class="profile-image">MP</div>
+                <div class="profile-name">
+                    <h2>María Pérez</h2>
+                    <span class="badge">Estudiante Activo</span>
+                </div>
+
+                <div class="profile-stats">
+                    <div class="stat-item">
+                        <div class="stat-value">6</div>
+                        <div class="stat-label">Cursos</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">85%</div>
+                        <div class="stat-label">Promedio</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">42</div>
+                        <div class="stat-label">Horas</div>
+                    </div>
+                </div>
+
+                <div class="quick-actions">
+                    <button class="quick-action-btn">
+                        <span class="icon">📚</span>
+                        <span class="text">Mis Cursos</span>
+                    </button>
+                    <button class="quick-action-btn">
+                        <span class="icon">📝</span>
+                        <span class="text">Tareas Pendientes</span>
+                    </button>
+                    <button class="quick-action-btn">
+                        <span class="icon">📊</span>
+                        <span class="text">Calificaciones</span>
+                    </button>
+                    <button class="quick-action-btn">
+                        <span class="icon">📅</span>
+                        <span class="text">Horarios</span>
+                    </button>
+                    <button class="quick-action-btn">
+                        <span class="icon">💬</span>
+                        <span class="text">Mensajes</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="main-content">
+                <!-- Personal Info Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Información Personal</h3>
+                        <button class="edit-toggle" onclick="toggleEdit()">Editar</button>
+                    </div>
+
+                    <div class="info-grid">
+                        <div class="info-field">
+                            <div class="info-label">Nombre Completo</div>
+                            <div class="info-value">María Pérez García</div>
+                        </div>
+                        <div class="info-field">
+                            <div class="info-label">Correo Institucional</div>
+                            <div class="info-value">maria.perez@universidad.edu</div>
+                        </div>
+                        <div class="info-field">
+                            <div class="info-label">Código de Estudiante</div>
+                            <div class="info-value">EST-2024-001</div>
+                        </div>
+                        <div class="info-field">
+                            <div class="info-label">Carrera</div>
+                            <div class="info-value">Ingeniería de Sistemas</div>
+                        </div>
+                        <div class="info-field">
+                            <div class="info-label">Semestre Actual</div>
+                            <div class="info-value">6to Semestre</div>
+                        </div>
+                        <div class="info-field">
+                            <div class="info-label">Teléfono</div>
+                            <div class="info-value">+591 123 456 789</div>
+                        </div>
+                        <div class="info-field">
+                            <div class="info-label">Fecha de Inscripción</div>
+                            <div class="info-value">Marzo 2024</div>
+                        </div>
+                        <div class="info-field">
+                            <div class="info-label">Estado Académico</div>
+                            <div class="info-value">Regular ✓</div>
+                        </div>
+                    </div>
+
+                    <!-- Edit Form -->
+                    <div class="edit-form" id="editForm">
+                        <form onsubmit="handleSubmit(event)">
+                            <div class="form-grid">
+                                <div class="form-field">
+                                    <label>Nombre</label>
+                                    <input type="text" value="María" required>
+                                </div>
+                                <div class="form-field">
+                                    <label>Apellido</label>
+                                    <input type="text" value="Pérez García" required>
+                                </div>
+                                <div class="form-field">
+                                    <label>Correo Electrónico</label>
+                                    <input type="email" value="maria.perez@universidad.edu" required>
+                                </div>
+                                <div class="form-field">
+                                    <label>Teléfono</label>
+                                    <input type="tel" value="+591 123 456 789" required>
+                                </div>
+                                <div class="form-field">
+                                    <label>Dirección</label>
+                                    <input type="text" value="Av. Principal #456, La Paz" required>
+                                </div>
+                                <div class="form-field">
+                                    <label>Teléfono de Emergencia</label>
+                                    <input type="tel" value="+591 987 654 321" required>
+                                </div>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="button" class="btn btn-secondary" onclick="toggleEdit()">Cancelar</button>
+                                <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Progress Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Progreso Académico</h3>
+                    </div>
+
+                    <div class="progress-section">
+                        <div class="progress-card">
+                            <div class="progress-header">
+                                <span class="progress-title">Créditos Completados</span>
+                                <span class="progress-percentage">75%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 75%"></div>
+                            </div>
+                        </div>
+
+                        <div class="progress-card">
+                            <div class="progress-header">
+                                <span class="progress-title">Asistencia General</span>
+                                <span class="progress-percentage">92%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 92%"></div>
+                            </div>
+                        </div>
+
+                        <div class="progress-card">
+                            <div class="progress-header">
+                                <span class="progress-title">Tareas Entregadas</span>
+                                <span class="progress-percentage">88%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 88%"></div>
+                            </div>
+                        </div>
+
+                        <div class="progress-card">
+                            <div class="progress-header">
+                                <span class="progress-title">Participación</span>
+                                <span class="progress-percentage">95%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 95%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Courses Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Cursos Actuales</h3>
+                    </div>
+
+                    <div class="courses-grid">
+                        <div class="course-card">
+                            <div class="course-icon">💻</div>
+                            <div class="course-name">Programación Web</div>
+                            <div class="course-details">Lunes y Miércoles | 14:00 - 16:00</div>
+                            <div class="course-progress">Progreso: 78%</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 78%"></div>
+                            </div>
+                        </div>
+
+                        <div class="course-card">
+                            <div class="course-icon">🗄️</div>
+                            <div class="course-name">Base de Datos</div>
+                            <div class="course-details">Martes y Jueves | 08:00 - 10:00</div>
+                            <div class="course-progress">Progreso: 65%</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 65%"></div>
+                            </div>
+                        </div>
+
+                        <div class="course-card">
+                            <div class="course-icon">🔒</div>
+                            <div class="course-name">Seguridad Informática</div>
+                            <div class="course-details">Viernes | 10:00 - 12:00</div>
+                            <div class="course-progress">Progreso: 82%</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 82%"></div>
+                            </div>
+                        </div>
+
+                        <div class="course-card">
+                            <div class="course-icon">📊</div>
+                            <div class="course-name">Análisis de Datos</div>
+                            <div class="course-details">Martes | 14:00 - 16:00</div>
+                            <div class="course-progress">Progreso: 90%</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 90%"></div>
+                            </div>
+                        </div>
+
+                        <div class="course-card">
+                            <div class="course-icon">🤖</div>
+                            <div class="course-name">Inteligencia Artificial</div>
+                            <div class="course-details">Miércoles | 16:00 - 18:00</div>
+                            <div class="course-progress">Progreso: 55%</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 55%"></div>
+                            </div>
+                        </div>
+
+                        <div class="course-card">
+                            <div class="course-icon">📱</div>
+                            <div class="course-name">Desarrollo Móvil</div>
+                            <div class="course-details">Jueves | 16:00 - 18:00</div>
+                            <div class="course-progress">Progreso: 70%</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 70%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Activity Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Actividad Reciente</h3>
+                    </div>
+
+                    <div class="activity-list">
+                        <div class="activity-item">
+                            <div class="activity-icon">✅</div>
+                            <div class="activity-content">
+                                <div class="activity-title">Tarea de Programación Web entregada</div>
+                                <div class="activity-time">Hace 2 horas</div>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon">📝</div>
+                            <div class="activity-content">
+                                <div class="activity-title">Examen de Base de Datos completado</div>
+                                <div class="activity-time">Ayer</div>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon">⭐</div>
+                            <div class="activity-content">
+                                <div class="activity-title">Calificación recibida: Análisis de Datos (95/100)</div>
+                                <div class="activity-time">Hace 2 días</div>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon">💬</div>
+                            <div class="activity-content">
+                                <div class="activity-title">Nuevo mensaje del profesor de IA</div>
+                                <div class="activity-time">Hace 3 días</div>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon">📚</div>
+                            <div class="activity-content">
+                                <div class="activity-title">Nuevo material disponible en Seguridad Informática</div>
+                                <div class="activity-time">Hace 4 días</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleEdit() {
+            const form = document.getElementById('editForm');
+            const btn = document.querySelector('.edit-toggle');
+            
+            if (form.classList.contains('active')) {
+                form.classList.remove('active');
+                btn.textContent = 'Editar';
+            } else {
+                form.classList.add('active');
+                btn.textContent = 'Cancelar';
+                form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
+        function handleSubmit(event) {
+            event.preventDefault();
+            alert('Cambios guardados exitosamente');
+            toggleEdit();
+        }
+
+        // Smooth hover effects
+        document.querySelectorAll('.quick-action-btn, .activity-item, .info-field, .course-card').forEach(item => {
+            item.addEventListener('mouseenter', function() {
+                this.style.transition = 'all 0.2s ease';
+            });
+        });
+
+        // Animate progress bars on load
+        window.addEventListener('load', function() {
+            const progressBars = document.querySelectorAll('.progress-fill');
+            progressBars.forEach(bar => {
+                const width = bar.style.width;
+                bar.style.width = '0';
+                setTimeout(() => {
+                    bar.style.width = width;
+                }, 100);
+            });
+        });
+    </script>
+</body>
+</html>
+{% endblock %}

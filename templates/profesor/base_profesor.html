@@ -1,0 +1,400 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Panel del Profesor{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --color-fondo: #F3F3E0;
+            --color-primario: #133E87;
+            --color-secundario: #608BC1;
+            --color-terciario: #CBDCEB;
+            --color-borde: #D1D1C7;
+            --color-texto: #333333;
+            --color-texto-claro: #666666;
+            --color-exito: #27ae60;
+            --color-advertencia: #e67e22;
+            --color-peligro: #e74c3c;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--color-fondo);
+            color: var(--color-texto);
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, var(--color-primario) 0%, #0d2e63 100%);
+            color: white;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 3px 0 15px rgba(0, 0, 0, 0.15);
+        }
+        
+        .sidebar-header {
+            padding: 30px 25px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .sidebar-header img {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background-color: white;
+            padding: 7px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .sidebar-header h2 {
+            font-size: 20px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        
+        .sidebar-menu {
+            padding: 25px 0;
+            flex-grow: 1;
+        }
+        
+        .menu-item {
+            padding: 16px 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 4px solid transparent;
+            margin: 5px 0;
+        }
+        
+        .menu-item:hover {
+            background-color: rgba(255, 255, 255, 0.12);
+            transform: translateX(5px);
+        }
+        
+        .menu-item.active {
+            background-color: rgba(255, 255, 255, 0.18);
+            border-left: 4px solid var(--color-secundario);
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .menu-item i {
+            font-size: 20px;
+            width: 24px;
+            text-align: center;
+        }
+        
+        .menu-item span {
+            font-weight: 500;
+            font-size: 16px;
+        }
+        
+        .sidebar-footer {
+            padding: 25px;
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--color-secundario), var(--color-primario));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            color: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .user-details h4 {
+            font-size: 16px;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        
+        .user-details p {
+            font-size: 14px;
+            opacity: 0.85;
+        }
+        
+        .logout-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.05));
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s;
+            font-weight: 500;
+            font-size: 15px;
+        }
+        
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* Main Content */
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        /* Navbar */
+        .navbar {
+            background: linear-gradient(90deg, white 0%, #f8f8f8 100%);
+            padding: 18px 35px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
+            z-index: 100;
+            border-bottom: 1px solid var(--color-borde);
+        }
+        
+        .navbar-left h1 {
+            color: var(--color-primario);
+            font-size: 26px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        
+        .navbar-right {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+        }
+        
+        .notification-icon {
+            position: relative;
+            cursor: pointer;
+            font-size: 22px;
+            color: var(--color-primario);
+            transition: all 0.3s;
+        }
+        
+        .notification-icon:hover {
+            color: var(--color-secundario);
+            transform: scale(1.1);
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: linear-gradient(135deg, var(--color-peligro), #c0392b);
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        .user-welcome {
+            font-size: 16px;
+            color: var(--color-texto);
+            font-weight: 500;
+        }
+        
+        .user-welcome strong {
+            color: var(--color-primario);
+        }
+        
+        /* Content Area */
+        .content {
+            padding: 35px;
+            flex-grow: 1;
+            overflow-y: auto;
+            background-color: var(--color-fondo);
+        }
+        
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .sidebar {
+                width: 240px;
+            }
+        }
+        
+        @media (max-width: 992px) {
+            .sidebar {
+                width: 80px;
+            }
+            
+            .sidebar-header h2, .menu-item span, .user-details, .logout-btn span {
+                display: none;
+            }
+            
+            .sidebar-header {
+                justify-content: center;
+                padding: 25px 15px;
+            }
+            
+            .menu-item {
+                justify-content: center;
+                padding: 18px 15px;
+            }
+            
+            .user-info {
+                justify-content: center;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+            }
+            
+            .sidebar-menu {
+                display: flex;
+                overflow-x: auto;
+                padding: 15px 0;
+            }
+            
+            .menu-item {
+                flex-direction: column;
+                padding: 12px 18px;
+                min-width: 90px;
+                border-left: none;
+                border-bottom: 4px solid transparent;
+            }
+            
+            .menu-item.active {
+                border-left: none;
+                border-bottom: 4px solid var(--color-secundario);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNMTIgMTNsLTEuNzUtMS43NU0xMiAxM2wxLjc1LTEuNzVNMTIgMTNWMThtMi4yNSA5YTMuMDAzIDMuMDAzIDAgMDEtNC41IDBNMTIgM2E5IDkgMCAwMDkgOWMwIDEuNjgxLS41NjQgMy4yMzEtMS41IDQuNDUiPjwvcGF0aD48L3N2Zz4=" alt="Logo">
+            <h2>Sistema Académico</h2>
+        </div>
+        
+        <div class="sidebar-menu">
+            <div class="menu-item active">
+                <i class="fas fa-home"></i>
+                <span>Inicio</span>
+            </div>
+            <div class="menu-item">
+                <i class="fas fa-user-graduate"></i>
+                <span>Mis Alumnos</span>
+            </div>
+            <div class="menu-item">
+                <i class="fas fa-book"></i>
+                <span>Mis Cursos</span>
+            </div>
+            <div class="menu-item">
+                <i class="fas fa-tasks"></i>
+                <span>Asignaciones</span>
+            </div>
+            <div class="menu-item">
+                <i class="fas fa-chart-bar"></i>
+                <span>Calificaciones</span>
+            </div>
+        </div>
+        
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar">JP</div>
+                <div class="user-details">
+                    <h4>Juan Pérez</h4>
+                    <p>Profesor de Matemáticas</p>
+                </div>
+            </div>
+            <button class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Cerrar Sesión</span>
+            </button>
+        </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Navbar -->
+        <div class="navbar">
+            <div class="navbar-left">
+                <h1>Panel del Profesor</h1>
+            </div>
+            <div class="navbar-right">
+                <div class="notification-icon">
+                    <i class="fas fa-bell"></i>
+                    <div class="notification-badge">3</div>
+                </div>
+                <div class="user-welcome">Bienvenido, <strong>Juan Pérez</strong></div>
+            </div>
+        </div>
+        
+        <!-- Content Area -->
+        <div class="content">
+            {% block content %}
+            <!-- El contenido específico de cada página irá aquí -->
+            {% endblock %}
+        </div>
+    </div>
+
+    <script>
+        // Activar elementos del menú al hacer clic
+        document.querySelectorAll('.menu-item').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.menu-item').forEach(i => {
+                    i.classList.remove('active');
+                });
+                this.classList.add('active');
+            });
+        });
+        
+        // Simular notificaciones
+        document.querySelector('.notification-icon').addEventListener('click', function() {
+            alert('Tienes 3 notificaciones:\n- Nueva tarea enviada\n- Reunión de profesores hoy a las 16:00\n- Recordatorio: Entrega de calificaciones');
+        });
+    </script>
+</body>
+</html>
