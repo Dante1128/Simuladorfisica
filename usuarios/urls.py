@@ -45,4 +45,9 @@ urlpatterns = [
     path('editar-colegio/<int:colegio_id>/', views.editar_colegio, name='editar_colegio'),
     path('eliminar-colegio/<int:colegio_id>/', views.eliminar_colegio, name='eliminar_colegio'),
     path('exportar-colegios/', views.exportar_colegios, name='exportar_colegios'),
+    path('gestion-documentos/', views.gestion_documentos, name='gestion_documentos'),
+    path('contenido-teorico/', views.contenido_teorico, name='contenido_teorico'),
+    path('documentos/<int:documento_id>/descargar/', views.descargar_documento, name='descargar_documento'),
+    path('documentos/<int:documento_id>/preview/', views.preview_documento, name='preview_documento')
+   
 ]
