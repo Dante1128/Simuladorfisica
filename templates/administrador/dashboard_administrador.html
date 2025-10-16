@@ -1,0 +1,669 @@
+{% extends 'administrador/base_admin.html' %}
+{% load static %}
+{% block title %}Dashboard - Informes y Reportes{% endblock %}
+
+{% block content %}
+<div class="dashboard-admin">
+    <!-- Header -->
+    <div class="dashboard-header">
+        <div class="header-main">
+            <h1 class="page-title">
+                <span class="icon">📊</span>
+                Dashboard - Informes y Reportes
+            </h1>
+            <div class="user-info">
+                <div class="avatar">AD</div>
+                <span class="user-name">Administrador</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filters-container">
+        <div class="section-title">
+            <span class="icon">⚙️</span>
+            Filtros de Datos
+        </div>
+        <form method="GET" class="filters-form">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label class="filter-label">Fecha inicio:</label>
+                    <input type="date" name="fecha_inicio" value="{{ fecha_inicio|default:'' }}" class="filter-input">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Fecha fin:</label>
+                    <input type="date" name="fecha_fin" value="{{ fecha_fin|default:'' }}" class="filter-input">
+                </div>
+                <div class="filter-actions">
+                    <button type="submit" class="btn btn-filter">
+                        <span class="btn-icon">🔍</span>
+                        Filtrar
+                    </button>
+                    <a href="{% url 'dashboard_administrador' %}" class="btn btn-clear">
+                        <span class="btn-icon">🔄</span>
+                        Limpiar
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="stats-container">
+        <div class="stats-grid">
+            <!-- Tarjeta Estudiantes -->
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon">🎓</div>
+                    <h3 class="stat-title">TOTAL ESTUDIANTES</h3>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number">{{ estadisticas.total_estudiantes|default:"0" }}</div>
+                    <a href="{% url 'reporte_estudiantes' %}" class="download-btn">
+                        <span class="download-icon">📥</span>
+                        Descargar PDF
+                    </a>
+                </div>
+            </div>
+
+            <!-- Tarjeta Profesores -->
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon">🧑‍🏫</div>
+                    <h3 class="stat-title">TOTAL PROFESORES</h3>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number">{{ estadisticas.total_profesores|default:"0" }}</div>
+                    <a href="{% url 'reporte_profesores' %}" class="download-btn">
+                        <span class="download-icon">📥</span>
+                        Descargar PDF
+                    </a>
+                </div>
+            </div>
+
+            <!-- Tarjeta Cursos -->
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon">📚</div>
+                    <h3 class="stat-title">TOTAL CURSOS</h3>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number">{{ estadisticas.total_cursos|default:"0" }}</div>
+                    <a href="{% url 'reporte_cursos' %}" class="download-btn">
+                        <span class="download-icon">📥</span>
+                        Descargar PDF
+                    </a>
+                </div>
+            </div>
+
+            <!-- Tarjeta Membresía -->
+            <div class="stat-card membership-card">
+                <div class="stat-header">
+                    <div class="stat-icon">🌟</div>
+                    <h3 class="stat-title">MEMBRESÍA ACTUAL</h3>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number">{{ estadisticas.membresia_actual|default:"Sin membresía" }}</div>
+                    <div class="membership-details">
+                        <div class="detail-row">
+                            <span class="detail-label">Usuarios:</span>
+                            <span class="detail-value">{{ estadisticas.usuarios_actuales|default:"0" }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Días restantes:</span>
+                            <span class="detail-value">{{ estadisticas.dias_restantes|default:"0" }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficos -->
+    <div class="charts-container">
+        <div class="section-title">Visualización de Datos</div>
+        <div class="charts-grid">
+            <div class="chart-wrapper">
+                <div class="chart-header">
+                    <h3 class="chart-title">
+                        <span class="icon">🥧</span>
+                        Distribución de Estudiantes por Curso
+                    </h3>
+                </div>
+                <div class="chart-area">
+                    <div id="chartTorta" class="chart"></div>
+                </div>
+            </div>
+
+            <div class="chart-wrapper">
+                <div class="chart-header">
+                    <h3 class="chart-title">
+                        <span class="icon">📊</span>
+                        Cursos con Más Estudiantes
+                    </h3>
+                </div>
+                <div class="chart-area">
+                    <div id="chartBarras" class="chart"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Highcharts -->
+<script src="https://code.highcharts.com/highcharts.js"></script>
+
+<script>
+    // Manejo seguro de datos desde Django
+    let datosTorta = [];
+    let datosBarras = { cursos: [], estudiantes: [] };
+
+    try {
+        // Parsear datos de torta
+        const tortaRaw = '{{ datos_torta_cursos|escapejs }}';
+        console.log("Datos torta crudos:", tortaRaw);
+        
+        if (tortaRaw && tortaRaw !== 'None' && tortaRaw !== '[]') {
+            datosTorta = JSON.parse(tortaRaw.replace(/&quot;/g, '"'));
+        }
+        
+        // Parsear datos de barras
+        const barrasRaw = '{{ datos_barras_cursos|escapejs }}';
+        console.log("Datos barras crudos:", barrasRaw);
+        
+        if (barrasRaw && barrasRaw !== 'None' && barrasRaw !== '{"cursos": [], "estudiantes": []}') {
+            datosBarras = JSON.parse(barrasRaw.replace(/&quot;/g, '"'));
+        }
+    } catch (error) {
+        console.error('Error parsing chart data:', error);
+        // Datos de ejemplo como fallback
+        datosTorta = [
+            { name: 'Curso A', y: 10 },
+            { name: 'Curso B', y: 5 },
+            { name: 'Curso C', y: 3 }
+        ];
+        datosBarras = {
+            cursos: ['Curso A', 'Curso B', 'Curso C'],
+            estudiantes: [10, 5, 3]
+        };
+    }
+
+    // Gráfico de Torta
+    if (document.getElementById('chartTorta') && datosTorta.length > 0) {
+        Highcharts.chart('chartTorta', {
+            chart: { 
+                type: 'pie',
+                backgroundColor: 'transparent',
+                height: 280
+            },
+            title: { text: null },
+            tooltip: { 
+                pointFormat: '<b>{point.y}</b> estudiantes ({point.percentage:.1f}%)' 
+            },
+            plotOptions: {
+                pie: {
+                    allowPointSelect: true,
+                    cursor: 'pointer',
+                    dataLabels: { 
+                        enabled: true, 
+                        format: '<b>{point.name}</b>: {point.y}',
+                        distance: -30
+                    },
+                    showInLegend: true
+                }
+            },
+            series: [{
+                name: 'Estudiantes',
+                colorByPoint: true,
+                data: datosTorta
+            }],
+            credits: { enabled: false }
+        });
+    } else if (document.getElementById('chartTorta')) {
+        document.getElementById('chartTorta').innerHTML = 
+            '<div class="no-data"><p>No hay datos disponibles</p></div>';
+    }
+
+    // Gráfico de Barras
+    if (document.getElementById('chartBarras') && datosBarras.cursos.length > 0) {
+        Highcharts.chart('chartBarras', {
+            chart: { 
+                type: 'column',
+                backgroundColor: 'transparent',
+                height: 280
+            },
+            title: { text: null },
+            xAxis: { 
+                categories: datosBarras.cursos,
+                title: { text: null }
+            },
+            yAxis: {
+                min: 0,
+                title: { text: 'Estudiantes' }
+            },
+            tooltip: { 
+                valueSuffix: ' estudiantes' 
+            },
+            plotOptions: { 
+                column: { 
+                    dataLabels: { enabled: true } 
+                } 
+            },
+            legend: { enabled: false },
+            series: [{
+                name: 'Estudiantes',
+                data: datosBarras.estudiantes,
+                color: '#608BC1'
+            }],
+            credits: { enabled: false }
+        });
+    } else if (document.getElementById('chartBarras')) {
+        document.getElementById('chartBarras').innerHTML = 
+            '<div class="no-data"><p>No hay datos disponibles</p></div>';
+    }
+</script>
+
+<style>
+    /* Variables de diseño */
+    :root {
+        --primary-blue: #133E87;
+        --secondary-blue: #608BC1;
+        --light-blue: #CBDCEB;
+        --background: #F3F3E0;
+        --white: #FFFFFF;
+        --text-dark: #333333;
+        --text-light: #666666;
+        --border: #E0E0E0;
+        --shadow: 0 2px 8px rgba(0,0,0,0.1);
+        --shadow-hover: 0 4px 12px rgba(0,0,0,0.15);
+        --border-radius: 8px;
+    }
+
+    /* Reset y base */
+    .dashboard-admin {
+        min-height: 100vh;
+        background: var(--background);
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+    }
+
+    /* Header */
+    .dashboard-header {
+        background: var(--white);
+        border-radius: var(--border-radius);
+        padding: 24px;
+        box-shadow: var(--shadow);
+    }
+
+    .header-main {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .page-title {
+        font-size: 24px;
+        font-weight: 600;
+        color: var(--primary-blue);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .page-title .icon {
+        font-size: 28px;
+    }
+
+    .user-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .avatar {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, var(--secondary-blue), var(--primary-blue));
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--white);
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .user-name {
+        font-weight: 500;
+        color: var(--text-dark);
+    }
+
+    /* Filtros */
+    .filters-container {
+        background: var(--white);
+        border-radius: var(--border-radius);
+        padding: 24px;
+        box-shadow: var(--shadow);
+    }
+
+    .section-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--primary-blue);
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .filters-form {
+        width: 100%;
+    }
+
+    .filter-row {
+        display: flex;
+        align-items: end;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        flex: 1;
+        min-width: 200px;
+    }
+
+    .filter-label {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-dark);
+    }
+
+    .filter-input {
+        padding: 12px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        font-size: 14px;
+        transition: border-color 0.3s;
+    }
+
+    .filter-input:focus {
+        outline: none;
+        border-color: var(--secondary-blue);
+        box-shadow: 0 0 0 2px rgba(96, 139, 193, 0.1);
+    }
+
+    .filter-actions {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 8px;
+    }
+
+    /* Botones */
+    .btn {
+        padding: 12px 20px;
+        border: none;
+        border-radius: 6px;
+        font-weight: 500;
+        font-size: 14px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-filter {
+        background: var(--secondary-blue);
+        color: var(--white);
+    }
+
+    .btn-filter:hover {
+        background: var(--primary-blue);
+        transform: translateY(-1px);
+    }
+
+    .btn-clear {
+        background: var(--light-blue);
+        color: var(--primary-blue);
+    }
+
+    .btn-clear:hover {
+        background: var(--secondary-blue);
+        color: var(--white);
+    }
+
+    /* Estadísticas */
+    .stats-container {
+        width: 100%;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
+    }
+
+    .stat-card {
+        background: var(--white);
+        border-radius: var(--border-radius);
+        padding: 24px;
+        box-shadow: var(--shadow);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: 1px solid var(--border);
+    }
+
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-hover);
+    }
+
+    .stat-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .stat-icon {
+        font-size: 32px;
+    }
+
+    .stat-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-light);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin: 0;
+    }
+
+    .stat-content {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .stat-number {
+        font-size: 36px;
+        font-weight: 700;
+        color: var(--primary-blue);
+        line-height: 1;
+    }
+
+    .download-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        background: var(--light-blue);
+        color: var(--primary-blue);
+        text-decoration: none;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        border: 1px solid transparent;
+    }
+
+    .download-btn:hover {
+        background: var(--secondary-blue);
+        color: var(--white);
+        transform: translateY(-1px);
+    }
+
+    /* Tarjeta de membresía especial */
+    .membership-card {
+        background: linear-gradient(135deg, var(--secondary-blue), var(--primary-blue));
+        color: var(--white);
+        border: none;
+    }
+
+    .membership-card .stat-title,
+    .membership-card .stat-number {
+        color: var(--white);
+    }
+
+    .membership-card .download-btn {
+        background: rgba(255,255,255,0.2);
+        color: var(--white);
+        border: 1px solid rgba(255,255,255,0.3);
+    }
+
+    .membership-card .download-btn:hover {
+        background: var(--white);
+        color: var(--primary-blue);
+    }
+
+    .membership-details {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .detail-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 14px;
+    }
+
+    .detail-label {
+        opacity: 0.9;
+    }
+
+    .detail-value {
+        font-weight: 600;
+    }
+
+    /* Gráficos */
+    .charts-container {
+        background: var(--white);
+        border-radius: var(--border-radius);
+        padding: 24px;
+        box-shadow: var(--shadow);
+    }
+
+    .charts-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+    }
+
+    .chart-wrapper {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .chart-header {
+        margin-bottom: 20px;
+    }
+
+    .chart-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--primary-blue);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .chart-area {
+        flex: 1;
+        min-height: 300px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .chart {
+        width: 100%;
+        height: 100%;
+    }
+
+    .no-data {
+        text-align: center;
+        color: var(--text-light);
+        font-style: italic;
+        padding: 40px 20px;
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+        .charts-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .dashboard-admin {
+            padding: 16px;
+            gap: 20px;
+        }
+
+        .header-main {
+            flex-direction: column;
+            gap: 16px;
+            text-align: center;
+        }
+
+        .filter-row {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .filter-group {
+            min-width: auto;
+        }
+
+        .filter-actions {
+            justify-content: center;
+        }
+
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .stat-number {
+            font-size: 32px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .page-title {
+            font-size: 20px;
+        }
+
+        .chart-title {
+            font-size: 14px;
+        }
+    }
+</style>
+{% endblock %}
