@@ -265,11 +265,10 @@ def panel_estudiante(request):
     """Vista básica para panel de administración"""
     usuario_id = request.session.get('usuario_id')
     if not usuario_id:
-        return render(request, 'estudiante/panel_estudiante.html', {"usuario": None})
-    
+        return redirect('login')
     try:
         usuario = Usuario.objects.get(id=usuario_id)
-        return render(request, 'estudiante/panel_estudiante.html', {"usuario": None})
+        return render(request, 'estudiante/panel_estudiante.html', {"usuario": usuario})
     except Usuario.DoesNotExist:
         return redirect('login')
 
@@ -423,11 +422,10 @@ def panel_profesor(request):
     # """Vista básica para panel de administración"""
     usuario_id = request.session.get('usuario_id')
     if not usuario_id:
-       # return redirect('login')
-        return render(request, 'profesor/panel_profesor.html', {"usuario": None})
+       return redirect('login')
     try:
         usuario = Usuario.objects.get(id=usuario_id)
-        return render(request, 'profesor/panel_profesor.html', {"usuario": None})
+        return render(request, 'profesor/panel_profesor.html', {"usuario": usuario})
     except Usuario.DoesNotExist:
         return redirect('login')
 #===========================================
