@@ -11,6 +11,11 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from .models import Laboratorio
 from django.utils import timezone
+from django.db.models import Q
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from .models import Componente
+from .forms import ComponenteForm
+from django.shortcuts import get_object_or_404
 
 def index(request):
     return render(request, 'paginaWeb/index.html')
@@ -37,6 +42,83 @@ def perfil_admin(request):
     usuario_id = request.session.get('usuario_id')
     if not usuario_id:
         return redirect('login')
+
+
+def componentes_list(request):
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        return redirect('login')
+    q = request.GET.get('q', '').strip()
+    qs = Componente.objects.select_related('tema', 'laboratorio').all()
+    if q:
+        qs = qs.filter(Q(nombre__icontains=q) | Q(tema__nombre_archivo__icontains=q))
+
+    # paginación simple
+    page = request.GET.get('page', 1)
+    paginator = Paginator(qs, 12)  # 12 por página
+    try:
+        componentes_page = paginator.page(page)
+    except PageNotAnInteger:
+        componentes_page = paginator.page(1)
+    except EmptyPage:
+        componentes_page = paginator.page(paginator.num_pages)
+
+    context = {
+        'componentes': componentes_page,
+        'page_obj': componentes_page,
+        'paginator': paginator,
+        'q': q,
+    }
+    return render(request, 'administrador/componentes_list.html', context)
+
+
+def componente_create(request):
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        return redirect('login')
+
+    if request.method == 'POST':
+        form = ComponenteForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Componente creado correctamente')
+            return redirect('componentes_list')
+    else:
+        form = ComponenteForm()
+
+    return render(request, 'administrador/componente_form.html', {'form': form, 'accion': 'Agregar'})
+
+
+def componente_update(request, pk):
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        return redirect('login')
+
+    componente = get_object_or_404(Componente, pk=pk)
+    if request.method == 'POST':
+        form = ComponenteForm(request.POST, request.FILES, instance=componente)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Componente actualizado correctamente')
+            return redirect('componentes_list')
+    else:
+        form = ComponenteForm(instance=componente)
+
+    return render(request, 'administrador/componente_form.html', {'form': form, 'accion': 'Editar'})
+
+
+def componente_delete_confirm(request, pk):
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        return redirect('login')
+
+    componente = get_object_or_404(Componente, pk=pk)
+    if request.method == 'POST':
+        componente.delete()
+        messages.success(request, 'Componente eliminado')
+        return redirect('componentes_list')
+
+    return render(request, 'administrador/componente_confirm_delete.html', {'componente': componente})
     
     try:
         usuario = Usuario.objects.get(id=usuario_id)
