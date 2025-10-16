@@ -20,6 +20,30 @@ from django.db.models import Q
 import csv
 import json
 from django.db import models
+
+# LIBRERIAS AGREGADAS
+from django.db.models import Count, Q, Sum
+from .models import (
+    Usuario, Colegio, Estudiante, Profesor, 
+    Administrador, Suscripcion, Membresia, 
+    Curso, Temas, Laboratorio, Pago, Rol
+)
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter, A4
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib import colors
+import io
+from datetime import datetime
+from django.shortcuts import render, get_object_or_404
+from django.http import HttpResponse
+from django.db.models import Q
+import base64
+from .models import Documento  
+from django.http import JsonResponse
+from django.contrib.admin.views.decorators import staff_member_required
+import json
+
 def index(request):
     return render(request, 'paginaWeb/index.html')
 def base_cliente(request):
@@ -262,7 +286,6 @@ def panel_estudiante(request):
     usuario_id = request.session.get('usuario_id')
     if not usuario_id:
         return redirect('login')
-    
     try:
         usuario = Usuario.objects.get(id=usuario_id)
         return render(request, 'estudiante/panel_estudiante.html', {"usuario": usuario})
@@ -490,19 +513,19 @@ def componente_delete_confirm(request, pk):
     except Usuario.DoesNotExist:
         return redirect('login')
     
+    
+
 def panel_profesor(request):
-    """Vista básica para panel de administración"""
+    # """Vista básica para panel de administración"""
     usuario_id = request.session.get('usuario_id')
     if not usuario_id:
-        return redirect('login')
-    
+       return redirect('login')
     try:
         usuario = Usuario.objects.get(id=usuario_id)
         return render(request, 'profesor/panel_profesor.html', {"usuario": usuario})
     except Usuario.DoesNotExist:
-        return redirect('login')  
-
-#====================================================================
+        return redirect('login')
+#===========================================
 #LOGIN
 #====================================================================
 def login(request):
@@ -547,3 +570,1028 @@ def login(request):
         
     # ⚠️ Muy importante: SIEMPRE retornar algo si no es POST
     return render(request, 'registration/login.html')
+
+# ====================================================================
+# DECORATOR PERSONALIZADO PARA AUTENTICACIÓN
+# ====================================================================
+def login_required_custom(view_func):
+    def _wrapped_view(request, *args, **kwargs):
+        usuario_id = request.session.get('usuario_id')
+        if not usuario_id:
+            messages.error(request, 'Debe iniciar sesión')
+            return redirect('login')
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
+
+# ====================================================================
+# DASHBOARD SUPERADMINISTRADOR
+# ====================================================================
+@login_required_custom
+def dashboard_superadmin(request):
+    usuario_id = request.session.get('usuario_id')
+    
+    try:
+        usuario = Usuario.objects.get(id=usuario_id)
+        
+        # Verificar que sea superadministrador
+        if not usuario.rol or usuario.rol.tipo.lower() != 'superadministrador':
+            messages.error(request, 'No tiene permisos para acceder a esta página')
+            return redirect('panel_admin')
+        
+        # FILTROS
+        fecha_inicio = request.GET.get('fecha_inicio', '')
+        fecha_fin = request.GET.get('fecha_fin', '')
+        filtro_colegio = request.GET.get('colegio', '')
+        
+        # Consultas base
+        colegios_query = Colegio.objects.all()
+        usuarios_query = Usuario.objects.all()
+        estudiantes_query = Estudiante.objects.all()
+        profesores_query = Profesor.objects.all()
+        suscripciones_query = Suscripcion.objects.all()
+        pagos_query = Pago.objects.filter(estado='aprobado')
+        
+        # Aplicar filtros
+        if fecha_inicio and fecha_fin:
+            try:
+                fecha_inicio_dt = datetime.strptime(fecha_inicio, '%Y-%m-%d').date()
+                fecha_fin_dt = datetime.strptime(fecha_fin, '%Y-%m-%d').date()
+                suscripciones_query = suscripciones_query.filter(
+                    fecha_inicio__gte=fecha_inicio_dt,
+                    fecha_fin__lte=fecha_fin_dt
+                )
+                pagos_query = pagos_query.filter(
+                    fecha__date__gte=fecha_inicio_dt,
+                    fecha__date__lte=fecha_fin_dt
+                )
+            except ValueError:
+                messages.error(request, 'Formato de fecha inválido')
+        
+        if filtro_colegio:
+            estudiantes_query = estudiantes_query.filter(colegio_id=filtro_colegio)
+            profesores_query = profesores_query.filter(colegio_id=filtro_colegio)
+            suscripciones_query = suscripciones_query.filter(colegio_id=filtro_colegio)
+        
+        # ESTADÍSTICAS PRINCIPALES
+        total_ingresos = pagos_query.aggregate(total=Sum('monto'))['total'] or 0
+        
+        estadisticas = {
+            'total_colegios': colegios_query.count(),
+            'total_usuarios': usuarios_query.count(),
+            'total_estudiantes': estudiantes_query.count(),
+            'total_profesores': profesores_query.count(),
+            'total_suscripciones': suscripciones_query.count(),
+            'ingresos_totales': float(total_ingresos),
+        }
+        
+        # GRÁFICO DE TORTA - Distribución de usuarios por rol
+        distribucion_roles = Usuario.objects.values('rol__tipo').annotate(
+            total=Count('id')
+        ).order_by('-total')
+        
+        datos_torta_roles = []
+        for item in distribucion_roles:
+            nombre_rol = item['rol__tipo'] if item['rol__tipo'] else 'Sin rol'
+            datos_torta_roles.append({
+                'name': nombre_rol, 
+                'y': item['total']
+            })
+        
+        # GRÁFICO DE BARRAS - Colegios con más estudiantes
+        colegios_estudiantes = Colegio.objects.annotate(
+            total_estudiantes=Count('estudiantes')
+        ).order_by('-total_estudiantes')[:10]
+        
+        datos_barras_colegios = {
+            'colegios': [colegio.nombre[:20] + '...' if len(colegio.nombre) > 20 else colegio.nombre 
+                         for colegio in colegios_estudiantes],
+            'estudiantes': [colegio.total_estudiantes for colegio in colegios_estudiantes]
+        }
+        
+        # GRÁFICO DE BARRAS - Tipos de membresías
+        membresias_suscripciones = Membresia.objects.annotate(
+            total_suscripciones=Count('suscripciones')
+        ).order_by('-total_suscripciones')
+        
+        datos_barras_membresias = {
+            'membresias': [membresia.nombre for membresia in membresias_suscripciones],
+            'suscripciones': [membresia.total_suscripciones for membresia in membresias_suscripciones]
+        }
+        
+        # TABLA DE SUSCRIPCIONES RECIENTES
+        suscripciones_recientes = suscripciones_query.select_related(
+            'colegio', 'membresia'
+        ).order_by('-fecha_inicio')[:10]
+        
+        # TABLA DE PAGOS RECIENTES
+        pagos_recientes = pagos_query.select_related('usuario').order_by('-fecha')[:10]
+        
+        context = {
+            'usuario': usuario,
+            'estadisticas': estadisticas,
+            'datos_torta_roles': json.dumps(datos_torta_roles),
+            'datos_barras_colegios': json.dumps(datos_barras_colegios),
+            'datos_barras_membresias': json.dumps(datos_barras_membresias),
+            'suscripciones_recientes': suscripciones_recientes,
+            'pagos_recientes': pagos_recientes,
+            'colegios': colegios_query,
+            'fecha_inicio': fecha_inicio,
+            'fecha_fin': fecha_fin,
+            'filtro_colegio': filtro_colegio,
+        }
+        
+        return render(request, 'superadministrador/dashboard_superadmin.html', context)
+        
+    except Usuario.DoesNotExist:
+        messages.error(request, 'Usuario no encontrado')
+        return redirect('login')
+    except Exception as e:
+        messages.error(request, f'Error: {str(e)}')
+        return redirect('panel_admin')
+
+# ====================================================================
+# DASHBOARD ADMINISTRADOR 
+# ====================================================================
+@login_required_custom
+def dashboard_administrador(request):
+    usuario_id = request.session.get('usuario_id')
+
+    try:
+        usuario = Usuario.objects.get(id=usuario_id)
+        
+        # ===============================================================
+        # VERIFICACIÓN DE ROL
+        # ===============================================================
+        if not usuario.rol:
+            messages.error(request, 'Usuario sin rol asignado')
+            return redirect('panel_admin')
+
+        rol_lower = usuario.rol.tipo.strip().lower()
+
+        # Solo administradores o superadministradores pueden acceder
+        if rol_lower not in ['administrador', 'superadministrador']:
+            messages.error(request, f'No tiene permisos para acceder al dashboard. Rol actual: {usuario.rol.tipo}')
+            
+            # Redirigir según su rol real
+            if rol_lower == 'profesor':
+                return redirect('panel_profesor')
+            elif rol_lower == 'estudiante':
+                return redirect('panel_estudiante')
+            else:
+                return redirect('login')
+
+        # ===============================================================
+        # PERFIL DE ADMINISTRADOR Y COLEGIO
+        # ===============================================================
+        administrador = Administrador.objects.filter(usuario=usuario).first()
+
+        if administrador and administrador.colegio:
+            colegio_admin = administrador.colegio
+        else:
+            colegio_admin = Colegio.objects.first()
+            if not colegio_admin:
+                messages.error(request, 'No hay colegios configurados en el sistema')
+                context = {
+                    'usuario': usuario,
+                    'administrador': None,
+                    'colegio': None,
+                    'estadisticas': {},
+                    'datos_torta_cursos': json.dumps([]),
+                    'datos_barras_cursos': json.dumps({'cursos': [], 'estudiantes': []}),
+                    'estudiantes_recientes': [],
+                    'profesores': [],
+                    'fecha_inicio': '',
+                    'fecha_fin': '',
+                }
+                return render(request, 'administrador/dashboard_administrador.html', context)
+
+        # ===============================================================
+        # FILTROS
+        # ===============================================================
+        fecha_inicio = request.GET.get('fecha_inicio', '')
+        fecha_fin = request.GET.get('fecha_fin', '')
+
+        # ===============================================================
+        # CONSULTAS BASE
+        # ===============================================================
+        estudiantes_query = Estudiante.objects.filter(colegio=colegio_admin)
+        profesores_query = Profesor.objects.filter(colegio=colegio_admin)
+        cursos_query = Curso.objects.filter(profesor__colegio=colegio_admin)
+
+        suscripcion_query = Suscripcion.objects.filter(
+            colegio=colegio_admin,
+            fecha_fin__gte=timezone.now().date()
+        ).first()
+
+        # ===============================================================
+        # ESTADÍSTICAS PRINCIPALES
+        # ===============================================================
+        try:
+            dias_restantes = 0
+            if suscripcion_query:
+                dias_restantes = max(
+                    (suscripcion_query.fecha_fin - timezone.now().date()).days, 0
+                )
+            
+            estadisticas = {
+                'total_estudiantes': estudiantes_query.count(),
+                'total_profesores': profesores_query.count(),
+                'total_cursos': cursos_query.count(),
+                'membresia_actual': suscripcion_query.membresia.nombre if suscripcion_query else 'Sin membresía',
+                'usuarios_actuales': suscripcion_query.usuarios_actuales if suscripcion_query else 0,
+                'dias_restantes': dias_restantes,
+            }
+        except Exception as e:
+            print(f"Error calculando estadísticas: {e}")
+            estadisticas = {
+                'total_estudiantes': 0,
+                'total_profesores': 0,
+                'total_cursos': 0,
+                'membresia_actual': 'Error en datos',
+                'usuarios_actuales': 0,
+                'dias_restantes': 0,
+            }
+
+        # ===============================================================
+        # GRÁFICO DE TORTA - Estudiantes por curso
+        # ===============================================================
+        try:
+            estudiantes_por_curso = estudiantes_query.values('curso__nombre').annotate(
+                total=Count('id')
+            ).order_by('-total')
+
+            datos_torta_cursos = [
+                {'name': item['curso__nombre'] or 'Sin curso', 'y': item['total']}
+                for item in estudiantes_por_curso
+            ] or [{'name': 'No hay datos', 'y': 1}]
+        except Exception as e:
+            print(f"Error en gráfico de torta: {e}")
+            datos_torta_cursos = [{'name': 'Error en datos', 'y': 1}]
+
+        # ===============================================================
+        # GRÁFICO DE BARRAS - Cursos con más estudiantes
+        # ===============================================================
+        try:
+            cursos_con_estudiantes = estudiantes_query.values('curso__nombre').annotate(
+                total=Count('id')
+            ).order_by('-total')[:5]
+
+            datos_barras_cursos = {
+                'cursos': [c['curso__nombre'] or 'Sin curso' for c in cursos_con_estudiantes],
+                'estudiantes': [c['total'] for c in cursos_con_estudiantes]
+            }
+
+            if not datos_barras_cursos['cursos']:
+                datos_barras_cursos = {'cursos': ['No hay datos'], 'estudiantes': [0]}
+        except Exception as e:
+            print(f"Error en gráfico de barras: {e}")
+            datos_barras_cursos = {'cursos': ['Error en datos'], 'estudiantes': [0]}
+
+        # ===============================================================
+        # TABLAS
+        # ===============================================================
+        try:
+            estudiantes_recientes = estudiantes_query.select_related('persona', 'colegio').order_by('-id')[:10]
+        except:
+            estudiantes_recientes = []
+
+        try:
+            profesores_lista = profesores_query.select_related('usuario', 'colegio').order_by('usuario__correo')
+        except:
+            profesores_lista = []
+
+        # ===============================================================
+        # CONTEXTO FINAL
+        # ===============================================================
+        context = {
+            'usuario': usuario,
+            'administrador': administrador,
+            'colegio': colegio_admin,
+            'estadisticas': estadisticas,
+            'datos_torta_cursos': json.dumps(datos_torta_cursos),
+            'datos_barras_cursos': json.dumps(datos_barras_cursos),
+            'estudiantes_recientes': estudiantes_recientes,
+            'profesores': profesores_lista,
+            'fecha_inicio': fecha_inicio,
+            'fecha_fin': fecha_fin,
+        }
+
+        return render(request, 'administrador/dashboard_administrador.html', context)
+
+    except Usuario.DoesNotExist:
+        messages.error(request, 'Usuario no encontrado')
+        return redirect('login')
+    except Exception as e:
+        print(f"Error crítico en dashboard_administrador: {str(e)}")
+        messages.error(request, f'Error al cargar el dashboard: {str(e)}')
+        return redirect('panel_admin')
+
+
+# ====================================================================
+# DASHBOARD PROFESOR 
+# ====================================================================
+@login_required_custom
+def dashboard_profesor(request):
+    usuario_id = request.session.get('usuario_id')
+    
+    try:
+        usuario = Usuario.objects.get(id=usuario_id)
+        
+        # Verificar que sea profesor - CORREGIDO
+        if not usuario.rol:
+            messages.error(request, 'Usuario sin rol asignado')
+            return redirect('panel_profesor')  # Redirigir a su propio panel
+        
+        if usuario.rol.tipo.lower() != 'profesor':
+            messages.error(request, 'No tiene permisos para acceder a esta página')
+            return redirect('panel_profesor')  # Redirigir a su propio panel
+        
+        # Obtener el profesor - CORREGIDO
+        profesor = Profesor.objects.filter(usuario=usuario).first()
+        
+        if not profesor:
+            # Si no tiene perfil de profesor, mostrar dashboard básico
+            messages.warning(request, 'Perfil de profesor no encontrado, mostrando información básica')
+            context = {
+                'usuario': usuario,
+                'profesor': None,
+                'estadisticas': {
+                    'total_cursos': 0,
+                    'total_temas': 0,
+                    'temas_disponibles': 0,
+                    'temas_no_disponibles': 0,
+                },
+                'datos_torta_temas': json.dumps([]),
+                'datos_barras_temas': json.dumps({'cursos': [], 'temas': []}),
+                'temas_recientes': [],
+                'cursos': [],
+                'fecha_inicio': '',
+                'fecha_fin': '',
+                'curso_filtro': '',
+            }
+            return render(request, 'profesor/dashboard_profesor.html', context)
+        
+        # FILTROS
+        fecha_inicio = request.GET.get('fecha_inicio', '')
+        fecha_fin = request.GET.get('fecha_fin', '')
+        curso_filtro = request.GET.get('curso', '')
+        
+        # Consultas base del profesor CON ANNOTATE - CORREGIDO
+        cursos_query = Curso.objects.filter(profesor=profesor).annotate(total_temas=Count('temas'))
+        temas_query = Temas.objects.filter(curso__profesor=profesor)
+        
+        if curso_filtro:
+            cursos_query = cursos_query.filter(id=curso_filtro)
+            temas_query = temas_query.filter(curso_id=curso_filtro)
+        
+        # Aplicar filtros de fecha si existen
+        if fecha_inicio and fecha_fin:
+            try:
+                fecha_inicio_dt = datetime.strptime(fecha_inicio, '%Y-%m-%d').date()
+                fecha_fin_dt = datetime.strptime(fecha_fin, '%Y-%m-%d').date()
+                temas_query = temas_query.filter(
+                    fecha_inicio__gte=fecha_inicio_dt,
+                    fecha_inicio__lte=fecha_fin_dt
+                )
+            except ValueError:
+                messages.error(request, 'Formato de fecha inválido')
+        
+        # ESTADÍSTICAS PRINCIPALES
+        estadisticas = {
+            'total_cursos': cursos_query.count(),
+            'total_temas': temas_query.count(),
+            'temas_disponibles': temas_query.filter(estado='disponible').count(),
+            'temas_no_disponibles': temas_query.filter(estado='no disponible').count(),
+        }
+        
+        # GRÁFICO DE TORTA - Estado de temas
+        datos_torta_temas = [
+            {'name': 'Disponibles', 'y': estadisticas['temas_disponibles']},
+            {'name': 'No Disponibles', 'y': estadisticas['temas_no_disponibles']},
+        ]
+        
+        # GRÁFICO DE BARRAS - Temas por curso
+        datos_barras_temas = {
+            'cursos': [curso.nombre for curso in cursos_query],
+            'temas': [curso.total_temas for curso in cursos_query]
+        }
+        
+        # TABLA DE TEMAS RECIENTES
+        temas_recientes = temas_query.select_related('curso').order_by('-fecha_inicio')[:10]
+        
+        # TABLA DE CURSOS
+        cursos_lista = cursos_query.order_by('nombre')
+        
+        context = {
+            'usuario': usuario,
+            'profesor': profesor,
+            'estadisticas': estadisticas,
+            'datos_torta_temas': json.dumps(datos_torta_temas),
+            'datos_barras_temas': json.dumps(datos_barras_temas),
+            'temas_recientes': temas_recientes,
+            'cursos': cursos_lista,
+            'fecha_inicio': fecha_inicio,
+            'fecha_fin': fecha_fin,
+            'curso_filtro': curso_filtro,
+        }
+        
+        return render(request, 'profesor/dashboard_profesor.html', context)
+        
+    except Usuario.DoesNotExist:
+        messages.error(request, 'Usuario no encontrado')
+        return redirect('login')
+    except Exception as e:
+        messages.error(request, f'Error: {str(e)}')
+        return redirect('panel_profesor') 
+        
+# ====================================================================
+# DASHBOARD ESTUDIANTE
+# ====================================================================
+@login_required_custom
+def dashboard_estudiante(request):
+    usuario_id = request.session.get('usuario_id')
+    
+    try:
+        usuario = Usuario.objects.get(id=usuario_id)
+
+        # Verificar que el usuario tenga rol
+        if not usuario.rol or not usuario.rol.tipo:
+            messages.error(request, 'Usuario sin rol asignado')
+            return redirect('login')
+
+        # Normalizar el tipo de rol
+        rol_tipo = usuario.rol.tipo.strip().lower()
+
+        # Verificar que sea estudiante
+        if rol_tipo != 'estudiante':
+            messages.error(request, f'Acceso denegado: su rol es "{usuario.rol.tipo}".')
+            return redirect('login')
+
+        # Obtener el perfil de persona
+        persona = usuario.personas.first()
+        if not persona:
+            messages.error(request, 'Perfil de persona no encontrado')
+            return redirect('panel_estudiante')
+            
+        # Obtener el estudiante asociado
+        estudiante = Estudiante.objects.filter(persona=persona).first()
+        if not estudiante:
+            messages.error(request, 'Perfil de estudiante no encontrado')
+            return redirect('panel_estudiante')
+        
+        # Consultas del estudiante
+        temas_query = Temas.objects.filter(
+            curso=estudiante.curso,
+            estado='disponible'
+        )
+        
+        laboratorios_query = Laboratorio.objects.filter(
+            curso=estudiante.curso,
+            estado='activo'
+        )
+        
+        # ESTADÍSTICAS PRINCIPALES
+        estadisticas = {
+            'total_temas_disponibles': temas_query.count(),
+            'total_laboratorios': laboratorios_query.count(),
+            'curso_actual': estudiante.curso.nombre if estudiante.curso else 'Sin curso asignado',
+            'colegio': estudiante.colegio.nombre if estudiante.colegio else 'Sin colegio',
+        }
+        
+        # GRÁFICO DE TORTA - Temas disponibles (ejemplo)
+        datos_torta_progreso = [
+            {'name': 'Temas Disponibles', 'y': estadisticas['total_temas_disponibles']},
+            {'name': 'Laboratorios Activos', 'y': estadisticas['total_laboratorios']},
+        ]
+        
+        # TABLAS
+        temas_disponibles = temas_query.select_related('curso').order_by('numero')[:10]
+        laboratorios_activos = laboratorios_query.order_by('nombre')[:10]
+        
+        context = {
+            'usuario': usuario,
+            'estudiante': estudiante,
+            'estadisticas': estadisticas,
+            'datos_torta_progreso': json.dumps(datos_torta_progreso),
+            'temas_disponibles': temas_disponibles,
+            'laboratorios_activos': laboratorios_activos,
+        }
+        
+        return render(request, 'estudiante/dashboard_estudiante.html', context)
+        
+    except Usuario.DoesNotExist:
+        messages.error(request, 'Usuario no encontrado')
+        return redirect('login')
+        
+    except Exception as e:
+        print(f"Error en dashboard_estudiante: {str(e)}")
+        messages.error(request, f'Ocurrió un error: {str(e)}')
+        return redirect('panel_estudiante')
+
+# ====================================================================
+# GENERAR REPORTES PDF
+# ====================================================================
+@login_required_custom
+def generar_reporte_pdf(request, tipo_reporte):
+    usuario_id = request.session.get('usuario_id')
+    
+    try:
+        usuario = Usuario.objects.get(id=usuario_id)
+        rol = usuario.rol.tipo.lower() if usuario.rol else ''
+        
+        # Crear el response PDF
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4)
+        elements = []
+        styles = getSampleStyleSheet()
+        
+        # Título del reporte
+        titulo = f"Reporte - {tipo_reporte.replace('_', ' ').title()}"
+        elements.append(Paragraph(titulo, styles['Title']))
+        elements.append(Paragraph(f"Generado por: {usuario.correo}", styles['Normal']))
+        elements.append(Paragraph(f"Fecha: {timezone.now().strftime('%Y-%m-%d %H:%M')}", styles['Normal']))
+        elements.append(Spacer(1, 12))
+        
+        # CONTENIDO DEL REPORTE SEGÚN ROL Y TIPO
+        if rol == 'superadministrador':
+            data = generar_reporte_superadmin(tipo_reporte, usuario)
+        elif rol == 'administrador':
+            data = generar_reporte_administrador(tipo_reporte, usuario)
+        elif rol == 'profesor':
+            data = generar_reporte_profesor(tipo_reporte, usuario)
+        elif rol == 'estudiante':
+            data = generar_reporte_estudiante(tipo_reporte, usuario)
+        else:
+            data = [['No hay datos disponibles para este rol']]
+        
+        # Crear tabla
+        if data and len(data) > 1:  # Si hay datos además del encabezado
+            table = Table(data)
+            table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2c3e50')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 12),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#ecf0f1')),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                ('FONTSIZE', (0, 1), (-1, -1), 10),
+            ]))
+            elements.append(table)
+        else:
+            elements.append(Paragraph("No hay datos disponibles para este reporte.", styles['Normal']))
+        
+        # Generar PDF
+        doc.build(elements)
+        buffer.seek(0)
+        
+        response = HttpResponse(buffer, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="reporte_{tipo_reporte}_{timezone.now().strftime("%Y%m%d_%H%M")}.pdf"'
+        
+        return response
+        
+    except Usuario.DoesNotExist:
+        messages.error(request, 'Usuario no encontrado')
+        return redirect('login')
+    except Exception as e:
+        messages.error(request, f'Error al generar el reporte: {str(e)}')
+        return redirect('panel_admin')
+
+# ====================================================================
+# FUNCIONES AUXILIARES PARA REPORTES
+# ====================================================================
+def generar_reporte_superadmin(tipo_reporte, usuario):
+    """Genera datos para reportes del superadministrador"""
+    if tipo_reporte == 'usuarios':
+        usuarios = Usuario.objects.select_related('rol').values_list(
+            'correo', 'rol__tipo', 'estado'
+        )
+        data = [['Correo', 'Rol', 'Estado']]
+        data.extend(list(usuarios))
+        
+    elif tipo_reporte == 'colegios':
+        colegios = Colegio.objects.all().values_list('nombre', 'direccion')
+        data = [['Nombre', 'Dirección']]
+        data.extend(list(colegios))
+        
+    elif tipo_reporte == 'suscripciones':
+        suscripciones = Suscripcion.objects.select_related('colegio', 'membresia').values_list(
+            'colegio__nombre', 'membresia__nombre', 'fecha_inicio', 'fecha_fin', 'usuarios_actuales'
+        )
+        data = [['Colegio', 'Membresía', 'Fecha Inicio', 'Fecha Fin', 'Usuarios Actuales']]
+        data.extend(list(suscripciones))
+        
+    elif tipo_reporte == 'pagos':
+        pagos = Pago.objects.select_related('usuario').filter(estado='aprobado').values_list(
+            'usuario__correo', 'monto', 'fecha', 'metodo'
+        )
+        data = [['Usuario', 'Monto', 'Fecha', 'Método']]
+        data.extend(list(pagos))
+        
+    else:
+        data = [['Reporte no disponible']]
+    
+    return data
+
+def generar_reporte_administrador(tipo_reporte, usuario):
+    """Genera datos para reportes del administrador"""
+    # Obtener el colegio del administrador (en implementación real)
+    colegio_admin = Colegio.objects.first()
+    
+    if tipo_reporte == 'estudiantes':
+        estudiantes = Estudiante.objects.filter(colegio=colegio_admin).select_related('persona').values_list(
+            'persona__nombre', 'persona__apellidoPaterno', 'persona__apellidoMaterno', 'curso'
+        )
+        data = [['Nombre', 'Apellido Paterno', 'Apellido Materno', 'Curso']]
+        data.extend(list(estudiantes))
+        
+    elif tipo_reporte == 'profesores':
+        profesores = Profesor.objects.filter(colegio=colegio_admin).select_related('usuario').values_list(
+            'usuario__correo', 'curso'
+        )
+        data = [['Correo', 'Curso']]
+        data.extend(list(profesores))
+        
+    elif tipo_reporte == 'cursos':
+        cursos = Curso.objects.filter(profesor__colegio=colegio_admin).values_list(
+            'nombre', 'profesor__usuario__correo'
+        )
+        data = [['Curso', 'Profesor']]
+        data.extend(list(cursos))
+        
+    else:
+        data = [['Reporte no disponible']]
+    
+    return data
+
+def generar_reporte_profesor(tipo_reporte, usuario):
+    """Genera datos para reportes del profesor"""
+    profesor = Profesor.objects.filter(usuario=usuario).first()
+    
+    if not profesor:
+        return [['Profesor no encontrado']]
+    
+    if tipo_reporte == 'cursos':
+        cursos = Curso.objects.filter(profesor=profesor).values_list('nombre', 'id')
+        data = [['Nombre del Curso', 'ID']]
+        data.extend(list(cursos))
+        
+    elif tipo_reporte == 'temas':
+        temas = Temas.objects.filter(curso__profesor=profesor).select_related('curso').values_list(
+            'nombre_archivo', 'curso__nombre', 'estado', 'fecha_inicio', 'numero'
+        )
+        data = [['Tema', 'Curso', 'Estado', 'Fecha Inicio', 'Número']]
+        data.extend(list(temas))
+        
+    else:
+        data = [['Reporte no disponible']]
+    
+    return data
+
+def generar_reporte_estudiante(tipo_reporte, usuario):
+    """Genera datos para reportes del estudiante"""
+    persona = usuario.personas.first()
+    estudiante = Estudiante.objects.filter(persona=persona).first()
+    
+    if not estudiante:
+        return [['Estudiante no encontrado']]
+    
+    if tipo_reporte == 'temas_disponibles':
+        temas = Temas.objects.filter(
+            curso__profesor__colegio=estudiante.colegio,
+            estado='disponible'
+        ).select_related('curso').values_list('nombre_archivo', 'curso__nombre', 'fecha_inicio', 'numero')
+        data = [['Tema', 'Curso', 'Fecha Inicio', 'Número']]
+        data.extend(list(temas))
+        
+    elif tipo_reporte == 'laboratorios':
+        laboratorios = Laboratorio.objects.filter(estado='activo').values_list(
+            'nombre', 'estado'
+        )
+        data = [['Laboratorio', 'Estado']]
+        data.extend(list(laboratorios))
+        
+    else:
+        data = [['Reporte no disponible']]
+    
+    return data
+
+# ====================================================================
+# APIS PARA DATOS EN TIEMPO REAL (AJAX)
+# ====================================================================
+@login_required_custom
+def api_estadisticas_tiempo_real(request):
+    """API para obtener estadísticas en tiempo real"""
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        return JsonResponse({'error': 'No autenticado'}, status=401)
+    
+    try:
+        usuario = Usuario.objects.get(id=usuario_id)
+        rol = usuario.rol.tipo.lower() if usuario.rol else ''
+        
+        data = {}
+        hoy = timezone.now().date()
+        
+        if rol == 'superadministrador':
+            # Estadísticas en tiempo real para superadmin
+            data = {
+                'total_usuarios': Usuario.objects.count(),
+                'total_colegios': Colegio.objects.count(),
+                'ingresos_hoy': float(Pago.objects.filter(
+                    fecha__date=hoy, 
+                    estado='aprobado'
+                ).aggregate(Sum('monto'))['monto__sum'] or 0),
+                'suscripciones_activas': Suscripcion.objects.filter(
+                    fecha_fin__gte=hoy
+                ).count(),
+            }
+            
+        elif rol == 'administrador':
+            # Estadísticas para administrador
+            colegio_admin = Colegio.objects.first()  # En realidad vendría de la relación
+            data = {
+                'estudiantes_totales': Estudiante.objects.filter(colegio=colegio_admin).count(),
+                'profesores_totales': Profesor.objects.filter(colegio=colegio_admin).count(),
+                'cursos_totales': Curso.objects.filter(profesor__colegio=colegio_admin).count(),
+            }
+            
+        elif rol == 'profesor':
+            # Estadísticas para profesor
+            profesor = Profesor.objects.filter(usuario=usuario).first()
+            if profesor:
+                data = {
+                    'cursos_totales': Curso.objects.filter(profesor=profesor).count(),
+                    'temas_totales': Temas.objects.filter(curso__profesor=profesor).count(),
+                    'temas_disponibles': Temas.objects.filter(
+                        curso__profesor=profesor, 
+                        estado='disponible'
+                    ).count(),
+                }
+                
+        elif rol == 'estudiante':
+            # Estadísticas para estudiante
+            persona = usuario.personas.first()
+            estudiante = Estudiante.objects.filter(persona=persona).first()
+            if estudiante:
+                data = {
+                    'temas_disponibles': Temas.objects.filter(
+                        curso__profesor__colegio=estudiante.colegio,
+                        estado='disponible'
+                    ).count(),
+                    'laboratorios_activos': Laboratorio.objects.filter(estado='activo').count(),
+                }
+        
+        return JsonResponse({'success': True, 'data': data})
+        
+    except Usuario.DoesNotExist:
+        return JsonResponse({'error': 'Usuario no encontrado'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+# ====================================================================
+# VISTA PRINCIPAL DE INFORMES
+# ====================================================================
+@login_required_custom
+def informes_principal(request):
+    """Vista principal que redirige al dashboard según el rol"""
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        return redirect('login')
+    
+    try:
+        usuario = Usuario.objects.get(id=usuario_id)
+        rol = usuario.rol.tipo.lower() if usuario.rol else ''
+        
+        if rol == 'superadministrador':
+            return redirect('dashboard_superadmin')
+        elif rol == 'administrador':
+            return redirect('dashboard_administrador')
+        elif rol == 'profesor':
+            return redirect('dashboard_profesor')
+        elif rol == 'estudiante':
+            return redirect('dashboard_estudiante')
+        else:
+            messages.error(request, 'Rol no reconocido')
+            return redirect('panel_admin')
+            
+    except Usuario.DoesNotExist:
+        messages.error(request, 'Usuario no encontrado')
+        return redirect('login')
+##VISTA PARA CONTENIDO TEORICO##
+
+def gestion_documentos(request):
+    """
+    Vista exclusiva para administradores para gestionar documentos
+    """
+    documentos = Documento.objects.all().order_by('-fecha_creacion')
+    
+    if request.method == 'POST':
+        # Manejar AJAX requests para crear/editar/eliminar
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return manejar_ajax_documentos(request)
+    
+    return render(request, 'profesor/gestion_documentos.html', {
+        'documentos': documentos
+    })
+    
+def crear_documento_ajax(request):
+    """Crear documento via AJAX con archivo PDF"""
+    try:
+        nombre = request.POST.get('nombre', '').strip()
+        if not nombre:
+            return JsonResponse({'error': 'El nombre es requerido'}, status=400)
+        
+        # Crear documento
+        documento = Documento(
+            nombre=nombre,
+            descripcion=request.POST.get('descripcion', ''),
+            estado=request.POST.get('estado', 'Activo'),
+            categoria='fisica_general'
+        )
+        
+        # Manejar archivo PDF si se subió
+        if 'archivo_pdf' in request.FILES:
+            archivo = request.FILES['archivo_pdf']
+            documento.archivo_pdf = archivo.read()  # Guardar binario
+            documento.nombre_archivo = archivo.name
+            documento.tamaño = archivo.size
+        
+        documento.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Documento creado correctamente' + (' con PDF' if 'archivo_pdf' in request.FILES else '')
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+def manejar_ajax_documentos(request):
+    """Manejar operaciones AJAX para documentos"""
+    if request.method == 'POST':
+        try:
+            # Verificar si es FormData (con archivos)
+            if request.content_type.startswith('multipart/form-data'):
+                action = request.POST.get('action', 'crear')
+                
+                if action == 'crear':
+                    return crear_documento_ajax(request)
+                # ... otras acciones
+            else:
+                # Manejo normal JSON
+                data = json.loads(request.body)
+                action = data.get('action')
+                
+                if action == 'crear':
+                    return crear_documento_ajax(data)
+                elif action == 'editar':
+                    return editar_documento_ajax(data)
+                elif action == 'eliminar':
+                    return eliminar_documento_ajax(data)
+                
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    
+    return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+    
+def editar_documento_ajax(data):
+    """Editar documento via AJAX"""
+    try:
+        documento_id = data.get('id')
+        if not documento_id:
+            return JsonResponse({'error': 'ID de documento requerido'}, status=400)
+        
+        documento = Documento.objects.get(id=documento_id)
+        documento.nombre = data.get('nombre', documento.nombre).strip()
+        documento.descripcion = data.get('descripcion', documento.descripcion)
+        documento.estado = data.get('estado', documento.estado)
+        documento.categoria = data.get('categoria', documento.categoria)
+        documento.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Documento actualizado correctamente'
+        })
+        
+    except Documento.DoesNotExist:
+        return JsonResponse({'error': 'Documento no encontrado'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+def eliminar_documento_ajax(data):
+    """Eliminar documento via AJAX"""
+    try:
+        documento_id = data.get('id')
+        if not documento_id:
+            return JsonResponse({'error': 'ID de documento requerido'}, status=400)
+        
+        documento = Documento.objects.get(id=documento_id)
+        documento_nombre = documento.nombre
+        documento.delete()
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Documento "{documento_nombre}" eliminado correctamente'
+        })
+        
+    except Documento.DoesNotExist:
+        return JsonResponse({'error': 'Documento no encontrado'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+    
+
+
+
+def contenido_teorico(request):
+    """Vista para mostrar el contenido teórico a los usuarios"""
+    # Obtener todos los documentos activos
+    documentos = Documento.objects.filter(estado='Activo').order_by('categoria', 'nombre')
+    
+    # Agrupar por categoría y preparar datos para el template
+    categorias = {}
+    for doc in documentos:
+        if doc.categoria not in categorias:
+            categorias[doc.categoria] = []
+        
+        # Crear un diccionario con toda la información necesaria
+        doc_data = {
+            'id': doc.id,
+            'nombre': doc.nombre,
+            'descripcion': doc.descripcion,
+            'nombre_archivo': doc.nombre_archivo,
+            'tamaño': doc.tamaño,
+            'fecha_actualizacion': doc.fecha_actualizacion,
+            'get_tamaño_formateado': doc.get_tamaño_formateado(),
+        }
+        categorias[doc.categoria].append(doc_data)
+    
+    # Si hay búsqueda, filtrar resultados
+    query = request.GET.get('q', '')
+    if query:
+        documentos_filtrados = documentos.filter(
+            Q(nombre__icontains=query) | 
+            Q(descripcion__icontains=query) |
+            Q(categoria__icontains=query)
+        )
+        
+        categorias_filtradas = {}
+        for doc in documentos_filtrados:
+            if doc.categoria not in categorias_filtradas:
+                categorias_filtradas[doc.categoria] = []
+            
+            doc_data = {
+                'id': doc.id,
+                'nombre': doc.nombre,
+                'descripcion': doc.descripcion,
+                'nombre_archivo': doc.nombre_archivo,
+                'tamaño': doc.tamaño,
+                'fecha_actualizacion': doc.fecha_actualizacion,
+                'get_tamaño_formateado': doc.get_tamaño_formateado(),
+            }
+            categorias_filtradas[doc.categoria].append(doc_data)
+        
+        categorias = categorias_filtradas
+    
+    context = {
+        'categorias': categorias,
+        'query': query
+    }
+    return render(request, 'estudiante/contenido_temas.html', context)
+
+def descargar_documento(request, documento_id):
+    """Vista para descargar documentos PDF"""
+    try:
+        documento = get_object_or_404(Documento, id=documento_id, estado='Activo')
+        
+        # Verificar que el documento tenga archivo PDF
+        if not documento.archivo_pdf:
+            return HttpResponse('El documento no tiene archivo PDF', status=404)
+        
+        # Crear respuesta con el PDF
+        response = HttpResponse(documento.archivo_pdf, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{documento.nombre_archivo or documento.nombre}.pdf"'
+        return response
+        
+    except Exception as e:
+        return HttpResponse(f'Error al descargar el documento: {str(e)}', status=500)
+
+def preview_documento(request, documento_id):
+    """Vista para previsualizar documentos PDF"""
+    try:
+        documento = get_object_or_404(Documento, id=documento_id, estado='Activo')
+        
+        # Verificar que el documento tenga archivo PDF
+        if not documento.archivo_pdf:
+            return HttpResponse('El documento no tiene archivo PDF', status=404)
+        
+        # Crear respuesta para visualización en línea
+        response = HttpResponse(documento.archivo_pdf, content_type='application/pdf')
+        response['Content-Disposition'] = f'inline; filename="{documento.nombre_archivo or documento.nombre}.pdf"'
+        return response
+        
+    except Exception as e:
+        return HttpResponse(f'Error al visualizar el documento: {str(e)}', status=500)
+    

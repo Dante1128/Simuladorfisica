@@ -1,0 +1,861 @@
+{% extends 'profesor/base_profesor.html' %}
+{% load static %}
+{% block title %}Dashboard - Informes y Reportes{% endblock %}
+
+{% block content %}
+<div class="dashboard-profesor">
+    <!-- Header -->
+    <div class="dashboard-header">
+        <div class="header-main">
+            <h1 class="page-title">
+                <span class="icon">📊</span>
+                Dashboard - Informes del Profesor
+            </h1>
+            <div class="user-info">
+                <div class="avatar">
+                    {% if usuario.correo %}
+                        {{ usuario.correo.0|upper }}
+                    {% else %}
+                        P
+                    {% endif %}
+                </div>
+                <span class="user-name">
+                    Prof. {{ usuario.correo }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filters-container">
+        <div class="section-title">
+            <span class="icon">⚙️</span>
+            Filtros de Datos
+        </div>
+        <form method="GET" class="filters-form">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label class="filter-label">Fecha inicio:</label>
+                    <input type="date" name="fecha_inicio" value="{{ fecha_inicio|default:'' }}" class="filter-input">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Fecha fin:</label>
+                    <input type="date" name="fecha_fin" value="{{ fecha_fin|default:'' }}" class="filter-input">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Curso:</label>
+                    <select name="curso" class="filter-input">
+                        <option value="">Todos los cursos</option>
+                        {% for curso in cursos %}
+                        <option value="{{ curso.id }}" {% if curso_filtro == curso.id|stringformat:"s" %}selected{% endif %}>
+                            {{ curso.nombre }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="filter-actions">
+                    <button type="submit" class="btn btn-filter">
+                        <span class="btn-icon">🔍</span>
+                        Filtrar
+                    </button>
+                    <a href="{% url 'dashboard_profesor' %}" class="btn btn-clear">
+                        <span class="btn-icon">🔄</span>
+                        Limpiar
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="stats-container">
+        <div class="stats-grid">
+            <!-- Tarjeta Cursos -->
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon">📚</div>
+                    <h3 class="stat-title">TOTAL CURSOS</h3>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number">{{ estadisticas.total_cursos|default:"0" }}</div>
+                    <a href="{% url 'reporte_cursos' %}" class="download-btn">
+                        <span class="download-icon">📥</span>
+                        Descargar PDF
+                    </a>
+                </div>
+            </div>
+
+            <!-- Tarjeta Temas Totales -->
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon">📝</div>
+                    <h3 class="stat-title">TOTAL TEMAS</h3>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number">{{ estadisticas.total_temas|default:"0" }}</div>
+                    <a href="{% url 'reporte_temas' %}" class="download-btn">
+                        <span class="download-icon">📥</span>
+                        Descargar PDF
+                    </a>
+                </div>
+            </div>
+
+            <!-- Tarjeta Temas Disponibles -->
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon">✅</div>
+                    <h3 class="stat-title">TEMAS DISPONIBLES</h3>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number">{{ estadisticas.temas_disponibles|default:"0" }}</div>
+                    <div class="stat-progress">
+                        <div class="progress-bar">
+                            {% if estadisticas.total_temas > 0 %}
+                                {% widthratio estadisticas.temas_disponibles estadisticas.total_temas 100 as progress %}
+                                <div class="progress-fill" id="progressFill"></div>
+                            {% else %}
+                                <div class="progress-fill" style="width: 0%"></div>
+                            {% endif %}
+                        </div>
+                        <span class="progress-text">
+                            {{ estadisticas.temas_disponibles|default:"0" }}/{{ estadisticas.total_temas|default:"0" }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tarjeta Estado -->
+            <div class="stat-card highlight-card">
+                <div class="stat-header">
+                    <div class="stat-icon">👨‍🏫</div>
+                    <h3 class="stat-title">ESTADO DEL PROFESOR</h3>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-status">Activo</div>
+                    <div class="stat-details">
+                        <div class="detail-row">
+                            <span class="detail-label">Colegio:</span>
+                            <span class="detail-value">
+                                {% if profesor.colegio %}
+                                    {{ profesor.colegio.nombre }}
+                                {% else %}
+                                    No asignado
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Cursos activos:</span>
+                            <span class="detail-value">{{ estadisticas.total_cursos|default:"0" }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficos -->
+    <div class="charts-container">
+        <div class="section-title">Visualización de Datos</div>
+        <div class="charts-grid">
+            <!-- Gráfico de Torta - Estado de Temas -->
+            <div class="chart-wrapper">
+                <div class="chart-header">
+                    <h3 class="chart-title">
+                        <span class="icon">🥧</span>
+                        Estado de los Temas
+                    </h3>
+                </div>
+                <div class="chart-area">
+                    <div id="chartTortaTemas" class="chart"></div>
+                </div>
+            </div>
+
+            <!-- Gráfico de Barras - Temas por Curso -->
+            <div class="chart-wrapper">
+                <div class="chart-header">
+                    <h3 class="chart-title">
+                        <span class="icon">📊</span>
+                        Temas por Curso
+                    </h3>
+                </div>
+                <div class="chart-area">
+                    <div id="chartBarrasTemas" class="chart"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tablas -->
+    <div class="tables-container">
+        <div class="tables-grid">
+            <!-- Tabla de Temas Recientes -->
+            <div class="table-wrapper">
+                <div class="table-header">
+                    <h3 class="table-title">
+                        <span class="icon">🆕</span>
+                        Temas Recientes
+                    </h3>
+                    <a href="{% url 'reporte_temas' %}" class="download-btn">
+                        <span class="download-icon">📥</span>
+                        Descargar PDF
+                    </a>
+                </div>
+                <div class="table-content">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Tema</th>
+                                <th>Curso</th>
+                                <th>Fecha Inicio</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for tema in temas_recientes %}
+                            <tr>
+                                <td>
+                                    <div class="item-info">
+                                        <div class="item-icon">📄</div>
+                                        <span class="item-name">{{ tema.nombre_archivo }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if tema.curso %}
+                                        {{ tema.curso.nombre }}
+                                    {% else %}
+                                        Sin curso
+                                    {% endif %}
+                                </td>
+                                <td>{{ tema.fecha_inicio|date:"d/m/Y" }}</td>
+                                <td>
+                                    <span class="status-badge {% if tema.estado == 'disponible' %}status-available{% else %}status-unavailable{% endif %}">
+                                        {{ tema.estado }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="no-data">No hay temas recientes</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tabla de Cursos -->
+            <div class="table-wrapper">
+                <div class="table-header">
+                    <h3 class="table-title">
+                        <span class="icon">📚</span>
+                        Mis Cursos
+                    </h3>
+                    <a href="{% url 'reporte_cursos' %}" class="download-btn">
+                        <span class="download-icon">📥</span>
+                        Descargar PDF
+                    </a>
+                </div>
+                <div class="table-content">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Curso</th>
+                                <th>Temas</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for curso in cursos %}
+                            <tr>
+                                <td>
+                                    <div class="item-info">
+                                        <div class="item-icon">🎯</div>
+                                        <span class="item-name">{{ curso.nombre }}</span>
+                                    </div>
+                                </td>
+                                <td>{{ curso.temas_set.count }} temas</td>
+                                <td>
+                                    <span class="status-badge status-active">Activo</span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="no-data">No hay cursos asignados</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Highcharts -->
+<script src="https://code.highcharts.com/highcharts.js"></script>
+
+<script>
+    // Manejo seguro de datos desde Django
+    let datosTorta = [];
+    let datosBarras = { cursos: [], estudiantes: [] };
+
+    try {
+        // Parsear datos de torta
+        const tortaRaw = '{{ datos_torta_cursos|escapejs }}';
+        console.log("Datos torta crudos:", tortaRaw);
+        
+        if (tortaRaw && tortaRaw !== 'None' && tortaRaw !== '[]') {
+            datosTorta = JSON.parse(tortaRaw.replace(/&quot;/g, '"'));
+        }
+        
+        // Parsear datos de barras
+        const barrasRaw = '{{ datos_barras_cursos|escapejs }}';
+        console.log("Datos barras crudos:", barrasRaw);
+        
+        if (barrasRaw && barrasRaw !== 'None' && barrasRaw !== '{"cursos": [], "estudiantes": []}') {
+            datosBarras = JSON.parse(barrasRaw.replace(/&quot;/g, '"'));
+        }
+    } catch (error) {
+        console.error('Error parsing chart data:', error);
+        // Datos de ejemplo como fallback
+        datosTorta = [
+            { name: 'Curso A', y: 10 },
+            { name: 'Curso B', y: 5 },
+            { name: 'Curso C', y: 3 }
+        ];
+        datosBarras = {
+            cursos: ['Curso A', 'Curso B', 'Curso C'],
+            estudiantes: [10, 5, 3]
+        };
+    }
+
+    // Gráfico de Torta
+    if (document.getElementById('chartTorta') && datosTorta.length > 0) {
+        Highcharts.chart('chartTorta', {
+            chart: { 
+                type: 'pie',
+                backgroundColor: 'transparent',
+                height: 280
+            },
+            title: { text: null },
+            tooltip: { 
+                pointFormat: '<b>{point.y}</b> estudiantes ({point.percentage:.1f}%)' 
+            },
+            plotOptions: {
+                pie: {
+                    allowPointSelect: true,
+                    cursor: 'pointer',
+                    dataLabels: { 
+                        enabled: true, 
+                        format: '<b>{point.name}</b>: {point.y}',
+                        distance: -30
+                    },
+                    showInLegend: true
+                }
+            },
+            series: [{
+                name: 'Estudiantes',
+                colorByPoint: true,
+                data: datosTorta
+            }],
+            credits: { enabled: false }
+        });
+    } else if (document.getElementById('chartTorta')) {
+        document.getElementById('chartTorta').innerHTML = 
+            '<div class="no-data"><p>No hay datos disponibles</p></div>';
+    }
+
+    // Gráfico de Barras
+    if (document.getElementById('chartBarras') && datosBarras.cursos.length > 0) {
+        Highcharts.chart('chartBarras', {
+            chart: { 
+                type: 'column',
+                backgroundColor: 'transparent',
+                height: 280
+            },
+            title: { text: null },
+            xAxis: { 
+                categories: datosBarras.cursos,
+                title: { text: null }
+            },
+            yAxis: {
+                min: 0,
+                title: { text: 'Estudiantes' }
+            },
+            tooltip: { 
+                valueSuffix: ' estudiantes' 
+            },
+            plotOptions: { 
+                column: { 
+                    dataLabels: { enabled: true } 
+                } 
+            },
+            legend: { enabled: false },
+            series: [{
+                name: 'Estudiantes',
+                data: datosBarras.estudiantes,
+                color: '#608BC1'
+            }],
+            credits: { enabled: false }
+        });
+    } else if (document.getElementById('chartBarras')) {
+        document.getElementById('chartBarras').innerHTML = 
+            '<div class="no-data"><p>No hay datos disponibles</p></div>';
+    }
+</script>
+
+
+<style>
+    :root {
+        --primary-blue: #133E87;
+        --secondary-blue: #608BC1;
+        --light-blue: #CBDCEB;
+        --success-green: #27ae60;
+        --warning-orange: #f39c12;
+        --background: #F3F3E0;
+        --white: #FFFFFF;
+        --text-dark: #333333;
+        --text-light: #666666;
+        --border: #E0E0E0;
+        --shadow: 0 2px 8px rgba(0,0,0,0.1);
+        --shadow-hover: 0 4px 12px rgba(0,0,0,0.15);
+        --border-radius: 8px;
+    }
+
+    .dashboard-profesor {
+        min-height: 100vh;
+        background: var(--background);
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+    }
+
+    .dashboard-header {
+        background: var(--white);
+        border-radius: var(--border-radius);
+        padding: 24px;
+        box-shadow: var(--shadow);
+    }
+
+    .header-main {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .page-title {
+        font-size: 24px;
+        font-weight: 600;
+        color: var(--primary-blue);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .user-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .avatar {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, var(--success-green), #2ecc71);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--white);
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .user-name {
+        font-weight: 500;
+        color: var(--text-dark);
+    }
+
+    .filters-container {
+        background: var(--white);
+        border-radius: var(--border-radius);
+        padding: 24px;
+        box-shadow: var(--shadow);
+    }
+
+    .section-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--primary-blue);
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .filter-row {
+        display: flex;
+        align-items: end;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        flex: 1;
+        min-width: 200px;
+    }
+
+    .filter-label {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-dark);
+    }
+
+    .filter-input {
+        padding: 12px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        font-size: 14px;
+    }
+
+    .filter-actions {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 8px;
+    }
+
+    .btn {
+        padding: 12px 20px;
+        border: none;
+        border-radius: 6px;
+        font-weight: 500;
+        font-size: 14px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-filter {
+        background: var(--secondary-blue);
+        color: var(--white);
+    }
+
+    .btn-filter:hover {
+        background: var(--primary-blue);
+    }
+
+    .btn-clear {
+        background: var(--light-blue);
+        color: var(--primary-blue);
+    }
+
+    .btn-clear:hover {
+        background: var(--secondary-blue);
+        color: var(--white);
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
+    }
+
+    .stat-card {
+        background: var(--white);
+        border-radius: var(--border-radius);
+        padding: 24px;
+        box-shadow: var(--shadow);
+        transition: transform 0.3s ease;
+        border: 1px solid var(--border);
+    }
+
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-hover);
+    }
+
+    .highlight-card {
+        background: linear-gradient(135deg, var(--success-green), #2ecc71);
+        color: var(--white);
+    }
+
+    .highlight-card .stat-title,
+    .highlight-card .stat-number,
+    .highlight-card .stat-status {
+        color: var(--white);
+    }
+
+    .stat-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .stat-icon {
+        font-size: 32px;
+    }
+
+    .stat-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-light);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin: 0;
+    }
+
+    .stat-content {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .stat-number {
+        font-size: 36px;
+        font-weight: 700;
+        color: var(--primary-blue);
+        line-height: 1;
+    }
+
+    .stat-status {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--primary-blue);
+    }
+
+    .download-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        background: var(--light-blue);
+        color: var(--primary-blue);
+        text-decoration: none;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .download-btn:hover {
+        background: var(--secondary-blue);
+        color: var(--white);
+    }
+
+    .highlight-card .download-btn {
+        background: rgba(255,255,255,0.2);
+        color: var(--white);
+    }
+
+    .highlight-card .download-btn:hover {
+        background: var(--white);
+        color: var(--success-green);
+    }
+
+    .stat-progress {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .progress-bar {
+        width: 100%;
+        height: 8px;
+        background: var(--light-blue);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: var(--success-green);
+        border-radius: 4px;
+        transition: width 0.3s ease;
+    }
+
+    .progress-text {
+        font-size: 12px;
+        color: var(--text-light);
+        text-align: center;
+    }
+
+    .stat-details {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .detail-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 14px;
+    }
+
+    .detail-label {
+        opacity: 0.9;
+    }
+
+    .detail-value {
+        font-weight: 600;
+    }
+
+    .charts-container {
+        background: var(--white);
+        border-radius: var(--border-radius);
+        padding: 24px;
+        box-shadow: var(--shadow);
+    }
+
+    .charts-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+    }
+
+    .chart-wrapper {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .chart-header {
+        margin-bottom: 20px;
+    }
+
+    .chart-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--primary-blue);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .chart-area {
+        flex: 1;
+        min-height: 300px;
+    }
+
+    .chart {
+        width: 100%;
+        height: 100%;
+    }
+
+    .tables-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+    }
+
+    .table-wrapper {
+        background: var(--white);
+        border-radius: var(--border-radius);
+        padding: 24px;
+        box-shadow: var(--shadow);
+    }
+
+    .table-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+    }
+
+    .data-table th {
+        background: var(--light-blue);
+        color: var(--primary-blue);
+        text-align: left;
+        padding: 12px 16px;
+        font-weight: 600;
+        border-bottom: 2px solid var(--secondary-blue);
+    }
+
+    .data-table td {
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .data-table tr:hover {
+        background: rgba(203, 220, 235, 0.3);
+    }
+
+    .item-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .status-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .status-available {
+        background: #d4f8e8;
+        color: var(--success-green);
+    }
+
+    .status-unavailable {
+        background: #fde8e6;
+        color: #e74c3c;
+    }
+
+    .status-active {
+        background: #e8f4fd;
+        color: var(--secondary-blue);
+    }
+
+    .no-data {
+        text-align: center;
+        color: var(--text-light);
+        font-style: italic;
+        padding: 40px 20px;
+    }
+
+    @media (max-width: 1024px) {
+        .charts-grid,
+        .tables-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .dashboard-profesor {
+            padding: 16px;
+        }
+        .header-main {
+            flex-direction: column;
+            gap: 16px;
+            text-align: center;
+        }
+        .filter-row {
+            flex-direction: column;
+        }
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+        .table-header {
+            flex-direction: column;
+            gap: 12px;
+            align-items: flex-start;
+        }
+    }
+</style>
+{% endblock %}

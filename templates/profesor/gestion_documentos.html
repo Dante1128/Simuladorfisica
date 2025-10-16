@@ -1,0 +1,265 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Contenido Teórico</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'usuarios/css/profesor/gestion_documentos.css'%}">
+    
+</head>
+<body>
+
+    <!-- Contenedor general -->
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNMTIgMTNsLTEuNzUtMS43NU0xMiAxM2wxLjc1LTEuNzVNMTIgMTNWMThtMi4yNSA5YTMuMDAzIDMuMDAzIDAgMDEtNC41IDBNMTIgM2E5IDkgMCAwMDkgOWMwIDEuNjgxLS41NjQgMy4yMzEtMS41IDQuNDUiPjwvcGF0aD48L3N2Zz4=" alt="Logo">
+                <h2>Sistema Académico</h2>
+            </div>
+
+            <!-- Menú -->
+            <div class="sidebar-menu">
+                <div class="menu-item">
+                    <i class="fas fa-home"></i>
+                    <span>Inicio</span>
+                </div>
+
+                <div class="menu-item" >
+                    <i class="fas fa-user-graduate"></i>
+                    <span>Mis Alumnos</span>
+                </div>
+
+                <div class="menu-item" >
+                    <i class="fas fa-book"></i>
+                    <span>Mis Cursos</span>
+                </div>
+
+                <div class="menu-item" >
+                    <i class="fas fa-tasks"></i>
+                    <span>Asignaciones</span>
+                </div>
+
+                <div class="menu-item {% if request.path == '/gestion-documentos/' %}active{% endif %}" onclick="window.location.href='{% url 'gestion_documentos' %}'">
+                    <i class="fas fa-tasks"></i>
+                    <span>Gestión Contenido</span>
+                </div>
+
+
+                <div class="menu-item">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Calificaciones</span>
+                </div>
+            </div>
+
+            <!-- Pie del sidebar -->
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar">JP</div>
+                    <div class="user-details">
+                        <h4>Juan Pérez</h4>
+                        <p>Profesor de Matemáticas</p>
+                    </div>
+                </div>
+
+                <button class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Cerrar Sesión</span>
+            </button>
+            </div>
+        </div>
+    
+        
+        <div class="main-content">
+            <header class="panel-header main-header">
+                <h1><i class="fas fa-book"></i> Gestión de Contenido Teórico</h1>
+                <div class="help-bar">
+                    <button class="help-btn" id="helpBtn">
+                        <i class="fas fa-question"></i>
+                    </button>
+                </div>
+            </header>
+            <div class="stats-panel">
+                <div class="stat-card">
+                    <div class="stat-icon documents">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <div class="stat-number">{{ documentos|length }}</div>
+                    <div class="stat-label">Total Documentos</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon active">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-number">{{ documentos_activos|default:"0" }}</div>
+                    <div class="stat-label">Activos</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon inactive">
+                        <i class="fas fa-pause-circle"></i>
+                    </div>
+                    <div class="stat-number">{{ documentos_inactivos|default:"0" }}</div>
+                    <div class="stat-label">Inactivos</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon pdf">
+                        <i class="fas fa-file-pdf"></i>
+                    </div>
+                    <div class="stat-number">{{ documentos_con_pdf|default:"0" }}</div>
+                    <div class="stat-label">Con PDF</div>
+                </div>
+            </div>
+            
+            <div class="documents-panel">
+                <div class="panel-header">
+                    <h2 class="panel-title"><i class="fas fa-file-alt"></i> Documentos Existentes</h2>
+                    <div class="panel-actions">
+                        <button class="btn-primary" id="newDoc">
+                            <i class="fas fa-plus"></i> Nuevo Documento
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="search-bar">
+                    <input type="text" class="search-inp" id="mainSearchInput" placeholder="Buscar documentos...">
+                    <button class="search-button" id="mainSearchButton">
+                        <i class="fas fa-search"></i> Buscar
+                    </button>
+                </div>
+                
+                <div class="documents-grid" id="documentsGrid">
+                    {% for documento in documentos %}
+                    <div class="document-card" data-doc-id="{{ documento.id }}">
+                        <div class="doc-header">
+                            <div>
+                                <div class="doc-title">{{ documento.nombre }}</div>
+                                <div class="doc-category">{{ documento.get_categoria_display }}</div>
+                            </div>
+                        </div>
+                        
+                        {% if documento.descripcion %}
+                        <div class="doc-description">{{ documento.descripcion }}</div>
+                        {% endif %}
+                        
+                        <div class="pdf-info">
+                            {% if documento.archivo_pdf %}
+                                <i class="fas fa-file-pdf"></i>
+                                {{ documento.nombre_archivo|default:"PDF subido" }}
+                                ({{ documento.get_tamaño_formateado }})
+                            {% else %}
+                                <i class="fas fa-times-circle"></i>
+                                <span>No hay PDF</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="doc-footer">
+                            <div class="doc-status status-{{ documento.estado|lower|cut:" " }}">
+                                <div class="status-badge"></div>
+                                <span>{{ documento.estado }}</span>
+                            </div>
+                            <div class="doc-actions">
+                                <button class="action-btn btn-edit" data-id="{{ documento.id }}" title="Editar">
+                                    <i class="fas fa-pencil-alt"></i>
+                                </button>
+                                <button class="action-btn btn-delete" data-id="{{ documento.id }}" title="Eliminar">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+            
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <h3>No hay documentos registrados</h3>
+                        <p>Comienza creando tu primer documento</p>
+                        <button class="btn-primary" id="emptyNewDoc" style="margin-top: 15px;">
+                            <i class="fas fa-plus"></i> Crear primer documento
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+    <!-- Modal para editar/crear documento -->
+    <div class="modal" id="docModal">
+        <div class="modal-content">
+            <h3 id="modalTitle">Nuevo Documento</h3>
+            
+            <form id="documentoForm">
+                <div class="form-group">
+                    <label for="docName">Nombre del Documento *</label>
+                    <input type="text" id="docName" placeholder="Ingrese el nombre del documento" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="docDescripcion">Descripción</label>
+                    <textarea id="docDescripcion" placeholder="Descripción del documento" rows="3"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="docStatus">Estado *</label>
+                    <select id="docStatus" required>
+                        <option value="Activo">Activo</option>
+                        <option value="Inactivo">Inactivo</option>
+                        <option value="En revisión">En revisión</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="docPdf">Archivo PDF (Opcional)</label>
+                    <input type="file" id="docPdf" accept=".pdf" class="file-input">
+                    <small style="color: #666;">Formatos aceptados: PDF (Máx. 10MB)</small>
+                </div>
+                
+                <div class="modal-buttons">
+                    <button type="button" class="btn-cancel" id="cancelBtn">Cancelar</button>
+                    <button type="submit" class="btn-save" id="saveBtn">
+                        <i class="fas fa-save"></i> Guardar Documento
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Panel de ayuda -->
+    <div class="help-panel" id="helpPanel">
+        <h3><i class="fas fa-question-circle"></i> Centro de Ayuda</h3>
+        <ul>
+            <li><i class="fas fa-plus"></i> <strong>Nuevo Documento:</strong> Crear metadatos del documento</li>
+            <li><i class="fas fa-file-pdf"></i> <strong>Subir PDF:</strong> Ir al admin para subir archivos PDF</li>
+            <li><i class="fas fa-pencil-alt"></i> <strong>Editar:</strong> Modificar metadatos</li>
+            <li><i class="fas fa-file-pdf"></i> <strong>PDF:</strong> Subir/editar archivo PDF</li>
+            <li><i class="fas fa-trash"></i> <strong>Eliminar:</strong> Eliminar documento permanentemente</li>
+        </ul>
+        <p><strong>Para subir PDFs:</strong> Use el botón <i class="fas fa-file-pdf"></i> o vaya al Panel Admin</p>
+        <button class="close-help" id="closeHelp">Cerrar</button>
+    </div>
+
+    <!-- Notificación -->
+    <div class="notification" id="notification"></div>
+
+
+    <!-- Modal de confirmación de eliminación -->
+    <div class="confirm-modal" id="confirmModal">
+        <div class="confirm-modal-content">
+            <div class="confirm-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h3>Confirmar Eliminación</h3>
+            <p id="confirmMessage">¿Está seguro de que desea eliminar este documento? Esta acción no se puede deshacer.</p>
+            <div class="confirm-buttons">
+                <button class="btn-cancel-delete" id="cancelDeleteBtn">Cancelar</button>
+                <button class="btn-confirm-delete" id="confirmDeleteBtn">Sí, Eliminar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{% static 'usuarios/js/profesor/gestion_documentos.js' %}"></script>
+</body>
+</html>
