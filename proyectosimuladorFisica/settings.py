@@ -80,7 +80,7 @@ WSGI_APPLICATION = 'proyectosimuladorFisica.wsgi.app'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'simuladordefisica',  
+        'NAME': 'Simuladorfisica',  
         'USER': 'postgres',         
         'PASSWORD': 'contra',
         'HOST': 'localhost',        
