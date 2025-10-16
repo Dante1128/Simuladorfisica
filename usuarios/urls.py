@@ -13,4 +13,9 @@ urlpatterns = [
     path('panel_admin/', views.panel_admin, name='panel_admin'),
     path('panel_estudiante/', views.panel_estudiante, name='panel_estudiante'),
     path('panel_profesor/', views.panel_profesor, name='panel_profesor'),
+    path('gestion-documentos/', views.gestion_documentos, name='gestion_documentos'),
+    path('contenido-teorico/', views.contenido_teorico, name='contenido_teorico'),
+    path('documentos/<int:documento_id>/descargar/', views.descargar_documento, name='descargar_documento'),
+    path('documentos/<int:documento_id>/preview/', views.preview_documento, name='preview_documento')
+   
 ]
