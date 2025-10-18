@@ -7,8 +7,6 @@ from django.contrib.auth.hashers import make_password, check_password
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.utils import timezone
-<<<<<<< HEAD
-=======
 from django.db.models import Q
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from .models import Componente
@@ -21,7 +19,6 @@ from django.conf import settings
 from django.utils.text import slugify
 from django.http import Http404
 from .models import Colegio
->>>>>>> 1782154e45f3329119f93f6cdd0881243851bf8a
 from django.http import JsonResponse, HttpResponse
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q, Count, Sum
@@ -47,15 +44,12 @@ from .forms import ComponenteForm
 # ======================
 import csv
 import json
-<<<<<<< HEAD
 import io
 import base64
 from datetime import datetime
-=======
 from django.db import models
 import mimetypes
 import shutil
->>>>>>> 1782154e45f3329119f93f6cdd0881243851bf8a
 
 # ======================
 # IMPORTS DE REPORTLAB (PDF)
@@ -65,9 +59,7 @@ from reportlab.lib.pagesizes import letter, A4
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
-<<<<<<< HEAD
 
-=======
 import io
 from datetime import datetime
 from django.shortcuts import render, get_object_or_404
@@ -80,7 +72,6 @@ from django.contrib.admin.views.decorators import staff_member_required
 import json
 from django.http import FileResponse
 from django.urls import reverse
->>>>>>> 1782154e45f3329119f93f6cdd0881243851bf8a
 
 def index(request):
     return render(request, 'paginaWeb/index.html')
