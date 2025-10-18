@@ -45,9 +45,9 @@
                     <span class="menu-item-text">Laboratorios RV</span>
                     <span class="menu-badge">15</span>
                 </a>
-                <a href="#" class="menu-item {% if request.resolver_match.url_name == 'contenido' %}active{% endif %}">
+                <a href="{% url 'gestion_documentos_administrador' %}" class="menu-item {% if request.resolver_match.url_name == 'contenido' %}active{% endif %}">
                     <i>📚</i>
-                    <span class="menu-item-text">Contenido Teórico</span>
+                    <span class="menu-item-text">Gestión Contenido</span>
                 </a>
             </div>
             

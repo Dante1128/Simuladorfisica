@@ -1662,9 +1662,25 @@ def informes_principal(request):
         messages.error(request, 'Usuario no encontrado')
         return redirect('login')
 
+
 ##VISTA PARA CONTENIDO TEORICO##
 
-def gestion_documentos(request):
+def gestion_documentos_profesor(request):
+    """
+    Vista exclusiva para profesores para gestionar documentos
+    """
+    documentos = Documento.objects.all().order_by('-fecha_creacion')
+    
+    if request.method == 'POST':
+        # Manejar AJAX requests para crear/editar/eliminar
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return manejar_ajax_documentos(request)
+    
+    return render(request, 'profesor/gestion_documentos.html', {
+        'documentos': documentos
+    })
+
+def gestion_documentos_administrador(request):
     """
     Vista exclusiva para administradores para gestionar documentos
     """
@@ -1675,7 +1691,22 @@ def gestion_documentos(request):
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return manejar_ajax_documentos(request)
     
-    return render(request, 'profesor/gestion_documentos.html', {
+    return render(request, 'administrador/gestion_documentos.html', {
+        'documentos': documentos
+    })
+
+def gestion_documentos_superadministrador(request):
+    """
+    Vista exclusiva para superadministradores para gestionar documentos
+    """
+    documentos = Documento.objects.all().order_by('-fecha_creacion')
+    
+    if request.method == 'POST':
+        # Manejar AJAX requests para crear/editar/eliminar
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return manejar_ajax_documentos(request)
+    
+    return render(request, 'superadministrador/gestion_documentos.html', {
         'documentos': documentos
     })
     

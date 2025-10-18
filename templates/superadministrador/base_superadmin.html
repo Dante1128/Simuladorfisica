@@ -6,11 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Superadministrador{% endblock %}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<<<<<<< HEAD
     <link rel="stylesheet" href="{% static 'css/superadministrador/base_superadmin.css' %}">
-=======
-    <link rel="stylesheet" href="{% static 'usuarios/css/superadministrador/superadmin.css' %}">
->>>>>>> 1782154e45f3329119f93f6cdd0881243851bf8a
+
     {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -42,16 +39,21 @@
                     <i class="fas fa-book"></i>
                     <span>Profesores</span>
                 </a>
-<<<<<<< HEAD
+
                 <a href="{% url 'gestion_estudiante' %}" class="nav-item">
                     <i class="fas fa-book"></i>
                     <span>Alumnos</span>
                 </a>
                 
+                <a href="{% url 'gestion_documentos_superadministrador' %}" class="nav-item">
+                    <i class="fas fa-book"></i>
+                    <span>Gestión Contenido</span>
+                </a>
+
                 <span class="nav-item disabled">
-=======
+
                 <a href="{% url 'laboratorios_list' %}" class="nav-item">
->>>>>>> 1782154e45f3329119f93f6cdd0881243851bf8a
+
                     <i class="fas fa-flask"></i>
                     <span>Laboratorios</span>
                 </a>

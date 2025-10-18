@@ -60,8 +60,10 @@ urlpatterns = [
     path('reportes/temas-disponibles/', views.generar_reporte_pdf, {'tipo_reporte': 'temas_disponibles'}, name='reporte_temas_disponibles'),
     path('reportes/laboratorios/', views.generar_reporte_pdf, {'tipo_reporte': 'laboratorios'}, name='reporte_laboratorios'),
     
-    # URLs para AJAX y búsquedas
-    path('gestion-documentos/', views.gestion_documentos, name='gestion_documentos'),
+    #MODULO GESTION CONTENIDO-TEORICO
+    path('gestion-documentos-profesor/', views.gestion_documentos_profesor, name='gestion_documentos_profesor'),
+    path('gestion-documentos-administrador/', views.gestion_documentos_administrador, name='gestion_documentos_administrador'),
+    path('gestion-documentos-superadministrador/', views.gestion_documentos_superadministrador, name='gestion_documentos_superadministrador'),
     path('contenido-teorico/', views.contenido_teorico, name='contenido_teorico'),
     path('documentos/<int:documento_id>/descargar/', views.descargar_documento, name='descargar_documento'),
     path('documentos/<int:documento_id>/preview/', views.preview_documento, name='preview_documento')
