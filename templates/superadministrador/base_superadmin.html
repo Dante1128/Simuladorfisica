@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Superadministrador{% endblock %}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{% static 'usuarios/css/superadministrador/superadmin.css' %}">
+    <link rel="stylesheet" href="{% static 'css/superadministrador/base_superadmin.css' %}">
+    {% block extra_css %}{% endblock %}
 </head>
 <body>
     <!-- Sidebar/Navbar -->
@@ -29,18 +30,19 @@
                     <i class="fas fa-school"></i>
                     <span>Colegios</span>
                 </a>
-                <a href="{% url 'gestion_cursos' %}" class="nav-item">
+                <a href="{% url 'gestion_administradores' %}" class="nav-item">
                     <i class="fas fa-book"></i>
-                    <span>Cursos</span>
-                </a>
-                <a href="{% url 'gestion_estudiante' %}" class="nav-item">
-                    <i class="fas fa-book"></i>
-                    <span>Alumnos</span>
+                    <span>Administrador Acadamico</span>
                 </a>
                 <a href="{% url 'gestion_profesor' %}" class="nav-item">
                     <i class="fas fa-book"></i>
                     <span>Profesores</span>
                 </a>
+                <a href="{% url 'gestion_estudiante' %}" class="nav-item">
+                    <i class="fas fa-book"></i>
+                    <span>Alumnos</span>
+                </a>
+                
                 <span class="nav-item disabled">
                     <i class="fas fa-flask"></i>
                     <span>Laboratorios</span>
@@ -49,10 +51,10 @@
                     <i class="fas fa-puzzle-piece"></i>
                     <span>Componentes</span>
                 </span>
-                <span class="nav-item disabled">
-                    <i class="fas fa-chart-bar"></i>
+               <a href="{% url 'dashboard_superadmin' %}" class="nav-item">
+                    <i class="fas fa-book"></i>
                     <span>Reportes</span>
-                </span>
+                </a>
             </nav>
             
             <button class="btn btn-logout" onclick="logout()">
@@ -68,7 +70,7 @@
         {% endblock %}
     </main>
     
-    <script src="{% static 'usuarios/js/superadministrador/superadmin.js' %}"></script>
+    <script src="{% static 'js/superadministrador/superadmin.js' %}"></script>
 
 </body>
 </html>

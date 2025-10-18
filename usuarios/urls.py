@@ -4,15 +4,11 @@ from . import views
 
 urlpatterns = [
     path('', views.index, name='index'),
-    path('login/', views.login, name='login'),
+    path('login/', views.login_view, name='login'),
     path('panel_superadmin/',views.panel_superadmin, name='panel_superadmin'),
-    # Rutas para Componentes
-    path('componentes/', views.componentes_list, name='componentes_list'),
-    path('componentes/agregar/', views.componente_create, name='componente_create'),
-    path('componentes/<int:pk>/editar/', views.componente_update, name='componente_update'),
-    path('componentes/<int:pk>/eliminar/', views.componente_delete_confirm, name='componente_delete_confirm'),
+    #RUTAS DE GESTIÓN
     path('gestion_colegios/', views.gestion_colegios, name='gestion_colegios'),
-    path('gestion_cursos/', views.gestion_cursos, name='gestion_cursos'),
+    path('gestion_administradores/', views.gestion_administradores, name='gestion_administradores'),
     path('gestion_profesor/', views.gestion_profesor, name='gestion_profesor'),
     path('gestion_estudiante/', views.gestion_estudiante, name='gestion_estudiante'),
     path('panel_admin/', views.panel_admin, name='panel_admin'),
@@ -32,7 +28,11 @@ urlpatterns = [
     
     # APIs para datos en tiempo real
     path('api/estadisticas-tiempo-real/', views.api_estadisticas_tiempo_real, name='api_estadisticas_tiempo_real'),
-    
+    # Rutas para Componentes
+    path('componentes/', views.componentes_list, name='componentes_list'),
+    path('componentes/agregar/', views.componente_create, name='componente_create'),
+    path('componentes/<int:pk>/editar/', views.componente_update, name='componente_update'),
+    path('componentes/<int:pk>/eliminar/', views.componente_delete_confirm, name='componente_delete_confirm'),
     # Reportes PDF
     path('reportes/usuarios/', views.generar_reporte_pdf, {'tipo_reporte': 'usuarios'}, name='reporte_usuarios'),
     path('reportes/colegios/', views.generar_reporte_pdf, {'tipo_reporte': 'colegios'}, name='reporte_colegios'),
@@ -46,10 +46,6 @@ urlpatterns = [
     path('reportes/laboratorios/', views.generar_reporte_pdf, {'tipo_reporte': 'laboratorios'}, name='reporte_laboratorios'),
     
     # URLs para AJAX y búsquedas
-    path('buscar-colegios/', views.buscar_colegios, name='buscar_colegios'),
-    path('editar-colegio/<int:colegio_id>/', views.editar_colegio, name='editar_colegio'),
-    path('eliminar-colegio/<int:colegio_id>/', views.eliminar_colegio, name='eliminar_colegio'),
-    path('exportar-colegios/', views.exportar_colegios, name='exportar_colegios'),
     path('gestion-documentos/', views.gestion_documentos, name='gestion_documentos'),
     path('contenido-teorico/', views.contenido_teorico, name='contenido_teorico'),
     path('documentos/<int:documento_id>/descargar/', views.descargar_documento, name='descargar_documento'),

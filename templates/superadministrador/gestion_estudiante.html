@@ -1,645 +1,167 @@
 {% extends 'superadministrador/base_superadmin.html' %}
 {% load static %}
-{% block title %}Gestión de Alumnos{% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<div class="container">
+    <h2 class="titulo-pagina">Gestión de Estudiantes</h2>
+
+    <div class="acciones-superiores">
+        <button class="btn btn-primary" id="btn-agregar">
+            <i class="fas fa-user-plus"></i> Nuevo Alumno
+        </button>
+    </div>
+
+    <div class="tabla-container">
+        <table class="tabla-estudiantes">
+            <thead>
+                <tr>
+                    <th>Nombre completo</th>
+                    <th>Curso</th>
+                    <th>Colegio</th>
+                    <th>Correo</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for estudiante in estudiantes %}
+                <tr>
+                    <td>{{ estudiante.persona.nombre }} {{ estudiante.persona.apellidoPaterno }} {{ estudiante.persona.apellidoMaterno }}</td>
+                    <td>{{ estudiante.curso }}</td>
+                    <td>{{ estudiante.colegio.nombre }}</td>
+                    <td>{{ estudiante.persona.usuario.correo }}</td>
+
+                    <td class="acciones-cell">
+                        <button class="btn btn-tertiary btn-sm btn-editar"
+                                data-id="{{ estudiante.id }}"
+                                data-nombres="{{ estudiante.persona.nombre }}"
+                                data-apellidos="{{ estudiante.persona.apellidoPaterno }} {{ estudiante.persona.apellidoMaterno }}"
+                                data-curso="{{ estudiante.curso }}"
+                                data-colegio="{{ estudiante.colegio.id }}"
+                                data-email="{{ estudiante.persona.usuario.correo }}"
+>
+                            <i class="fas fa-edit"></i> Editar
+                        </button>
+                        <button class="btn btn-secondary btn-sm">
+                            <i class="fas fa-eye"></i> Ver
+                        </button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align:center;">No hay estudiantes registrados</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- === Modal === -->
+<div id="modal-alumno" class="modal">
+    <div class="modal-content">
+        <h3 id="modal-titulo" class="modal-titulo"><i class="fas fa-user-plus"></i> Nuevo Alumno</h3>
+
+        <form id="form-alumno" method="POST" action="{% url 'gestion_estudiante' %}">
+            {% csrf_token %}
+            <input type="hidden" id="alumno-id" name="alumno-id">
+
+            <div class="form-group">
+                <label for="alumno-nombres">Nombres:</label>
+                <input type="text" id="alumno-nombres" name="alumno-nombres" required>
+            </div>
+
+            <div class="form-group">
+                <label for="alumno-apellidos">Apellidos:</label>
+                <input type="text" id="alumno-apellidos" name="alumno-apellidos" required>
+            </div>
+
+            <div class="form-group">
+                <label for="alumno-curso">Curso:</label>
+                <input type="text" id="alumno-curso" name="alumno-curso" required>
+            </div>
+
+            <div class="form-group">
+                <label for="alumno-colegio">Colegio:</label>
+                <select id="alumno-colegio" name="alumno-colegio" required>
+                    <option value="">Seleccione un colegio</option>
+                    {% for colegio in colegios %}
+                        <option value="{{ colegio.id }}">{{ colegio.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="alumno-email">Correo Electrónico:</label>
+                <input type="email" id="alumno-email" name="alumno-email" placeholder="correo@ejemplo.com" required>
+            </div>
+
+            <div class="form-group">
+                <label for="alumno-password">Contraseña:</label>
+                <input type="password" id="alumno-password" name="alumno-password" placeholder="Ingrese una contraseña segura">
+                <small>Dejar vacío si no desea cambiar la contraseña al editar</small>
+            </div>
+
+            <div class="modal-botones">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Guardar</button>
+                <button type="button" class="btn btn-secondary" id="btn-cerrar-modal"><i class="fas fa-times"></i> Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <style>
-    :root {
-        --color-fondo: #F3F3E0;
-        --color-primario: #133E87;
-        --color-secundario: #608BC1;
-        --color-terciario: #CBDCEB;
-        --color-borde: #D1D1C7;
-    }
-    
-    .alumnos-container {
-        max-width: 1400px;
-        margin: 0 auto;
-        padding: 20px;
-    }
-    
-    .page-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 25px;
-        padding-bottom: 15px;
-        border-bottom: 2px solid var(--color-borde);
-    }
-    
-    .page-title h1 {
-        color: var(--color-primario);
-        font-size: 28px;
-        font-weight: 600;
-        margin-bottom: 5px;
-    }
-    
-    .page-title p {
-        color: #666;
-        font-size: 16px;
-    }
-    
-    .main-content {
-        background-color: white;
-        border-radius: 10px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        overflow: hidden;
-        margin-bottom: 30px;
-    }
-    
-    .content-section {
-        padding: 25px;
-    }
-    
-    .filters {
-        background-color: var(--color-terciario);
-        padding: 20px;
-        border-radius: 8px;
-        margin-bottom: 25px;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 20px;
-        align-items: end;
-    }
-    
-    .filter-group {
-        flex: 1;
-        min-width: 200px;
-    }
-    
-    .filter-group label {
-        display: block;
-        margin-bottom: 8px;
-        font-weight: 500;
-        color: var(--color-primario);
-    }
-    
-    .filter-group select, .filter-group input {
-        width: 100%;
-        padding: 10px 12px;
-        border: 1px solid #ddd;
-        border-radius: 6px;
-        font-size: 15px;
-    }
-    
-    .actions {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 25px;
-    }
-    
-    .search-box {
-        position: relative;
-        width: 300px;
-    }
-    
-    .search-box input {
-        width: 100%;
-        padding: 10px 15px 10px 40px;
-        border: 1px solid #ddd;
-        border-radius: 6px;
-        font-size: 15px;
-    }
-    
-    .search-box i {
-        position: absolute;
-        left: 15px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: #777;
-    }
-    
-    .action-buttons {
-        display: flex;
-        gap: 12px;
-    }
-    
-    .btn {
-        padding: 10px 18px;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        font-weight: 500;
-        transition: all 0.3s;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 15px;
-    }
-    
-    .btn-primary {
-        background-color: var(--color-primario);
-        color: white;
-    }
-    
-    .btn-primary:hover {
-        background-color: #0d2e63;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-    
-    .btn-secondary {
-        background-color: var(--color-secundario);
-        color: white;
-    }
-    
-    .btn-secondary:hover {
-        background-color: #4a73a5;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-    
-    .btn-tertiary {
-        background-color: var(--color-terciario);
-        color: var(--color-primario);
-        border: 1px solid var(--color-secundario);
-    }
-    
-    .btn-tertiary:hover {
-        background-color: #b8cde0;
-    }
-    
-    .btn-sm {
-        padding: 6px 12px;
-        font-size: 14px;
-    }
-    
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-bottom: 20px;
-    }
-    
-    table th {
-        background-color: var(--color-primario);
-        color: white;
-        text-align: left;
-        padding: 14px 16px;
-        font-weight: 500;
-    }
-    
-    table td {
-        padding: 14px 16px;
-        border-bottom: 1px solid #eee;
-    }
-    
-    table tr:hover {
-        background-color: rgba(203, 220, 235, 0.2);
-    }
-    
-    .acciones-cell {
-        display: flex;
-        gap: 8px;
-    }
-    
-    .pagination {
-        display: flex;
-        justify-content: center;
-        margin-top: 25px;
-    }
-    
-    .pagination button {
-        margin: 0 5px;
-        padding: 8px 14px;
-        background-color: white;
-        border: 1px solid #ddd;
-        border-radius: 6px;
-        cursor: pointer;
-        transition: all 0.3s;
-    }
-    
-    .pagination button.active {
-        background-color: var(--color-primario);
-        color: white;
-        border-color: var(--color-primario);
-    }
-    
-    .pagination button:hover:not(.active) {
-        background-color: var(--color-terciario);
-    }
-    
-    /* Modal Styles */
-    .modal-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: rgba(0, 0, 0, 0.5);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 1000;
-        opacity: 0;
-        visibility: hidden;
-        transition: all 0.3s;
-    }
-    
-    .modal-overlay.active {
-        opacity: 1;
-        visibility: visible;
-    }
-    
-    .modal {
-        background-color: white;
-        border-radius: 10px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-        width: 90%;
-        max-width: 600px;
-        max-height: 90vh;
-        overflow-y: auto;
-        transform: translateY(-20px);
-        transition: transform 0.3s;
-    }
-    
-    .modal-overlay.active .modal {
-        transform: translateY(0);
-    }
-    
-    .modal-header {
-        background-color: var(--color-primario);
-        color: white;
-        padding: 20px 25px;
-        border-radius: 10px 10px 0 0;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    
-    .modal-header h2 {
-        margin: 0;
-        font-size: 22px;
-        font-weight: 500;
-    }
-    
-    .close-modal {
-        background: none;
-        border: none;
-        color: white;
-        font-size: 22px;
-        cursor: pointer;
-        transition: transform 0.3s;
-    }
-    
-    .close-modal:hover {
-        transform: rotate(90deg);
-    }
-    
-    .modal-body {
-        padding: 25px;
-    }
-    
-    .form-group {
-        margin-bottom: 20px;
-    }
-    
-    .form-group label {
-        display: block;
-        margin-bottom: 8px;
-        font-weight: 500;
-        color: var(--color-primario);
-    }
-    
-    .form-group input, .form-group select, .form-group textarea {
-        width: 100%;
-        padding: 12px 15px;
-        border: 1px solid #ddd;
-        border-radius: 6px;
-        font-size: 15px;
-        transition: border 0.3s;
-    }
-    
-    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-        border-color: var(--color-secundario);
-        outline: none;
-    }
-    
-    .form-row {
-        display: flex;
-        gap: 15px;
-    }
-    
-    .form-row .form-group {
-        flex: 1;
-    }
-    
-    .modal-footer {
-        padding: 20px 25px;
-        border-top: 1px solid #eee;
-        display: flex;
-        justify-content: flex-end;
-        gap: 12px;
-    }
-    
-    .empty-state {
-        text-align: center;
-        padding: 40px 20px;
-        color: #777;
-    }
-    
-    .empty-state i {
-        font-size: 50px;
-        margin-bottom: 15px;
-        color: #ccc;
-    }
-    
-    @media (max-width: 768px) {
-        .page-header {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 15px;
-        }
-        
-        .actions {
-            flex-direction: column;
-            gap: 15px;
-        }
-        
-        .search-box {
-            width: 100%;
-        }
-        
-        .filters {
-            flex-direction: column;
-        }
-        
-        .form-row {
-            flex-direction: column;
-            gap: 0;
-        }
-        
-        table {
-            display: block;
-            overflow-x: auto;
-        }
-        
-        .acciones-cell {
-            flex-direction: column;
-        }
-    }
+.container { max-width: 1000px; margin:auto; padding:20px; }
+.titulo-pagina { font-size:1.8em; font-weight:600; margin-bottom:15px; }
+.acciones-superiores { display:flex; justify-content:flex-end; margin-bottom:10px; }
+.btn { border:none; border-radius:8px; padding:8px 12px; cursor:pointer; }
+.btn-primary { background-color:#007bff; color:white; }
+.btn-tertiary { background-color:#ffc107; color:black; }
+.btn-secondary { background-color:#6c757d; color:white; }
+.btn-sm { padding:5px 8px; font-size:0.9em; }
+.tabla-container { margin-top:20px; overflow-x:auto; }
+.tabla-estudiantes { width:100%; border-collapse:collapse; }
+.tabla-estudiantes th, .tabla-estudiantes td { padding:10px; border:1px solid #ddd; }
+.tabla-estudiantes th { background-color:#f8f9fa; }
+.acciones-cell { display:flex; gap:5px; justify-content:center; }
+.modal { display:none; position:fixed; inset:0; background-color:rgba(0,0,0,0.5); justify-content:center; align-items:center; }
+.modal.active { display:flex; }
+.modal-content { background:white; padding:20px; border-radius:12px; width:400px; }
+.modal-titulo { margin-bottom:15px; font-size:1.2em; display:flex; align-items:center; gap:10px; }
+.form-group { margin-bottom:10px; display:flex; flex-direction:column; }
+.modal-botones { display:flex; justify-content:flex-end; gap:10px; }
 </style>
 
-<div class="alumnos-container">
-    <div class="page-header">
-        <div class="page-title">
-            <h1><i class="fas fa-user-graduate"></i> Gestión de Alumnos</h1>
-            <p>Administra la información de los alumnos del sistema</p>
-        </div>
-    </div>
-    
-    <div class="main-content">
-        <div class="content-section">
-            <div class="filters">
-                <div class="filter-group">
-                    <label for="colegio"><i class="fas fa-school"></i> Colegio</label>
-                    <select id="colegio">
-                        <option value="">Todos los colegios</option>
-                        <option value="1">Colegio San José</option>
-                        <option value="2">Colegio Santa María</option>
-                        <option value="3">Colegio San Martín</option>
-                    </select>
-                </div>
-                
-                <div class="filter-group">
-                    <label for="curso"><i class="fas fa-book"></i> Curso</label>
-                    <select id="curso">
-                        <option value="">Todos los cursos</option>
-                        <option value="1">Primero Básico</option>
-                        <option value="2">Segundo Básico</option>
-                        <option value="3">Tercero Básico</option>
-                    </select>
-                </div>
-                
-                <button class="btn btn-tertiary">
-                    <i class="fas fa-filter"></i> Aplicar Filtros
-                </button>
-            </div>
-            
-            <div class="actions">
-                <div class="search-box">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="buscar" placeholder="Buscar alumno por nombre o ID">
-                </div>
-                
-                <div class="action-buttons">
-                    <button class="btn btn-secondary">
-                        <i class="fas fa-file-export"></i> Exportar Datos
-                    </button>
-                    <button class="btn btn-primary" id="btn-agregar-alumno">
-                        <i class="fas fa-user-plus"></i> Agregar Alumno
-                    </button>
-                </div>
-            </div>
-            
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Nombre Completo</th>
-                        <th>Curso</th>
-                        <th>Colegio</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>1001</td>
-                        <td>María González Pérez</td>
-                        <td>Primero Básico</td>
-                        <td>Colegio San José</td>
-                        <td class="acciones-cell">
-                            <button class="btn btn-tertiary btn-sm btn-editar">
-                                <i class="fas fa-edit"></i> Editar
-                            </button>
-                            <button class="btn btn-secondary btn-sm">
-                                <i class="fas fa-eye"></i> Ver
-                            </button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>1002</td>
-                        <td>Carlos Rodríguez López</td>
-                        <td>Segundo Básico</td>
-                        <td>Colegio Santa María</td>
-                        <td class="acciones-cell">
-                            <button class="btn btn-tertiary btn-sm btn-editar">
-                                <i class="fas fa-edit"></i> Editar
-                            </button>
-                            <button class="btn btn-secondary btn-sm">
-                                <i class="fas fa-eye"></i> Ver
-                            </button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>1003</td>
-                        <td>Ana Martínez Silva</td>
-                        <td>Tercero Básico</td>
-                        <td>Colegio San Martín</td>
-                        <td class="acciones-cell">
-                            <button class="btn btn-tertiary btn-sm btn-editar">
-                                <i class="fas fa-edit"></i> Editar
-                            </button>
-                            <button class="btn btn-secondary btn-sm">
-                                <i class="fas fa-eye"></i> Ver
-                            </button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-            
-            <div class="pagination">
-                <button class="active">1</button>
-                <button>2</button>
-                <button>3</button>
-                <button>Siguiente <i class="fas fa-chevron-right"></i></button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal para Agregar/Editar Alumno -->
-<div class="modal-overlay" id="modal-alumno">
-    <div class="modal">
-        <div class="modal-header">
-            <h2 id="modal-titulo"><i class="fas fa-user-plus"></i> Agregar Nuevo Alumno</h2>
-            <button class="close-modal">&times;</button>
-        </div>
-        <div class="modal-body">
-            <form id="form-alumno">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="alumno-id">ID Alumno</label>
-                        <input type="text" id="alumno-id" placeholder="ID automático" disabled>
-                    </div>
-                    <div class="form-group">
-                        <label for="alumno-colegio">Colegio</label>
-                        <select id="alumno-colegio" required>
-                            <option value="">Seleccione un colegio</option>
-                            <option value="1">Colegio San José</option>
-                            <option value="2">Colegio Santa María</option>
-                            <option value="3">Colegio San Martín</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="alumno-nombres">Nombres</label>
-                        <input type="text" id="alumno-nombres" placeholder="Ingrese nombres" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="alumno-apellidos">Apellidos</label>
-                        <input type="text" id="alumno-apellidos" placeholder="Ingrese apellidos" required>
-                    </div>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="alumno-curso">Curso</label>
-                        <select id="alumno-curso" required>
-                            <option value="">Seleccione un curso</option>
-                            <option value="1">Primero Básico</option>
-                            <option value="2">Segundo Básico</option>
-                            <option value="3">Tercero Básico</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="alumno-fecha-nacimiento">Fecha de Nacimiento</label>
-                        <input type="date" id="alumno-fecha-nacimiento" required>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="alumno-email">Correo Electrónico</label>
-                    <input type="email" id="alumno-email" placeholder="ejemplo@correo.com">
-                </div>
-                
-                <div class="form-group">
-                    <label for="alumno-telefono">Teléfono de Contacto</label>
-                    <input type="tel" id="alumno-telefono" placeholder="+56 9 1234 5678">
-                </div>
-                
-                <div class="form-group">
-                    <label for="alumno-direccion">Dirección</label>
-                    <textarea id="alumno-direccion" rows="3" placeholder="Ingrese dirección completa"></textarea>
-                </div>
-            </form>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-tertiary" id="btn-cancelar">Cancelar</button>
-            <button class="btn btn-primary" id="btn-guardar">
-                <i class="fas fa-save"></i> Guardar Alumno
-            </button>
-        </div>
-    </div>
-</div>
-
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const modal = document.getElementById('modal-alumno');
-        const btnAgregar = document.getElementById('btn-agregar-alumno');
-        const btnEditar = document.querySelectorAll('.btn-editar');
-        const btnCerrar = document.querySelector('.close-modal');
-        const btnCancelar = document.getElementById('btn-cancelar');
-        const btnGuardar = document.getElementById('btn-guardar');
-        const modalTitulo = document.getElementById('modal-titulo');
-        
-        // Abrir modal para agregar alumno
-        btnAgregar.addEventListener('click', function() {
-            modalTitulo.innerHTML = '<i class="fas fa-user-plus"></i> Agregar Nuevo Alumno';
-            document.getElementById('alumno-id').value = '';
-            document.getElementById('alumno-nombres').value = '';
-            document.getElementById('alumno-apellidos').value = '';
-            document.getElementById('alumno-colegio').value = '';
-            document.getElementById('alumno-curso').value = '';
-            document.getElementById('alumno-fecha-nacimiento').value = '';
-            document.getElementById('alumno-email').value = '';
-            document.getElementById('alumno-telefono').value = '';
-            document.getElementById('alumno-direccion').value = '';
+document.addEventListener('DOMContentLoaded', () => {
+    const modal = document.getElementById('modal-alumno');
+    const modalTitulo = document.getElementById('modal-titulo');
+    const btnAgregar = document.getElementById('btn-agregar');
+    const btnCerrarModal = document.getElementById('btn-cerrar-modal');
+    const btnEditar = document.querySelectorAll('.btn-editar');
+    const formAlumno = document.getElementById('form-alumno');
+
+    btnAgregar.addEventListener('click', () => {
+        modalTitulo.innerHTML = '<i class="fas fa-user-plus"></i> Nuevo Alumno';
+        formAlumno.reset();
+        document.getElementById('alumno-id').value = '';
+        modal.classList.add('active');
+    });
+
+    btnEditar.forEach(btn => {
+        btn.addEventListener('click', function() {
+            modalTitulo.innerHTML = '<i class="fas fa-user-edit"></i> Editar Alumno';
+            document.getElementById('alumno-id').value = this.dataset.id;
+            document.getElementById('alumno-nombres').value = this.dataset.nombres;
+            document.getElementById('alumno-apellidos').value = this.dataset.apellidos;
+            document.getElementById('alumno-curso').value = this.dataset.curso;
+            document.getElementById('alumno-colegio').value = this.dataset.colegio;
+            document.getElementById('alumno-email').value = this.dataset.email;
+            document.getElementById('alumno-password').value = '';
             modal.classList.add('active');
         });
-        
-        // Abrir modal para editar alumno
-        btnEditar.forEach(btn => {
-            btn.addEventListener('click', function() {
-                modalTitulo.innerHTML = '<i class="fas fa-user-edit"></i> Editar Alumno';
-                // Aquí normalmente cargaríamos los datos del alumno desde la base de datos
-                // Por ahora, solo simulamos con datos de ejemplo
-                document.getElementById('alumno-id').value = '1001';
-                document.getElementById('alumno-nombres').value = 'María';
-                document.getElementById('alumno-apellidos').value = 'González Pérez';
-                document.getElementById('alumno-colegio').value = '1';
-                document.getElementById('alumno-curso').value = '1';
-                document.getElementById('alumno-fecha-nacimiento').value = '2015-03-15';
-                document.getElementById('alumno-email').value = 'maria.gonzalez@ejemplo.com';
-                document.getElementById('alumno-telefono').value = '+56 9 1234 5678';
-                document.getElementById('alumno-direccion').value = 'Av. Principal 123, Santiago';
-                modal.classList.add('active');
-            });
-        });
-        
-        // Cerrar modal
-        function cerrarModal() {
-            modal.classList.remove('active');
-        }
-        
-        btnCerrar.addEventListener('click', cerrarModal);
-        btnCancelar.addEventListener('click', cerrarModal);
-        
-        // Cerrar modal al hacer clic fuera de él
-        modal.addEventListener('click', function(e) {
-            if (e.target === modal) {
-                cerrarModal();
-            }
-        });
-        
-        // Guardar alumno
-        btnGuardar.addEventListener('click', function() {
-            // Aquí iría la lógica para guardar en la base de datos
-            alert('Alumno guardado correctamente');
-            cerrarModal();
-        });
     });
+
+    btnCerrarModal.addEventListener('click', () => modal.classList.remove('active'));
+});
 </script>
 {% endblock %}
