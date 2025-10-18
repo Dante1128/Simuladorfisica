@@ -1,0 +1,15 @@
+{% extends 'administrador/base_admin.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container">
+    <div class="admin-card">
+        <h2>¿Deseas ingresar al laboratorio?</h2>
+        <p>Laboratorio: <strong>{{ laboratorio.nombre }}</strong></p>
+        <div style="display:flex;gap:12px;margin-top:12px">
+            <a href="{% url 'laboratorio_entrar' laboratorio.id %}" class="btn btn-success">Sí, ingresar</a>
+            <a href="{% url 'estudiantes_laboratorios_list' %}" class="btn btn-secondary">No, volver</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

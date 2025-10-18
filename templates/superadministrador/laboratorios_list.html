@@ -1,0 +1,756 @@
+{% extends 'superadministrador/base_superadmin.html' %}
+{% load static %}
+
+{% block title %}Gestión de Laboratorios{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Estilos generales */
+.container {
+    margin-left: 137px;
+    width: calc(100% - 137px);
+    min-height: 100vh;
+    background: #f0f2f5;
+    padding: 0;
+    box-sizing: border-box;
+}
+.main-contentt {
+    flex: 1;
+    
+    padding: 40px;
+    min-height: 100vh;
+    background: #F3F3E0;
+    position: relative;
+}
+/* Header principal con gradiente */
+.page-header {
+    background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+    padding: 40px 50px;
+    color: white;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.page-header-content {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.page-header-icon {
+    width: 60px;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+}
+
+.page-header-text h1 {
+    margin: 0;
+    font-size: 32px;
+    font-weight: 600;
+}
+
+.page-header-text p {
+    margin: 5px 0 0 0;
+    opacity: 0.9;
+    font-size: 15px;
+}
+
+/* Contenido principal */
+.main-content {
+    padding: 30px 50px;
+}
+
+/* Barra de búsqueda y acciones */
+.search-bar-container {
+    background: white;
+    border-radius: 12px;
+    padding: 20px 30px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.search-input-wrapper {
+    flex: 1;
+    position: relative;
+    max-width: 500px;
+}
+
+.search-input-wrapper i {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    font-size: 16px;
+}
+
+.search-input {
+    width: 100%;
+    padding: 12px 15px 12px 45px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.btn-nuevo {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 24px;
+    background: #1e40af;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+}
+
+.btn-nuevo:hover {
+    background: #1e3a8a;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(30, 64, 175, 0.4);
+}
+
+.btn-nuevo i {
+    font-size: 16px;
+}
+
+/* Tabla de datos */
+.data-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.table-header {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 150px;
+    gap: 20px;
+    padding: 20px 30px;
+    background: #1e3a8a;
+    color: white;
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.table-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 150px;
+    gap: 20px;
+    padding: 20px 30px;
+    border-bottom: 1px solid #f3f4f6;
+    align-items: center;
+    transition: background 0.2s;
+}
+
+.table-row:hover {
+    background: #f9fafb;
+}
+
+.table-row:last-child {
+    border-bottom: none;
+}
+
+/* Columnas */
+.lab-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.lab-icon {
+    width: 45px;
+    height: 45px;
+    background: #1e3a8a;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.lab-details h3 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: #111827;
+}
+
+.lab-details p {
+    margin: 3px 0 0 0;
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.location-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.location-cell i {
+    color: #9ca3af;
+}
+
+/* Botones de acción */
+.actions-cell {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.btn-action {
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 14px;
+}
+
+.btn-edit {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.btn-edit:hover {
+    background: #2563eb;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.btn-delete {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.btn-delete:hover {
+    background: #dc2626;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+/* Estado */
+.status-badge {
+    display: inline-flex;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+/* Sin datos */
+.no-data-message {
+    text-align: center;
+    padding: 80px 20px;
+    color: #9ca3af;
+}
+
+.no-data-message i {
+    font-size: 64px;
+    margin-bottom: 20px;
+    opacity: 0.3;
+}
+
+.no-data-message p {
+    margin: 0;
+    font-size: 16px;
+    color: #6b7280;
+}
+
+/* Modal */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-overlay.active {
+    display: flex !important;
+}
+
+.modal-dialog {
+    background: white;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 550px;
+    margin: 20px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal-header {
+    padding: 20px 24px;
+    background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+    color: white;
+    border-radius: 12px 12px 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.close-button {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.close-button:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.modal-body {
+    padding: 30px;
+}
+
+/* Formularios */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 8px;
+    color: #374151;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.form-control:focus {
+    border-color: #2563eb;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 30px;
+}
+
+.btn {
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-primary {
+    background: #1e40af;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #1e3a8a;
+    transform: translateY(-1px);
+}
+
+.btn-danger {
+    background: #dc2626;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #b91c1c;
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.btn-secondary:hover {
+    background: #e5e7eb;
+}
+
+/* Loading */
+.loading-spinner {
+    text-align: center;
+    padding: 40px;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    margin: 0 auto 20px;
+    border: 4px solid #f3f4f6;
+    border-top-color: #2563eb;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Delete Confirmation */
+.delete-confirmation {
+    text-align: center;
+    padding: 20px;
+}
+
+.delete-confirmation i {
+    font-size: 60px;
+    color: #dc2626;
+    margin-bottom: 20px;
+}
+
+.delete-confirmation p {
+    color: #374151;
+    font-size: 15px;
+    margin-bottom: 10px;
+}
+
+.warning-text {
+    color: #9ca3af;
+    font-size: 13px;
+    margin-top: 10px;
+    margin-bottom: 30px;
+}
+
+/* Error */
+.error-message {
+    text-align: center;
+    padding: 30px;
+    color: #dc2626;
+}
+
+.error-message i {
+    font-size: 48px;
+    margin-bottom: 16px;
+}
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="container">
+    <!-- Header Principal -->
+    <div class="page-header">
+        <div class="page-header-content">
+            <div class="page-header-icon">
+                <i class="fas fa-flask"></i>
+            </div>
+            <div class="page-header-text">
+                <h1>Gestión de Laboratorios</h1>
+                <p>Administre y organice los laboratorios del sistema</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenido Principal -->
+    <div class="main-contentt">
+        <!-- Barra de búsqueda y botón nuevo -->
+        <div class="search-bar-container">
+            <div class="search-input-wrapper">
+                <i class="fas fa-search"></i>
+                <input type="text" class="search-input" placeholder="Buscar por nombre o carpeta..." id="searchInput">
+            </div>
+            <button type="button" class="btn-nuevo" onclick="openLabModal('agregar')" id="btnAgregarLab">
+                <i class="fas fa-plus"></i>
+                <span>Nuevo Laboratorio</span>
+            </button>
+        </div>
+
+        <!-- Tabla de Laboratorios -->
+        <div class="data-card">
+            {% if laboratorios %}
+            <div class="table-header">
+                <div>LABORATORIO</div>
+                <div>ESTADO</div>
+                <div>CARPETA</div>
+                <div style="text-align: right;">ACCIONES</div>
+            </div>
+            
+            {% for l in laboratorios %}
+            <div class="table-row">
+                <div class="lab-info">
+                    <div class="lab-icon">
+                        <i class="fas fa-flask"></i>
+                    </div>
+                    <div class="lab-details">
+                        <h3>{{ l.nombre }}</h3>
+                        <p>ID: #{{ l.id }}</p>
+                    </div>
+                </div>
+                
+                <div>
+                    <span class="status-badge">{{ l.estado }}</span>
+                </div>
+                
+                <div class="location-cell">
+                    <i class="fas fa-folder"></i>
+                    <span>{{ l.carpeta|default:'-' }}</span>
+                </div>
+                
+                <div class="actions-cell">
+                    <button type="button" class="btn-action btn-edit" onclick="openLabModal('editar', '{{ l.id }}', '{{ l.nombre }}')" title="Editar">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button type="button" class="btn-action btn-delete" onclick="openLabModal('eliminar', '{{ l.id }}', '{{ l.nombre }}')" title="Eliminar">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+            
+            {% else %}
+            <div class="no-data-message">
+                <i class="fas fa-flask"></i>
+                <p>No hay laboratorios registrados</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="labModal" class="modal-overlay">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3 id="modalTitle">Laboratorio</h3>
+                <button type="button" class="close-button" onclick="closeLabModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="labModalBody" class="modal-body">
+                <!-- El contenido se carga dinámicamente -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Funciones del Modal
+function showLoading() {
+    return `<div class="loading-spinner">
+        <div class="spinner"></div>
+        <p>Cargando...</p>
+    </div>`;
+}
+
+function showError(message) {
+    return `<div class="error-message">
+        <i class="fas fa-exclamation-circle"></i>
+        <p>${message}</p>
+    </div>`;
+}
+
+function openLabModal(tipo, id = '', nombre = '') {
+    const modal = document.getElementById('labModal');
+    const title = document.getElementById('modalTitle');
+    const body = document.getElementById('labModalBody');
+    
+    modal.classList.add('active');
+    body.innerHTML = showLoading();
+
+    switch(tipo) {
+        case 'agregar':
+            title.textContent = 'Agregar Laboratorio';
+            fetch('{% url "laboratorio_create" %}', {
+                credentials: 'same-origin',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(handleResponse)
+            .then(html => body.innerHTML = html)
+            .catch(handleError);
+            break;
+
+        case 'editar':
+            title.textContent = 'Editar Laboratorio';
+            fetch(`/superadmin/laboratorios/${id}/editar/`, {
+                credentials: 'same-origin',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(handleResponse)
+            .then(html => body.innerHTML = html)
+            .catch(handleError);
+            break;
+
+        case 'eliminar':
+            title.textContent = 'Eliminar Laboratorio';
+            body.innerHTML = `
+                <div class="delete-confirmation">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p>¿Estás seguro que deseas eliminar el laboratorio <strong>${nombre}</strong>?</p>
+                    <p class="warning-text">Esta acción no se puede deshacer.</p>
+                    
+                    <form method="post" action="/superadmin/laboratorios/${id}/eliminar/" class="form-actions">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash-alt"></i> Eliminar
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="closeLabModal()">
+                            Cancelar
+                        </button>
+                    </form>
+                </div>`;
+            break;
+    }
+}
+
+function handleResponse(response) {
+    if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
+    return response.text();
+}
+
+function handleError(error) {
+    document.getElementById('labModalBody').innerHTML = showError(
+        `No se pudo cargar el contenido: ${error.message}`
+    );
+    console.error('Error en el modal:', error);
+}
+
+function closeLabModal() {
+    const modal = document.getElementById('labModal');
+    modal.classList.remove('active');
+    setTimeout(() => {
+        document.getElementById('labModalBody').innerHTML = '';
+    }, 300);
+}
+
+// Búsqueda en tiempo real
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('.table-row');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? 'grid' : 'none';
+            });
+        });
+    }
+    
+    // Cerrar modal con Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeLabModal();
+    });
+});
+
+// Attach handler to form inside modal
+function attachLabFormHandler() {
+    const form = document.querySelector('#labModalBody form');
+    if (!form || form.dataset.handlerAttached) return;
+    form.dataset.handlerAttached = 'true';
+    
+    form.addEventListener('submit', function(e){
+        e.preventDefault();
+        const data = new FormData(form);
+        fetch(form.action || window.location.pathname, {
+            method: 'POST',
+            body: data,
+            credentials: 'same-origin',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(r => r.text())
+        .then(text => {
+            if (text === 'OK') {
+                closeLabModal();
+                window.location.reload();
+            } else {
+                document.getElementById('labModalBody').innerHTML = text;
+                attachLabFormHandler();
+            }
+        })
+        .catch(err => { 
+            console.error(err); 
+            alert('Error guardando laboratorio'); 
+        });
+    });
+}
+
+// Monitor modal body changes
+const modalBody = document.getElementById('labModalBody');
+if (modalBody) {
+    const observer = new MutationObserver(() => attachLabFormHandler());
+    observer.observe(modalBody, { childList: true, subtree: true });
+}
+
+// Exponer funciones globalmente
+window.openLabModal = openLabModal;
+window.closeLabModal = closeLabModal;
+</script>
+{% endblock %}

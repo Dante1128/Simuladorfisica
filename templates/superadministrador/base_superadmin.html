@@ -7,6 +7,7 @@
     <title>{% block title %}Superadministrador{% endblock %}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{% static 'usuarios/css/superadministrador/superadmin.css' %}">
+    {% block extra_css %}{% endblock %}
 </head>
 <body>
     <!-- Sidebar/Navbar -->
@@ -41,10 +42,10 @@
                     <i class="fas fa-book"></i>
                     <span>Profesores</span>
                 </a>
-                <span class="nav-item disabled">
+                <a href="{% url 'laboratorios_list' %}" class="nav-item">
                     <i class="fas fa-flask"></i>
                     <span>Laboratorios</span>
-                </span>
+                </a>
                 <span class="nav-item disabled">
                     <i class="fas fa-puzzle-piece"></i>
                     <span>Componentes</span>
