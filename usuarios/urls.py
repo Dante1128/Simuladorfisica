@@ -6,9 +6,7 @@ urlpatterns = [
     path('', views.index, name='index'),
     path('login/', views.login_view, name='login'),
     path('panel_superadmin/',views.panel_superadmin, name='panel_superadmin'),
-<<<<<<< HEAD
     #RUTAS DE GESTIÓN
-=======
     # Rutas para Componentes
     path('componentes/', views.componentes_list, name='componentes_list'),
     path('componentes/agregar/', views.componente_create, name='componente_create'),
@@ -24,7 +22,6 @@ urlpatterns = [
     path('estudiantes/laboratorios/<int:pk>/confirmar/', views.laboratorio_access_confirm, name='laboratorio_access_confirm'),
     path('estudiantes/laboratorios/<int:pk>/entrar/', views.laboratorio_entrar, name='laboratorio_entrar'),
     path('estudiantes/laboratorios/<int:pk>/serve/<path:filename>/', views.laboratorio_serve, name='laboratorio_serve'),
->>>>>>> 1782154e45f3329119f93f6cdd0881243851bf8a
     path('gestion_colegios/', views.gestion_colegios, name='gestion_colegios'),
     path('gestion_administradores/', views.gestion_administradores, name='gestion_administradores'),
     path('gestion_profesor/', views.gestion_profesor, name='gestion_profesor'),
