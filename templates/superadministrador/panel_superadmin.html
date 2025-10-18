@@ -4,6 +4,9 @@
 
 {% block content %}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<<<<<<< HEAD
+    <link rel="stylesheet" href="{% static 'css/superadministrador/panel_superadmin.css' %}">
+=======
     <style>
         /* DASHBOARD INDEPENDIENTE */
         .dashboard-container {
@@ -454,6 +457,7 @@
         .stat-card:nth-child(4) { animation-delay: 0.4s; }
     </style>
 
+>>>>>>> 1782154e45f3329119f93f6cdd0881243851bf8a
     <div class="dashboard-container">
         <!-- HEADER -->
         <div class="dashboard-header">
@@ -635,34 +639,7 @@
                 </div>
             </div>
 
-            <!-- ALERTAS DEL SISTEMA -->
-            <div class="alerts-section">
-                <h2>Alertas del Sistema</h2>
-                <div class="alert-item warning">
-                    <i class="fas fa-exclamation-triangle alert-icon"></i>
-                    <div class="alert-content">
-                        <h4>Espacio en disco bajo</h4>
-                        <p>Queda menos del 15% de espacio disponible en el servidor</p>
-                    </div>
-                </div>
-                <div class="alert-item info">
-                    <i class="fas fa-info-circle alert-icon"></i>
-                    <div class="alert-content">
-                        <h4>Actualización disponible</h4>
-                        <p>Nueva versión 2.1.0 del sistema lista para instalar</p>
-                    </div>
-                </div>
-                <div class="alert-item success">
-                    <i class="fas fa-check-circle alert-icon"></i>
-                    <div class="alert-content">
-                        <h4>Sistema estable</h4>
-                        <p>Todos los servicios funcionando correctamente</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
+            
     <script>
         // Actualizar fecha y hora en tiempo real
         function updateDateTime() {

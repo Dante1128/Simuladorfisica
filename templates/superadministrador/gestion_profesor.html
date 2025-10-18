@@ -4,384 +4,7 @@
 
 {% block content %}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root {
-            --color-fondo: #F3F3E0;
-            --color-primario: #133E87;
-            --color-secundario: #608BC1;
-            --color-terciario: #CBDCEB;
-            --color-exito: #28a745;
-            --color-error: #dc3545;
-            --color-advertencia: #ffc107;
-        }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid var(--color-secundario);
-        }
-        
-        h1 {
-            color: var(--color-primario);
-            font-size: 28px;
-            font-weight: 600;
-        }
-        
-        .search-bar {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .search-bar input {
-            padding: 10px 15px;
-            border: 1px solid var(--color-secundario);
-            border-radius: 4px;
-            width: 300px;
-            font-size: 14px;
-        }
-        
-        .search-bar button {
-            background-color: var(--color-primario);
-            color: white;
-            border: none;
-            border-radius: 4px;
-            padding: 10px 20px;
-            cursor: pointer;
-            font-weight: 500;
-            transition: background-color 0.3s;
-        }
-        
-        .search-bar button:hover {
-            background-color: var(--color-secundario);
-        }
-        
-        .table-container {
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-            overflow: hidden;
-            margin-bottom: 20px;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        
-        thead {
-            background-color: var(--color-primario);
-            color: white;
-        }
-        
-        th {
-            padding: 16px 20px;
-            text-align: left;
-            font-weight: 600;
-            font-size: 15px;
-        }
-        
-        tbody tr {
-            border-bottom: 1px solid var(--color-terciario);
-            transition: background-color 0.2s;
-        }
-        
-        tbody tr:hover {
-            background-color: var(--color-terciario);
-        }
-        
-        td {
-            padding: 14px 20px;
-            font-size: 14px;
-        }
-        
-        .actions {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .btn {
-            padding: 8px 12px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 500;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            text-decoration: none;
-        }
-        
-        .btn-edit {
-            background-color: var(--color-secundario);
-            color: white;
-        }
-        
-        .btn-edit:hover {
-            background-color: var(--color-primario);
-        }
-        
-        .btn-delete {
-            background-color: var(--color-error);
-            color: white;
-        }
-        
-        .btn-delete:hover {
-            background-color: #c0392b;
-        }
-        
-        footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 20px;
-            padding: 15px 0;
-        }
-        
-        .pagination {
-            display: flex;
-            gap: 8px;
-        }
-        
-        .pagination button {
-            padding: 8px 12px;
-            border: 1px solid var(--color-secundario);
-            background-color: white;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .pagination button.active {
-            background-color: var(--color-primario);
-            color: white;
-            border-color: var(--color-primario);
-        }
-        
-        .pagination button:hover:not(.active) {
-            background-color: var(--color-terciario);
-        }
-        
-        .add-btn {
-            background-color: var(--color-primario);
-            color: white;
-            border: none;
-            border-radius: 4px;
-            padding: 10px 20px;
-            cursor: pointer;
-            font-weight: 500;
-            transition: background-color 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .add-btn:hover {
-            background-color: var(--color-secundario);
-        }
-        
-        /* Estilos para el modal */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-        }
-        
-        .modal-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
-        
-        .modal {
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-            width: 90%;
-            max-width: 500px;
-            transform: translateY(-20px);
-            transition: transform 0.3s ease;
-        }
-        
-        .modal-overlay.active .modal {
-            transform: translateY(0);
-        }
-        
-        .modal-header {
-            background-color: var(--color-primario);
-            color: white;
-            padding: 15px 20px;
-            border-radius: 8px 8px 0 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .modal-header h2 {
-            font-size: 20px;
-            font-weight: 600;
-        }
-        
-        .close-btn {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 20px;
-            cursor: pointer;
-        }
-        
-        .modal-body {
-            padding: 20px;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: var(--color-primario);
-        }
-        
-        .form-group input, .form-group select {
-            width: 100%;
-            padding: 10px 15px;
-            border: 1px solid var(--color-secundario);
-            border-radius: 4px;
-            font-size: 14px;
-        }
-        
-        .modal-footer {
-            padding: 15px 20px;
-            border-top: 1px solid var(--color-terciario);
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-        }
-        
-        .btn-cancel {
-            background-color: #6c757d;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            padding: 8px 15px;
-            cursor: pointer;
-            font-weight: 500;
-        }
-        
-        .btn-cancel:hover {
-            background-color: #5a6268;
-        }
-        
-        .btn-save {
-            background-color: var(--color-primario);
-            color: white;
-            border: none;
-            border-radius: 4px;
-            padding: 8px 15px;
-            cursor: pointer;
-            font-weight: 500;
-        }
-        
-        .btn-save:hover {
-            background-color: var(--color-secundario);
-        }
-        
-        /* Estilos para las notificaciones */
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 20px;
-            border-radius: 4px;
-            color: white;
-            font-weight: 500;
-            z-index: 1100;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            transform: translateX(150%);
-            transition: transform 0.3s ease;
-        }
-        
-        .notification.show {
-            transform: translateX(0);
-        }
-        
-        .notification-success {
-            background-color: var(--color-exito);
-        }
-        
-        .notification-error {
-            background-color: var(--color-error);
-        }
-        
-        .notification-warning {
-            background-color: var(--color-advertencia);
-            color: #212529;
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: #666;
-        }
-        
-        .empty-state i {
-            font-size: 48px;
-            margin-bottom: 15px;
-            color: var(--color-secundario);
-        }
-        
-        @media (max-width: 768px) {
-            .search-bar input {
-                width: 200px;
-            }
-            
-            th, td {
-                padding: 12px 15px;
-            }
-            
-            header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 15px;
-            }
-            
-            .actions {
-                flex-direction: column;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="{% static 'css/superadministrador/gestion_profesor.css' %}">
 
     <div class="container">
         <header>
@@ -396,7 +19,7 @@
             <table>
                 <thead>
                     <tr>
-                        <th>ID</th>
+                    
                         <th>Curso</th>
                         <th>Nombre Profesor</th>
                         <th>Colegio</th>
@@ -407,7 +30,6 @@
                 <tbody>
                     {% for profesor in profesores %}
                     <tr>
-                        <td>{{ profesor.id }}</td>
                         <td>{{ profesor.curso }}</td>
                         <td>
                             {% with persona=profesor.usuario.personas.first %}
@@ -429,9 +51,12 @@
                             )">
                                 <i class="fas fa-edit"></i> Editar
                             </button>
-                            <a href="?eliminar={{ profesor.id }}" class="btn btn-delete" onclick="return confirmDelete()">
-                                <i class="fas fa-trash"></i> Eliminar
-                            </a>
+                          <label class="switch">
+    <input type="checkbox" onchange="this.form.submit()" {% if profesor.estado == 'Activo' %}checked{% endif %}>
+    <span class="slider round"></span>
+</label>
+
+
                         </td>
                     </tr>
                     {% empty %}
@@ -577,6 +202,41 @@
         <span id="warningMessage">Advertencia</span>
     </div>
 
+    <style>
+        .switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+}
+.switch input {display:none;}
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 24px;
+}
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+input:checked + .slider {
+  background-color: #007bff;
+}
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
+
+</style>
     <script>
         // Mostrar notificaciones basadas en parámetros de URL
         window.addEventListener('DOMContentLoaded', function() {
