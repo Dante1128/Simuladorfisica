@@ -74,7 +74,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 4000);
   }
 
-  function openModal(isNew = false, docName = "", docStatus = "Activo", docDescripcion = "") {
+  function openModal(isNew = false, docData = null) {
     if (!modal) return;
 
     if (isNew) {
@@ -84,14 +84,68 @@ document.addEventListener("DOMContentLoaded", () => {
       docDescripcionTextarea.value = "";
       docPdfInput.value = "";
       currentEditingDocId = null;
+      
+      // Ocultar información de archivo actual en nuevo documento
+      const currentFileInfo = document.getElementById('currentFileInfo');
+      if (currentFileInfo) currentFileInfo.style.display = 'none';
     } else {
       modalTitle.textContent = "Editar Documento";
-      docNameInput.value = docName;
-      docStatusSelect.value = docStatus;
-      docDescripcionTextarea.value = docDescripcion;
-      docPdfInput.value = "";
+      docNameInput.value = docData.nombre || "";
+      docStatusSelect.value = docData.estado || "Activo";
+      docDescripcionTextarea.value = docData.descripcion || "";
+      currentEditingDocId = docData.id;
+      
+      // Mostrar archivo actual si existe
+      if (docData.nombreArchivo) {
+        mostrarArchivoActual(docData.nombreArchivo, docData.tamaño);
+      } else {
+        // Ocultar si no hay archivo
+        const currentFileInfo = document.getElementById('currentFileInfo');
+        if (currentFileInfo) currentFileInfo.style.display = 'none';
+      }
     }
     modal.style.display = "flex";
+  }
+
+  function mostrarArchivoActual(nombreArchivo, tamaño) {
+    const currentFileInfo = document.getElementById('currentFileInfo');
+    const currentFileName = document.getElementById('currentFileName');
+    const currentFileSize = document.getElementById('currentFileSize');
+    
+    if (nombreArchivo && currentFileInfo && currentFileName && currentFileSize) {
+      currentFileName.textContent = nombreArchivo;
+      currentFileSize.textContent = tamaño ? `(${tamaño})` : '';
+      currentFileInfo.style.display = 'block';
+    }
+  }
+
+  // Función para extraer información del PDF de la tarjeta del documento
+  function extraerInfoPDF(docCard) {
+    const pdfInfo = docCard.querySelector('.pdf-info');
+    if (!pdfInfo) return { nombreArchivo: null, tamaño: null };
+    
+    const pdfText = pdfInfo.textContent.trim();
+    
+    if (pdfText.includes("No hay PDF")) {
+      return { nombreArchivo: null, tamaño: null };
+    }
+    
+    // Extraer nombre y tamaño del texto existente
+    let nombreArchivo = "Documento PDF";
+    let tamaño = "";
+    
+    // Buscar el texto entre <i class="fas fa-file-pdf"></i> y el tamaño entre paréntesis
+    const textoLimpio = pdfText.replace(/<i class="fas fa-file-pdf"><\/i>/, '').trim();
+    const match = textoLimpio.match(/(.+?)\s*(?:\(([^)]+)\))?$/);
+    
+    if (match) {
+      nombreArchivo = match[1].trim();
+      if (match[2]) {
+        tamaño = match[2].trim();
+      }
+    }
+    
+    return { nombreArchivo, tamaño };
   }
 
   function closeModal() {
@@ -107,6 +161,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const estado = docStatusSelect?.value;
     const descripcion = docDescripcionTextarea?.value;
     const archivo = docPdfInput?.files[0];
+    const removeCurrentFile = document.getElementById('removeCurrentFileFlag')?.value === 'true';
 
     if (!nombre) {
       showNotification("El nombre del documento no puede estar vacío", "error");
@@ -132,7 +187,15 @@ document.addEventListener("DOMContentLoaded", () => {
       formData.append("estado", estado);
       formData.append("descripcion", descripcion);
       formData.append("categoria", "fisica_general");
-      if (currentEditingDocId) formData.append("id", currentEditingDocId);
+      
+      if (currentEditingDocId) {
+        formData.append("id", currentEditingDocId);
+        // Añadir flag para eliminar archivo actual si se presionó "Quitar"
+        if (removeCurrentFile) {
+          formData.append("remove_current_file", "true");
+        }
+      }
+      
       if (archivo) formData.append("archivo_pdf", archivo);
 
       showNotification("Guardando documento...", "success");
@@ -203,8 +266,18 @@ document.addEventListener("DOMContentLoaded", () => {
       const docEstado = docCard.querySelector(".doc-status span").textContent;
       const descElement = docCard.querySelector(".doc-description");
       const docDescripcion = descElement ? descElement.textContent : "";
-      currentEditingDocId = docId;
-      openModal(false, docNombre, docEstado, docDescripcion);
+      const pdfInfo = extraerInfoPDF(docCard);
+        
+      const docData = {
+        id: docId,
+        nombre: docNombre,
+        estado: docEstado,
+        descripcion: docDescripcion,
+        nombreArchivo: pdfInfo.nombreArchivo,
+        tamaño: pdfInfo.tamaño
+      };
+      
+      openModal(false, docData);
     });
   });
 
@@ -216,6 +289,20 @@ document.addEventListener("DOMContentLoaded", () => {
       showConfirmModal(docNombre);
     });
   });
+
+  // ============================================================
+  //  MANEJO DE BOTÓN "QUITAR" ARCHIVO ACTUAL
+  // ============================================================
+  const removeCurrentFileBtn = document.getElementById('removeCurrentFile');
+  if (removeCurrentFileBtn) {
+    removeCurrentFileBtn.addEventListener('click', function() {
+      const currentFileInfo = document.getElementById('currentFileInfo');
+      if (currentFileInfo) {
+        currentFileInfo.style.display = 'none';
+      }
+      document.getElementById('removeCurrentFileFlag').value = 'true';
+    });
+  }
 
   // ============================================================
   //  MODAL DE CONFIRMACIÓN

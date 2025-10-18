@@ -31,13 +31,15 @@
                     <div class="stat-icon active">
                         <i class="fas fa-check-circle"></i>
                     </div>
-                    <div class="stat-number">{{ documentos_activos|default:"0" }}</div>
+
+                    <div class="stat-number">{{ documentos | length }}</div>
                     <div class="stat-label">Activos</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon inactive">
                         <i class="fas fa-pause-circle"></i>
                     </div>
+                    
                     <div class="stat-number">{{ documentos_inactivos|default:"0" }}</div>
                     <div class="stat-label">Inactivos</div>
                 </div>
@@ -45,8 +47,8 @@
                     <div class="stat-icon pdf">
                         <i class="fas fa-file-pdf"></i>
                     </div>
-                    <div class="stat-number">{{ documentos_con_pdf|default:"0" }}</div>
-                    <div class="stat-label">Con PDF</div>
+                    <div class="stat-number">{{ documentos_revision|default:"0" }}</div>
+                    <div class="stat-label">En revisión</div>
                 </div>
             </div>
             
@@ -147,8 +149,28 @@
                 
                 <div class="form-group">
                     <label for="docPdf">Archivo PDF (Opcional)</label>
+                    
+                    <!-- Información del archivo actual (solo aparece en edición) -->
+                    <div id="currentFileInfo" class="current-file-info" style="display: none; margin-bottom: 10px;">
+                        <div class="file-display">
+                            <i class="fas fa-file-pdf"></i>
+                            <span class="file-name" id="currentFileName"></span>
+                            <span class="file-size" id="currentFileSize"></span>
+                            <button type="button" id="removeCurrentFile" class="btn-remove">
+                                <i class="fas fa-times"></i> Quitar
+                            </button>
+                        </div>
+                        <small>Archivo actual - Puedes reemplazarlo o quitarlo</small>
+                    </div>
+                    
                     <input type="file" id="docPdf" accept=".pdf" class="file-input">
                     <small style="color: #666;">Formatos aceptados: PDF (Máx. 10MB)</small>
+                    
+                    <!-- Información del nuevo archivo seleccionado -->
+                    <div id="newFileInfo" class="new-file-info" style="display: none;"></div>
+                    
+                    <!-- Flag oculto para controlar eliminación -->
+                    <input type="hidden" id="removeCurrentFileFlag" value="false">
                 </div>
                 
                 <div class="modal-buttons">
@@ -175,7 +197,8 @@
     </div>
 
 
-    
+     <!-- Notificación -->
+    <div class="notification" id="notification"></div>
 
     <script src="{% static 'js/profesor/gestion_documentos.js' %}"></script>
 

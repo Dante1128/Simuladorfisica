@@ -218,6 +218,76 @@ class Temas(models.Model):
 
     def __str__(self):
         return f"{self.curso.nombre} - {self.nombre_archivo}"
+    
+
+ # ======================
+# MODULO: CONTENIDO TEORICO
+# ======================   
+class Documento(models.Model):
+    ESTADO_CHOICES = [
+        ('Activo', 'Activo'),
+        ('Inactivo', 'Inactivo'),
+        ('En revisión', 'En revisión'),
+    ]
+    
+    categoria = models.CharField(
+    max_length=50, 
+    default='fisica_general',
+    verbose_name="Categoría"
+)
+    
+    nombre = models.CharField(max_length=255, verbose_name="Nombre del documento")
+    descripcion = models.TextField(blank=True, verbose_name="Descripción")
+    archivo_pdf = models.BinaryField(verbose_name="Archivo PDF", null=True, blank=True)  # ← ¡CORREGIDO!
+    nombre_archivo = models.CharField(max_length=255, verbose_name="Nombre del archivo", blank=True)
+    tamaño = models.IntegerField(verbose_name="Tamaño (bytes)", null=True, blank=True)
+    curso = models.ForeignKey(Curso, on_delete=models.CASCADE, related_name='documentos')
+    categoria = models.CharField(
+        max_length=50, 
+        default='fisica_general',
+        verbose_name="Categoría"
+    )
+    estado = models.CharField(max_length=20, choices=[
+        ('Activo', 'activo'),
+        ('Inactivo', 'inactivo'),
+    ],default='Activo')
+    fecha_creacion = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de creación")
+    fecha_actualizacion = models.DateTimeField(auto_now=True, verbose_name="Fecha de actualización", null=True)
+    
+    class Meta:
+        db_table = 'documentos'
+        verbose_name = 'Documento'
+        verbose_name_plural = 'Documentos'
+        ordering = ['-fecha_creacion']
+    
+    def __str__(self):
+        return self.nombre
+    
+    def get_pdf_base64(self):
+        """Devuelve el PDF en base64 para incrustar en HTML"""
+        if self.archivo_pdf:
+            return base64.b64encode(self.archivo_pdf).decode('utf-8')
+        return ""
+    
+    def get_tamaño_formateado(self):
+        """Devuelve el tamaño formateado (KB, MB)"""
+        if self.tamaño:
+            if self.tamaño < 1024:
+                return f"{self.tamaño} B"
+            elif self.tamaño < 1024 * 1024:
+                return f"{self.tamaño / 1024:.1f} KB"
+            else:
+                return f"{self.tamaño / (1024 * 1024):.1f} MB"
+        return "0 B"
+    
+
+
+def crear_roles(sender, **kwargs):
+    for tipo, _ in Rol.TIPOS_ROL:
+        Rol.objects.get_or_create(tipo=tipo)
+
+post_migrate.connect(crear_roles, sender=None)
+  
 
 
 # ======================
@@ -251,7 +321,7 @@ class Componente(models.Model):
     modelo3D = models.FileField(upload_to='modelos3D/', null=True, blank=True)
     especificaciones = models.TextField(blank=True)
     video_explicacion = models.URLField(max_length=500, blank=True)
-    tema = models.ForeignKey(Temas, on_delete=models.CASCADE, related_name='componentes')
+    tema = models.ForeignKey(Documento, on_delete=models.CASCADE, related_name='componentes')
     laboratorio = models.ForeignKey(Laboratorio, on_delete=models.SET_NULL, null=True, blank=True, related_name='componentes')
     estado = models.CharField(max_length=20, choices=[
         ('Activo', 'activo'),
@@ -346,71 +416,4 @@ class Pago(models.Model):
         return f"Pago {self.id} - {self.usuario.username} - ${self.monto}"
 
 
- # ======================
-# MODULO: CONTENIDO TEORICO
-# ======================   
-class Documento(models.Model):
-    ESTADO_CHOICES = [
-        ('Activo', 'Activo'),
-        ('Inactivo', 'Inactivo'),
-        ('En revisión', 'En revisión'),
-    ]
-    
-    categoria = models.CharField(
-    max_length=50, 
-    default='fisica_general',
-    verbose_name="Categoría"
-)
-    
-    nombre = models.CharField(max_length=255, verbose_name="Nombre del documento")
-    descripcion = models.TextField(blank=True, verbose_name="Descripción")
-    archivo_pdf = models.BinaryField(verbose_name="Archivo PDF", null=True, blank=True)  # ← ¡CORREGIDO!
-    nombre_archivo = models.CharField(max_length=255, verbose_name="Nombre del archivo", blank=True)
-    tamaño = models.IntegerField(verbose_name="Tamaño (bytes)", null=True, blank=True)
-    categoria = models.CharField(
-        max_length=50, 
-        default='fisica_general',
-        verbose_name="Categoría"
-    )
-    estado = models.CharField(max_length=20, choices=[
-        ('Activo', 'activo'),
-        ('Inactivo', 'inactivo'),
-    ],default='Activo')
-    fecha_creacion = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de creación")
-    fecha_actualizacion = models.DateTimeField(auto_now=True, verbose_name="Fecha de actualización", null=True)
-    
-    class Meta:
-        db_table = 'documentos'
-        verbose_name = 'Documento'
-        verbose_name_plural = 'Documentos'
-        ordering = ['-fecha_creacion']
-    
-    def __str__(self):
-        return self.nombre
-    
-    def get_pdf_base64(self):
-        """Devuelve el PDF en base64 para incrustar en HTML"""
-        if self.archivo_pdf:
-            return base64.b64encode(self.archivo_pdf).decode('utf-8')
-        return ""
-    
-    def get_tamaño_formateado(self):
-        """Devuelve el tamaño formateado (KB, MB)"""
-        if self.tamaño:
-            if self.tamaño < 1024:
-                return f"{self.tamaño} B"
-            elif self.tamaño < 1024 * 1024:
-                return f"{self.tamaño / 1024:.1f} KB"
-            else:
-                return f"{self.tamaño / (1024 * 1024):.1f} MB"
-        return "0 B"
-    
-
-
-def crear_roles(sender, **kwargs):
-    for tipo, _ in Rol.TIPOS_ROL:
-        Rol.objects.get_or_create(tipo=tipo)
-
-post_migrate.connect(crear_roles, sender=None)
-  
     

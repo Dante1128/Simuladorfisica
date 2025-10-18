@@ -151,8 +151,28 @@
                 
                 <div class="form-group">
                     <label for="docPdf">Archivo PDF (Opcional)</label>
+                    
+                    <!-- Información del archivo actual (solo aparece en edición) -->
+                    <div id="currentFileInfo" class="current-file-info" style="display: none; margin-bottom: 10px;">
+                        <div class="file-display">
+                            <i class="fas fa-file-pdf"></i>
+                            <span class="file-name" id="currentFileName"></span>
+                            <span class="file-size" id="currentFileSize"></span>
+                            <button type="button" id="removeCurrentFile" class="btn-remove">
+                                <i class="fas fa-times"></i> Quitar
+                            </button>
+                        </div>
+                        <small>Archivo actual - Puedes reemplazarlo o quitarlo</small>
+                    </div>
+                    
                     <input type="file" id="docPdf" accept=".pdf" class="file-input">
                     <small style="color: #666;">Formatos aceptados: PDF (Máx. 10MB)</small>
+                    
+                    <!-- Información del nuevo archivo seleccionado -->
+                    <div id="newFileInfo" class="new-file-info" style="display: none;"></div>
+                    
+                    <!-- Flag oculto para controlar eliminación -->
+                    <input type="hidden" id="removeCurrentFileFlag" value="false">
                 </div>
                 
                 <div class="modal-buttons">
