@@ -1,0 +1,325 @@
+{% extends 'superadministrador/base_superadmin.html' %}
+{% load static %}
+{% block title %}Gestión de Profesores{% endblock %}
+
+{% block content %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/superadministrador/gestion_profesor.css' %}">
+
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-chalkboard-teacher"></i> Gestión de Profesores</h1>
+            <div class="search-bar">
+                <input type="text" placeholder="Buscar profesor...">
+                <button><i class="fas fa-search"></i> Buscar</button>
+            </div>
+        </header>
+        
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                    
+                        <th>Curso</th>
+                        <th>Nombre Profesor</th>
+                        <th>Colegio</th>
+                        <th>Correo Usuario</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for profesor in profesores %}
+                    <tr>
+                        <td>{{ profesor.curso }}</td>
+                        <td>
+                            {% with persona=profesor.usuario.personas.first %}
+                                {% if persona %}
+                                    {{ persona.nombre }} {{ persona.apellidoPaterno }} {{ persona.apellidoMaterno }}
+                                {% else %}
+                                    <span style="color:#888">Sin nombre</span>
+                                {% endif %}
+                            {% endwith %}
+                        </td>
+                        <td>{{ profesor.colegio.nombre }}</td>
+                        <td>{{ profesor.usuario.correo }}</td>
+                        <td class="actions">
+                            <button class="btn btn-edit" onclick="openEditModal(
+                                '{{ profesor.id }}', 
+                                '{{ profesor.usuario.correo|escapejs }}', 
+                                '{{ profesor.colegio.id }}', 
+                                '{{ profesor.curso|escapejs }}'
+                            )">
+                                <i class="fas fa-edit"></i> Editar
+                            </button>
+                          <label class="switch">
+    <input type="checkbox" onchange="this.form.submit()" {% if profesor.estado == 'Activo' %}checked{% endif %}>
+    <span class="slider round"></span>
+</label>
+
+
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="empty-state">
+                            <i class="fas fa-users"></i>
+                            <p>No hay profesores registrados</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <footer>
+            <div class="pagination">
+                <button class="active">1</button>
+                <button>2</button>
+                <button>3</button>
+                <button>...</button>
+                <button>10</button>
+            </div>
+            <button class="add-btn" onclick="openCreateModal()">
+                <i class="fas fa-plus"></i> Agregar Profesor
+            </button>
+        </footer>
+    </div>
+    
+    <!-- Modal para crear profesor -->
+    <div class="modal-overlay" id="createModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2><i class="fas fa-user-plus"></i> Agregar Nuevo Profesor</h2>
+                <button class="close-btn" onclick="closeCreateModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form method="post" action="">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="create_nombre"><i class="fas fa-user"></i> Nombre</label>
+                        <input type="text" id="create_nombre" name="nombre" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="create_apellidoPaterno"><i class="fas fa-user"></i> Apellido Paterno</label>
+                        <input type="text" id="create_apellidoPaterno" name="apellidoPaterno" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="create_apellidoMaterno"><i class="fas fa-user"></i> Apellido Materno</label>
+                        <input type="text" id="create_apellidoMaterno" name="apellidoMaterno" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="create_correo"><i class="fas fa-envelope"></i> Correo Electrónico</label>
+                        <input type="email" id="create_correo" name="correo" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="create_contrasenia"><i class="fas fa-lock"></i> Contraseña</label>
+                        <input type="password" id="create_contrasenia" name="contrasenia" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="create_colegio"><i class="fas fa-school"></i> Colegio</label>
+                        <select id="create_colegio" name="colegio" required>
+                            <option value="">Seleccione un colegio...</option>
+                            {% for colegio in colegios %}
+                            <option value="{{ colegio.id }}">{{ colegio.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="create_curso"><i class="fas fa-book"></i> Curso</label>
+                        <input type="text" id="create_curso" name="curso" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" onclick="closeCreateModal()">Cancelar</button>
+                    <button type="submit" class="btn-save" name="crear">
+                        <i class="fas fa-save"></i> Guardar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Modal para editar profesor -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2><i class="fas fa-user-edit"></i> Editar Profesor</h2>
+                <button class="close-btn" onclick="closeEditModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form method="post" action="">
+                {% csrf_token %}
+                <input type="hidden" id="edit_id" name="editar_id">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="edit_correo"><i class="fas fa-envelope"></i> Correo Electrónico</label>
+                        <input type="email" id="edit_correo" name="editar_correo" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_contrasenia"><i class="fas fa-lock"></i> Contraseña (dejar en blanco para no cambiar)</label>
+                        <input type="password" id="edit_contrasenia" name="editar_contrasenia">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_colegio"><i class="fas fa-school"></i> Colegio</label>
+                        <select id="edit_colegio" name="editar_colegio" required>
+                            <option value="">Seleccione un colegio...</option>
+                            {% for colegio in colegios %}
+                            <option value="{{ colegio.id }}">{{ colegio.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_curso"><i class="fas fa-book"></i> Curso</label>
+                        <input type="text" id="edit_curso" name="editar_curso" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" onclick="closeEditModal()">Cancelar</button>
+                    <button type="submit" class="btn-save" name="editar">
+                        <i class="fas fa-save"></i> Actualizar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Notificaciones -->
+    <div class="notification notification-success" id="successNotification">
+        <i class="fas fa-check-circle"></i>
+        <span id="successMessage">Operación completada con éxito</span>
+    </div>
+    
+    <div class="notification notification-error" id="errorNotification">
+        <i class="fas fa-exclamation-circle"></i>
+        <span id="errorMessage">Ha ocurrido un error</span>
+    </div>
+    
+    <div class="notification notification-warning" id="warningNotification">
+        <i class="fas fa-exclamation-triangle"></i>
+        <span id="warningMessage">Advertencia</span>
+    </div>
+
+    <style>
+        .switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+}
+.switch input {display:none;}
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 24px;
+}
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+input:checked + .slider {
+  background-color: #007bff;
+}
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
+
+</style>
+    <script>
+        // Mostrar notificaciones basadas en parámetros de URL
+        window.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            if (urlParams.get('creado') === 'true') {
+                showNotification('success', 'Profesor creado exitosamente');
+            }
+            
+            if (urlParams.get('editado') === 'true') {
+                showNotification('success', 'Profesor actualizado exitosamente');
+            }
+            
+            if (urlParams.get('eliminado') === 'true') {
+                showNotification('success', 'Profesor eliminado exitosamente');
+            }
+            
+            if (urlParams.get('error') === 'true') {
+                showNotification('error', 'Ha ocurrido un error en la operación');
+            }
+        });
+
+        // Funciones para el modal de creación
+        function openCreateModal() {
+            document.getElementById('createModal').classList.add('active');
+            document.getElementById('create_correo').focus();
+        }
+        
+        function closeCreateModal() {
+            document.getElementById('createModal').classList.remove('active');
+        }
+        
+        // Funciones para el modal de edición
+        function openEditModal(id, correo, colegioId, curso) {
+            document.getElementById('edit_id').value = id;
+            document.getElementById('edit_correo').value = correo;
+            document.getElementById('edit_colegio').value = colegioId;
+            document.getElementById('edit_curso').value = curso;
+            document.getElementById('editModal').classList.add('active');
+        }
+        
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('active');
+        }
+        
+        // Confirmación para eliminar
+        function confirmDelete() {
+            return confirm('¿Está seguro de que desea eliminar este profesor?');
+        }
+        
+        // Función para mostrar notificaciones
+        function showNotification(type, message) {
+            const notification = document.getElementById(`${type}Notification`);
+            const messageElement = document.getElementById(`${type}Message`);
+            
+            messageElement.textContent = message;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 5000);
+        }
+        
+        // Cerrar modales al hacer clic fuera de ellos
+        document.addEventListener('click', function(event) {
+            const createModal = document.getElementById('createModal');
+            const editModal = document.getElementById('editModal');
+            
+            if (event.target === createModal) {
+                closeCreateModal();
+            }
+            
+            if (event.target === editModal) {
+                closeEditModal();
+            }
+        });
+
+        // Cerrar modales con tecla Escape
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeCreateModal();
+                closeEditModal();
+            }
+        });
+    </script>
+{% endblock %}

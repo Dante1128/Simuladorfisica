@@ -1,0 +1,359 @@
+{% extends 'superadministrador/base_superadmin.html' %}
+{% load static %}
+{% block title %}Gestión de Colegios - Sistema de Laboratorios{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="{% static 'css/superadministrador/gestion_colegios.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="colegios-container">
+    <!-- Header profesional -->
+    <div class="page-header">
+        <h2><i class="fas fa-school"></i> Gestión de Colegios</h2>
+        <p>Administre y organice los colegios del sistema</p>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <div class="search-container">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" id="searchInput" placeholder="Buscar por nombre o dirección...">
+            <button class="clear-search" id="clearSearch">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="actions-container">
+            <button class="btn-primary" id="newSchool">
+                <i class="fas fa-plus"></i> Nuevo Colegio
+            </button>
+        </div>
+    </div>
+
+    <!-- Tabla profesional -->
+    <div class="table-wrapper">
+        <div class="table-container">
+            <table class="colegios-table">
+                <thead>
+                    <tr>
+                        <th>Colegio</th>
+                        <th>Dirección</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    {% for colegio in colegios %}
+                    <tr>
+                        <td>
+                            <div class="school-info">
+                                <div class="school-icon">
+                                    <i class="fas fa-graduation-cap"></i>
+                                </div>
+                                <div class="school-details">
+                                    <div class="school-name">{{ colegio.nombre }}</div> 
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="address-cell">
+                                <i class="fas fa-map-marker-alt"></i>
+                                {{ colegio.direccion }}
+                            </div>
+                        </td>
+                        <td>
+                            <label class="switch">
+                                <input type="checkbox" class="toggle-estado" data-id="{{ colegio.id }}" {% if colegio.estado == 'Activo' %}checked{% endif %}>
+                                <span class="slider round"></span>
+                            </label>
+                        </td>
+                        <td>
+                            <div class="acciones">
+                                <button class="btn-icon btn-edit" title="Editar" onclick="openEditModal('{{ colegio.id }}', '{{ colegio.nombre|escapejs }}', '{{ colegio.direccion|escapejs }}')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" style="text-align:center;">No hay colegios registrados.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar Colegio -->
+<div class="modal-overlay" id="editSchoolModal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-edit"></i> Editar Colegio</h3>
+            <button class="close-modal" id="closeEditModal" type="button">&times;</button>
+        </div>
+        <form id="editSchoolForm" method="post" action="">
+            {% csrf_token %}
+            <input type="hidden" id="editar_id" name="editar_id">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="editar_nombre"><i class="fas fa-school"></i> Nombre del colegio</label>
+                    <input type="text" id="editar_nombre" name="editar_nombre" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="editar_direccion"><i class="fas fa-map-marker-alt"></i> Dirección</label>
+                    <input type="text" id="editar_direccion" name="editar_direccion" class="form-control" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" id="cancelEditBtn">Cancelar</button>
+                <button type="submit" class="btn-primary" id="updateBtn" name="editar">
+                    <i class="fas fa-save"></i> Actualizar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Nuevo Colegio -->
+<div class="modal-overlay" id="schoolModal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-plus" id="modalIcon"></i> <span id="modalTitle">Nuevo Colegio</span></h3>
+            <button class="close-modal" id="closeModal" type="button">&times;</button>
+        </div>
+        <form id="schoolForm" method="post" action="">
+            {% csrf_token %}
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="schoolName"><i class="fas fa-school"></i> Nombre del colegio</label>
+                    <input type="text" id="schoolName" name="nombre" class="form-control" placeholder="Ej: Colegio San Francisco" required>
+                </div>
+                <div class="form-group">
+                    <label for="schoolAddress"><i class="fas fa-map-marker-alt"></i> Dirección</label>
+                    <input type="text" id="schoolAddress" name="direccion" class="form-control" placeholder="Ej: Av. Principal #123" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" id="cancelBtn">Cancelar</button>
+                <button type="submit" class="btn-primary" id="saveBtn" name="crear">
+                    <i class="fas fa-save"></i> Guardar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Confirmación -->
+<div class="confirm-overlay" id="confirmModal">
+    <div class="confirm-box">
+        <div class="confirm-header">
+            <i class="fas fa-exclamation-triangle"></i>
+            Confirmar Eliminación
+        </div>
+        <div class="confirm-body">
+            <p id="confirmMessage">¿Está seguro de que desea eliminar este colegio?</p>
+        </div>
+        <div class="confirm-footer">
+            <button class="btn-cancel" id="cancelConfirm">Cancelar</button>
+            <button class="btn-confirm" id="confirmDelete">Eliminar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Notificación -->
+<div class="custom-alert" id="customAlert">
+    <div class="alert-header">
+        <i class="fas fa-check-circle alert-icon" id="alertIcon"></i>
+        <span id="alertTitle">Éxito</span>
+        <button class="alert-close" id="alertClose">&times;</button>
+    </div>
+    <div class="alert-body">
+        <p id="alertMessage">Operación realizada correctamente.</p>
+    </div>
+</div>
+
+<script>
+    // Modal editar colegio
+    const editModal = document.getElementById('editSchoolModal');
+    const closeEditModalBtn = document.getElementById('closeEditModal');
+    const cancelEditBtn = document.getElementById('cancelEditBtn');
+    
+    function openEditModal(id, nombre, direccion) {
+        document.getElementById('editar_id').value = id;
+        document.getElementById('editar_nombre').value = nombre;
+        document.getElementById('editar_direccion').value = direccion;
+        editModal.style.display = 'flex';
+    }
+    
+    function closeEditModal() {
+        editModal.style.display = 'none';
+        document.getElementById('editSchoolForm').reset();
+    }
+    
+    closeEditModalBtn.addEventListener('click', closeEditModal);
+    cancelEditBtn.addEventListener('click', closeEditModal);
+    
+    window.addEventListener('click', (e) => {
+        if (e.target === editModal) closeEditModal();
+    });
+    
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && editModal.style.display === 'flex') closeEditModal();
+    });
+
+    const modal = document.getElementById('schoolModal');
+    const newSchoolBtn = document.getElementById('newSchool');
+    const closeModalBtn = document.getElementById('closeModal');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const searchInput = document.getElementById('searchInput');
+    const clearSearch = document.getElementById('clearSearch');
+    const tableBody = document.getElementById('tableBody');
+    const customAlert = document.getElementById('customAlert');
+    const alertClose = document.getElementById('alertClose');
+    const confirmModal = document.getElementById('confirmModal');
+    const cancelConfirm = document.getElementById('cancelConfirm');
+
+    let colegioToDelete = null;
+
+    function openModal() {
+        modal.style.display = 'flex';
+    }
+
+    function closeModal() {
+        modal.style.display = 'none';
+        document.getElementById('schoolForm').reset();
+    }
+
+    function showAlert(message, type = 'success') {
+        const config = {
+            success: {
+                title: 'Éxito',
+                icon: 'fa-check-circle',
+                className: 'alert-success'
+            },
+            error: {
+                title: 'Error',
+                icon: 'fa-exclamation-circle',
+                className: 'alert-error'
+            }
+        };
+        
+        const { title, icon, className } = config[type];
+        
+        document.getElementById('alertTitle').textContent = title;
+        document.getElementById('alertIcon').className = `fas ${icon} alert-icon`;
+        document.getElementById('alertMessage').textContent = message;
+        customAlert.className = `custom-alert ${className}`;
+        customAlert.classList.add('show');
+        
+        setTimeout(() => {
+            customAlert.classList.remove('show');
+        }, 5000);
+    }
+
+    function showConfirm(id, name) {
+        colegioToDelete = id;
+        document.getElementById('confirmMessage').textContent = 
+            `¿Está seguro de que desea eliminar el colegio "${name}"? Esta acción no se puede deshacer.`;
+        confirmModal.style.display = 'flex';
+    }
+
+    newSchoolBtn.addEventListener('click', openModal);
+    closeModalBtn.addEventListener('click', closeModal);
+    cancelBtn.addEventListener('click', closeModal);
+    alertClose.addEventListener('click', () => customAlert.classList.remove('show'));
+    
+    cancelConfirm.addEventListener('click', () => {
+        confirmModal.style.display = 'none';
+        colegioToDelete = null;
+    });
+
+    document.getElementById('confirmDelete').addEventListener('click', () => {
+        if (colegioToDelete) {
+            showAlert('Colegio eliminado correctamente', 'success');
+            confirmModal.style.display = 'none';
+            colegioToDelete = null;
+        }
+    });
+
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const rows = tableBody.getElementsByTagName('tr');
+        let visibleCount = 0;
+        
+        clearSearch.style.display = searchTerm ? 'block' : 'none';
+        
+        for (let row of rows) {
+            const text = row.textContent.toLowerCase();
+            if (text.includes(searchTerm)) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        }
+        
+        if (visibleCount === 0 && searchTerm) {
+            if (!document.getElementById('noResults')) {
+                const noResults = document.createElement('tr');
+                noResults.id = 'noResults';
+                noResults.innerHTML = `
+                    <td colspan="4">
+                        <div class="empty-state">
+                            <i class="fas fa-search"></i>
+                            <h3>No se encontraron resultados</h3>
+                            <p>Intente con otros términos de búsqueda</p>
+                        </div>
+                    </td>
+                `;
+                tableBody.appendChild(noResults);
+            }
+        } else {
+            const noResults = document.getElementById('noResults');
+            if (noResults) noResults.remove();
+        }
+    });
+
+    clearSearch.addEventListener('click', () => {
+        searchInput.value = '';
+        clearSearch.style.display = 'none';
+        const rows = tableBody.getElementsByTagName('tr');
+        for (let row of rows) {
+            row.style.display = '';
+        }
+        const noResults = document.getElementById('noResults');
+        if (noResults) noResults.remove();
+    });
+
+    window.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+        if (e.target === confirmModal) {
+            confirmModal.style.display = 'none';
+            colegioToDelete = null;
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            if (modal.style.display === 'flex') closeModal();
+            if (confirmModal.style.display === 'flex') {
+                confirmModal.style.display = 'none';
+                colegioToDelete = null;
+            }
+        }
+    });
+
+    // Toggle estado con bolita redonda
+    document.querySelectorAll('.toggle-estado').forEach(sw => {
+        sw.addEventListener('change', function(){
+            const colegioId = this.dataset.id;
+            fetch(`?estado_id=${colegioId}`, { method: 'GET' })
+            .then(() => location.reload())
+            .catch(err => console.error(err));
+        });
+    });
+</script>
+{% endblock %}

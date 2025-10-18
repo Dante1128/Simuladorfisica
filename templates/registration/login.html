@@ -9,8 +9,37 @@
       rel="stylesheet"
       href="{% static 'usuarios/css/paginaWeb/login.css' %}"
     />
+    <style>
+      /* Botón circular de volver afuera del contenedor */
+      .back-btn {
+        position: fixed; /* fijo en la ventana */
+        top: 20px;
+        left: 20px;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: none;
+        background-color: #ffffff;
+        color: rgb(0, 13, 255);
+        font-size: 20px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        transition: background-color 0.3s;
+        z-index: 1000; /* sobre todos los elementos */
+      }
+
+      .back-btn:hover {
+        background-color: #457da0;
+      }
+    </style>
   </head>
   <body>
+    <!-- Botón circular de volver fuera del contenedor -->
+    <button type="button" class="back-btn" onclick="window.history.back()">←</button>
+
     <div class="container">
       <div class="left-panel">
         <div class="logo-container">
@@ -40,7 +69,8 @@
         </div>
 
         <form method="POST" action="">
-          {% csrf_token %} {% if messages %}
+          {% csrf_token %} 
+          {% if messages %}
           <div class="messages">
             {% for message in messages %}
             <div
@@ -77,16 +107,10 @@
           <button type="submit" class="submit-btn">Iniciar Sesión</button>
         </form>
 
-        <div class="form-footer">
-          <p>
-            ¿Primera vez aquí?
-            <a href="#" id="createAccountLink"
-              >Crea una cuenta</a
-            >
-          </p>
-        </div>
+       
       </div>
     </div>
+
     <script src="{% static 'usuarios/js/paginaWeb/login.js' %}"></script>
   </body>
 </html>

@@ -1,0 +1,167 @@
+{% extends 'superadministrador/base_superadmin.html' %}
+{% load static %}
+{% block title %}Gestión de Administradores{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="{% static 'css/superadministrador/gestion_administrador.css' %}">
+
+<div class="administradores-container">
+    <h2>Gestión de Administradores</h2>
+
+    <!-- Botón para abrir modal crear -->
+    <button id="newAdminBtn">Nuevo Administrador</button>
+
+    <!-- Tabla de administradores -->
+    <table>
+        <thead>
+            <tr>
+                <th>Correo</th>
+                <th>Nombre Completo</th>
+                <th>Colegio</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for admin in administradores %}
+            <tr>
+                <td>{{ admin.usuario.correo }}</td>
+                <td>{{ admin.persona.nombre }} {{ admin.persona.apellidoPaterno }} {{ admin.persona.apellidoMaterno }}</td>
+                <td>{% if admin.colegio %}{{ admin.colegio.nombre }}{% else %}-{% endif %}</td>
+                <td>{{ admin.estado }}</td>
+                <td>
+                    <button class="viewBtn" data-id="{{ admin.id }}">Ver</button>
+                    <button class="editBtn" data-id="{{ admin.id }}">Editar</button>
+                    <form method="POST" style="display:inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="cambiar_estado" value="1">
+                        <input type="hidden" name="admin_id" value="{{ admin.id }}">
+                        <button type="submit">{% if admin.estado == 'Activo' %}Desactivar{% else %}Activar{% endif %}</button>
+                    </form>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" style="text-align: center; padding: 40px 20px; color: #666;">No hay administradores registrados.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal Crear Administrador -->
+<div id="adminModal" class="modal">
+    <div class="modal-content">
+        <h3>Crear Nuevo Administrador<span class="close">&times;</span></h3>
+        <form method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="crear" value="1">
+            <label>Correo:</label>
+            <input type="email" name="correo" required>
+            <label>Contraseña:</label>
+            <input type="password" name="contrasenia" required>
+            <label>Nombre:</label>
+            <input type="text" name="nombre" required>
+            <label>Apellido Paterno:</label>
+            <input type="text" name="apellidoPaterno" required>
+            <label>Apellido Materno:</label>
+            <input type="text" name="apellidoMaterno" required>
+            <label>Colegio:</label>
+            <select name="colegio">
+                <option value="">-- Ninguno --</option>
+                {% for colegio in colegios %}
+                <option value="{{ colegio.id }}">{{ colegio.nombre }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit">Guardar</button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Editar Administrador -->
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <h3>Editar Administrador<span class="close-edit">&times;</span></h3>
+        <form method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="editar" value="1">
+            <input type="hidden" name="admin_id" id="editAdminId">
+            <label>Correo:</label>
+            <input type="email" name="correo" id="editCorreo" required>
+            <label>Nombre:</label>
+            <input type="text" name="nombre" id="editNombre" required>
+            <label>Apellido Paterno:</label>
+            <input type="text" name="apellidoPaterno" id="editApellidoPaterno" required>
+            <label>Apellido Materno:</label>
+            <input type="text" name="apellidoMaterno" id="editApellidoMaterno" required>
+            <label>Colegio:</label>
+            <select name="colegio" id="editColegio">
+                <option value="">-- Ninguno --</option>
+                {% for colegio in colegios %}
+                <option value="{{ colegio.id }}">{{ colegio.nombre }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit">Actualizar</button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Ver Administrador -->
+<div id="viewModal" class="modal">
+    <div class="modal-content">
+        <h3>Datos del Administrador<span class="close-view">&times;</span></h3>
+        <div>
+            <p><strong>Correo:</strong> <span id="viewCorreo"></span></p>
+            <p><strong>Nombre Completo:</strong> <span id="viewNombre"></span></p>
+            <p><strong>Colegio:</strong> <span id="viewColegio"></span></p>
+            <p><strong>Estado:</strong> <span id="viewEstado"></span></p>
+        </div>
+    </div>
+</div>
+
+<!-- Script para modales -->
+<script>
+// Crear
+document.getElementById('newAdminBtn').onclick = function() {
+    document.getElementById('adminModal').style.display = 'block';
+}
+document.querySelector('.close').onclick = function() { document.getElementById('adminModal').style.display = 'none'; }
+
+// Editar
+document.querySelectorAll('.editBtn').forEach(btn=>{
+    btn.onclick = function() {
+        const row = btn.closest('tr');
+        document.getElementById('editAdminId').value = btn.dataset.id;
+        document.getElementById('editCorreo').value = row.cells[0].innerText;
+        const nombres = row.cells[1].innerText.split(' ');
+        document.getElementById('editNombre').value = nombres[0];
+        document.getElementById('editApellidoPaterno').value = nombres[1]||'';
+        document.getElementById('editApellidoMaterno').value = nombres[2]||'';
+        const colegio = row.cells[2].innerText;
+        const select = document.getElementById('editColegio');
+        select.value = Array.from(select.options).find(opt=>opt.text===colegio)?.value || '';
+        document.getElementById('editModal').style.display='block';
+    }
+});
+document.querySelector('.close-edit').onclick = function(){ document.getElementById('editModal').style.display='none'; }
+
+// Ver
+document.querySelectorAll('.viewBtn').forEach(btn=>{
+    btn.onclick=function(){
+        const row = btn.closest('tr');
+        document.getElementById('viewCorreo').innerText = row.cells[0].innerText;
+        document.getElementById('viewNombre').innerText = row.cells[1].innerText;
+        document.getElementById('viewColegio').innerText = row.cells[2].innerText;
+        document.getElementById('viewEstado').innerText = row.cells[3].innerText;
+        document.getElementById('viewModal').style.display='block';
+    }
+});
+document.querySelector('.close-view').onclick=function(){ document.getElementById('viewModal').style.display='none'; }
+
+// Cerrar al dar clic fuera
+window.onclick = function(event){
+    if(event.target==document.getElementById('adminModal')) document.getElementById('adminModal').style.display='none';
+    if(event.target==document.getElementById('editModal')) document.getElementById('editModal').style.display='none';
+    if(event.target==document.getElementById('viewModal')) document.getElementById('viewModal').style.display='none';
+}
+</script>
+{% endblock %}

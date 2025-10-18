@@ -1,0 +1,69 @@
+{% extends 'administrador/base_admin.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container">
+    <div class="admin-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">
+            <h2>Administrar Componentes</h2>
+            <div style="display:flex;gap:8px;align-items:center">
+                <form method="get" style="display:flex;gap:8px;align-items:center">
+                    <input type="text" name="q" placeholder="Buscar por nombre o tema..." class="form-control" value="{{ q|default:'' }}" />
+                    <button type="submit" class="btn btn-secondary">Buscar</button>
+                </form>
+                <a href="{% url 'componente_create' %}" class="btn btn-primary">➕ Agregar Componente</a>
+            </div>
+        </div>
+    </div>
+
+    {% if messages %}
+    <div style="margin-top:12px">
+        {% for message in messages %}
+            <div class="admin-card message-{{ message.tags }}" style="padding:12px;margin-bottom:8px">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if componentes %}
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px;margin-top:18px">
+        {% for c in componentes %}
+        <div class="component-card">
+            <div style="display:flex;gap:14px;align-items:center">
+                <div style="width:96px;height:96px;border-radius:10px;overflow:hidden;background:linear-gradient(180deg,#f8fbff,#eef7ff);display:flex;align-items:center;justify-content:center">
+                    {% if c.imagen %}
+                        <img src="{{ c.imagen.url }}" alt="{{ c.nombre }}" style="width:100%;height:100%;object-fit:cover" />
+                    {% else %}
+                        <span style="font-size:34px;opacity:0.75">🧩</span>
+                    {% endif %}
+                </div>
+                <div style="flex:1">
+                    <h3 style="margin:0 0 6px 0">{{ c.nombre }}</h3>
+                    <div class="component-meta">{{ c.tema.nombre_archivo }}{% if c.laboratorio %} · {{ c.laboratorio.nombre }}{% endif %}</div>
+                    {% if c.descripcion %}
+                        <p style="margin-top:10px;color:#445">{{ c.descripcion|truncatechars:140 }}</p>
+                    {% endif %}
+                    <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
+                        <a href="{% url 'componente_update' c.id %}" class="btn btn-secondary">✏️ Editar</a>
+                        <a href="{% url 'componente_delete_confirm' c.id %}" class="btn btn-danger">🗑️ Eliminar</a>
+                        <div style="margin-left:auto"> <span class="tag">Ver componente</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <div style="margin-top:18px;display:flex;gap:8px;align-items:center;justify-content:center">
+        {% if page_obj.has_previous %}
+            <a href="?q={{ q }}&page={{ page_obj.previous_page_number }}" class="btn btn-secondary">← Anterior</a>
+        {% endif %}
+        <div style="padding:6px 12px;border-radius:8px;background:#fff;box-shadow:0 4px 12px rgba(8,18,40,0.04);margin:0 6px">Página {{ page_obj.number }} de {{ paginator.num_pages }}</div>
+        {% if page_obj.has_next %}
+            <a href="?q={{ q }}&page={{ page_obj.next_page_number }}" class="btn btn-secondary">Siguiente →</a>
+        {% endif %}
+    </div>
+    {% else %}
+        <div class="admin-card" style="margin-top:18px">No hay componentes registrados.</div>
+    {% endif %}
+
+</div>
+{% endblock %}

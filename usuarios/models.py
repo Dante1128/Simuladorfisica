@@ -1,13 +1,22 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinValueValidator
+import base64
 
+from django.db.models.signals import post_migrate
 
 # ======================
 # MODELO: ROL
 # ======================
 class Rol(models.Model):
-    tipo = models.CharField(max_length=50)
+    TIPOS_ROL = [
+        ('SuperAdmin', 'SuperAdmin'),
+        ('Administrador', 'Administrador'),
+        ('Profesor', 'Profesor'),
+        ('Estudiante', 'Estudiante'),
+    ]
+
+    tipo = models.CharField(max_length=50, choices=TIPOS_ROL, unique=True)
 
     class Meta:
         verbose_name = 'Rol'
@@ -15,6 +24,7 @@ class Rol(models.Model):
 
     def __str__(self):
         return self.tipo
+
 
 
 # ======================
@@ -25,37 +35,44 @@ class Usuario(models.Model):
     correo = models.CharField(max_length=100)
     contrasenia = models.CharField(max_length=100)
     estado = models.CharField(max_length=20, choices=[
-        ('A', 'Activo'),
-        ('I', 'Inactivo'),
-    ])
+        ('Activo', 'activo'),
+        ('Inactivo', 'inactivo'),
+    ] ,default='Activo'
+                              )
 
     class Meta:
         verbose_name = 'Usuario'
         verbose_name_plural = 'Usuarios'
 
     def __str__(self):
-        return f"{self.username} ({self.correo})"
+        return f"{self.correo} ({self.rol})"
 
 
 # ======================
 # MODELO: ADMINISTRADOR
 # ======================
 class Administrador(models.Model):
-    TIPO_CHOICES = [
-        ('academico', 'Académico'),
-        ('sistema', 'Sistema'),
-    ]
-
     usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='administradores')
-    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default='sistema')
+    persona = models.ForeignKey('Persona', on_delete=models.SET_NULL, null=True, blank=True, related_name='administradores')
+    estado = models.CharField(max_length=20, choices=[
+        ('Activo', 'activo'),
+        ('Inactivo', 'inactivo'),
+    ], default='Activo')
+    
+    # Relación con Colegio (opcional)
+    colegio = models.ForeignKey('Colegio', on_delete=models.SET_NULL, null=True, blank=True, related_name='administradores')
 
     class Meta:
         verbose_name = 'Administrador'
         verbose_name_plural = 'Administradores'
 
     def __str__(self):
-        return f"Administrador: {self.usuario.username}"
-
+        detalles = [self.usuario.correo]
+        if self.persona:
+            detalles.append(f"{self.persona.nombre} {self.persona.apellidoPaterno}")
+        if self.colegio:
+            detalles.append(f"({self.colegio.nombre})")
+        return " - ".join(detalles)
 
 # ======================
 # MODELO: CONFIGURACIÓN VISUAL
@@ -89,6 +106,10 @@ class Persona(models.Model):
     nombre = models.CharField(max_length=100)
     apellidoPaterno = models.CharField(max_length=100)
     apellidoMaterno = models.CharField(max_length=100)
+    estado = models.CharField(max_length=20, choices=[
+        ('Activo', 'activo'),
+        ('Inactivo', 'inactivo'),
+    ], default='Activo')
 
     class Meta:
         verbose_name = 'Persona'
@@ -104,6 +125,10 @@ class Persona(models.Model):
 class Colegio(models.Model):
     nombre = models.CharField(max_length=200)
     direccion = models.CharField(max_length=300)
+    estado = models.CharField(max_length=20, choices=[
+        ('Activo', 'activo'),
+        ('Inactivo', 'inactivo'),
+    ],default='Activo')
 
     class Meta:
         verbose_name = 'Colegio'
@@ -120,6 +145,10 @@ class Estudiante(models.Model):
     persona = models.ForeignKey(Persona, on_delete=models.CASCADE, related_name='estudiantes')
     colegio = models.ForeignKey(Colegio, on_delete=models.CASCADE, related_name='estudiantes')
     curso = models.CharField(max_length=100)
+    estado = models.CharField(max_length=20, choices=[
+        ('Activo', 'activo'),
+        ('Inactivo', 'inactivo'),
+    ],default='Activo')
 
     class Meta:
         verbose_name = 'Estudiante'
@@ -136,6 +165,10 @@ class Profesor(models.Model):
     usuario = models.OneToOneField(Usuario, on_delete=models.CASCADE, related_name='profesor')
     colegio = models.ForeignKey(Colegio, on_delete=models.CASCADE, related_name='profesores')
     curso = models.CharField(max_length=100)
+    estado = models.CharField(max_length=20, choices=[
+        ('Activo', 'activo'),
+        ('Inactivo', 'inactivo'),
+    ],default='Activo')
 
     class Meta:
         verbose_name = 'Profesor'
@@ -151,6 +184,10 @@ class Profesor(models.Model):
 class Curso(models.Model):
     nombre = models.CharField(max_length=100)
     profesor = models.ForeignKey(Profesor, on_delete=models.CASCADE, related_name='cursos')
+    estado = models.CharField(max_length=20, choices=[
+        ('Activo', 'activo'),
+        ('Inactivo', 'inactivo'),
+    ],default='Activo')
 
     class Meta:
         verbose_name = 'Curso'
@@ -158,7 +195,6 @@ class Curso(models.Model):
 
     def __str__(self):
         return self.nombre
-
 
 # ======================
 # MODELO: TEMAS
@@ -175,7 +211,6 @@ class Temas(models.Model):
     fecha_inicio = models.DateField()
     tamanio = models.IntegerField(help_text="Duración en horas o días")
     archivo = models.FileField(upload_to='temas/')
-
     class Meta:
         verbose_name = 'Tema'
         verbose_name_plural = 'Temas'
@@ -217,7 +252,11 @@ class Componente(models.Model):
     video_explicacion = models.URLField(max_length=500, blank=True)
     tema = models.ForeignKey(Temas, on_delete=models.CASCADE, related_name='componentes')
     laboratorio = models.ForeignKey(Laboratorio, on_delete=models.SET_NULL, null=True, blank=True, related_name='componentes')
-
+    estado = models.CharField(max_length=20, choices=[
+        ('Activo', 'activo'),
+        ('Inactivo', 'inactivo'),
+    ],default='Activo')
+    
     class Meta:
         verbose_name = 'Componente'
         verbose_name_plural = 'Componentes'
@@ -246,7 +285,8 @@ class Membresia(models.Model):
     estado = models.CharField(max_length=50, choices=[
         ('activa', 'Activa'),
         ('vencida', 'Vencida'),
-        ('cancelada', 'Cancelada')
+        ('cancelada', 'Cancelada'),
+        ('suspendida', 'Suspendida')
     ], default='activa')
 
     class Meta:
@@ -305,4 +345,71 @@ class Pago(models.Model):
         return f"Pago {self.id} - {self.usuario.username} - ${self.monto}"
 
 
+ # ======================
+# MODULO: CONTENIDO TEORICO
+# ======================   
+class Documento(models.Model):
+    ESTADO_CHOICES = [
+        ('Activo', 'Activo'),
+        ('Inactivo', 'Inactivo'),
+        ('En revisión', 'En revisión'),
+    ]
+    
+    categoria = models.CharField(
+    max_length=50, 
+    default='fisica_general',
+    verbose_name="Categoría"
+)
+    
+    nombre = models.CharField(max_length=255, verbose_name="Nombre del documento")
+    descripcion = models.TextField(blank=True, verbose_name="Descripción")
+    archivo_pdf = models.BinaryField(verbose_name="Archivo PDF", null=True, blank=True)  # ← ¡CORREGIDO!
+    nombre_archivo = models.CharField(max_length=255, verbose_name="Nombre del archivo", blank=True)
+    tamaño = models.IntegerField(verbose_name="Tamaño (bytes)", null=True, blank=True)
+    categoria = models.CharField(
+        max_length=50, 
+        default='fisica_general',
+        verbose_name="Categoría"
+    )
+    estado = models.CharField(max_length=20, choices=[
+        ('Activo', 'activo'),
+        ('Inactivo', 'inactivo'),
+    ],default='Activo')
+    fecha_creacion = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de creación")
+    fecha_actualizacion = models.DateTimeField(auto_now=True, verbose_name="Fecha de actualización", null=True)
+    
+    class Meta:
+        db_table = 'documentos'
+        verbose_name = 'Documento'
+        verbose_name_plural = 'Documentos'
+        ordering = ['-fecha_creacion']
+    
+    def __str__(self):
+        return self.nombre
+    
+    def get_pdf_base64(self):
+        """Devuelve el PDF en base64 para incrustar en HTML"""
+        if self.archivo_pdf:
+            return base64.b64encode(self.archivo_pdf).decode('utf-8')
+        return ""
+    
+    def get_tamaño_formateado(self):
+        """Devuelve el tamaño formateado (KB, MB)"""
+        if self.tamaño:
+            if self.tamaño < 1024:
+                return f"{self.tamaño} B"
+            elif self.tamaño < 1024 * 1024:
+                return f"{self.tamaño / 1024:.1f} KB"
+            else:
+                return f"{self.tamaño / (1024 * 1024):.1f} MB"
+        return "0 B"
+    
 
+
+def crear_roles(sender, **kwargs):
+    for tipo, _ in Rol.TIPOS_ROL:
+        Rol.objects.get_or_create(tipo=tipo)
+
+post_migrate.connect(crear_roles, sender=None)
+  
+    
