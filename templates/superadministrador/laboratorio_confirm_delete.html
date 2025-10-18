@@ -1,0 +1,19 @@
+{% extends 'administrador/base_admin.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container">
+    <div class="confirm-card">
+        <div class="confirm-inner">
+            <h2>Confirmar eliminación</h2>
+            <p>¿Seguro que desea eliminar el laboratorio <strong>"{{ laboratorio.nombre }}"</strong>? Se eliminará la carpeta con los recursos si existe.</p>
+
+            <form method="post" style="display:flex;gap:12px;margin-top:14px">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">🗑️ Sí, eliminar</button>
+                <a href="{% url 'laboratorios_list' %}" class="btn btn-secondary">✖️ Cancelar</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
