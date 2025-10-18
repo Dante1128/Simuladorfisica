@@ -346,7 +346,7 @@ class Pago(models.Model):
         return f"Pago {self.id} - {self.usuario.username} - ${self.monto}"
 
 
- # ======================
+  # ======================
 # MODULO: CONTENIDO TEORICO
 # ======================   
 class Documento(models.Model):
@@ -367,6 +367,7 @@ class Documento(models.Model):
     archivo_pdf = models.BinaryField(verbose_name="Archivo PDF", null=True, blank=True)  # ← ¡CORREGIDO!
     nombre_archivo = models.CharField(max_length=255, verbose_name="Nombre del archivo", blank=True)
     tamaño = models.IntegerField(verbose_name="Tamaño (bytes)", null=True, blank=True)
+    curso = models.ForeignKey(Curso, on_delete=models.CASCADE, related_name='documentos')
     categoria = models.CharField(
         max_length=50, 
         default='fisica_general',
@@ -404,13 +405,3 @@ class Documento(models.Model):
             else:
                 return f"{self.tamaño / (1024 * 1024):.1f} MB"
         return "0 B"
-    
-
-
-def crear_roles(sender, **kwargs):
-    for tipo, _ in Rol.TIPOS_ROL:
-        Rol.objects.get_or_create(tipo=tipo)
-
-post_migrate.connect(crear_roles, sender=None)
-  
-    
