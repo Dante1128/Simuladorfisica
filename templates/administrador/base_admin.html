@@ -45,7 +45,7 @@
                     <span class="menu-item-text">Laboratorios RV</span>
                     <span class="menu-badge">15</span>
                 </a>
-                <a href="#" class="menu-item {% if request.resolver_match.url_name == 'contenido' %}active{% endif %}">
+                <a href="{% url 'gestion_documentos_administrador' %}" class="menu-item {% if request.resolver_match.url_name == 'contenido' %}active{% endif %}">
                     <i>📚</i>
                     <span class="menu-item-text">Contenido Teórico</span>
                 </a>
@@ -53,7 +53,7 @@
             
             <div class="menu-section">
                 <div class="menu-section-title">Administración</div>
-                <a href="#" class="menu-item {% if request.resolver_match.url_name == 'usuarios' %}active{% endif %}">
+                <a href="{% url 'gestion_documentos_administrador' %}" class="menu-item {% if request.resolver_match.url_name == 'usuarios' %}active{% endif %}">
                     <i>👥</i>
                     <span class="menu-item-text">Gestión de Usuarios</span>
                     <span class="menu-badge">3</span>
@@ -69,6 +69,7 @@
                 {% load menu_tags %}
                 {% componentes_menu %}
             </div>
+
             
             <div class="menu-section">
                 <div class="menu-section-title">Cuenta</div>

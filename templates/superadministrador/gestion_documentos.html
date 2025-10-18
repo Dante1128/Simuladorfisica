@@ -1,10 +1,10 @@
-{% extends 'profesor/base_profesor.html' %}
+{% extends 'superadministrador/base_superadmin.html' %}
 {% load static %}
 {% block title %}Bienvenido al Sistema de Laboratorios{% endblock %}
 
 {% block content %}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{% static 'usuarios/css/profesor/gestion_documentos.css'%}">
+    <link rel="stylesheet" href="{% static 'css/superadministrador/gestion_documentos.css'%}">
 
     <!-- Contenedor general -->
     <div class="dashboard-container">
@@ -12,12 +12,13 @@
         
         <div class="main-content">
             <header class="panel-header main-header">
-                <h1><i class="fas fa-book"></i> Gestión de Contenido Teórico- Profesor</h1>
-                <div class="help-bar">
-                    <button class="help-btn" id="helpBtn">
-                        <i class="fas fa-question"></i>
-                    </button>
-                </div>
+                
+                    <h1><i class="fas fa-book"></i> Gestión de Contenido Teórico- SuperAdministrador</h1>
+                    <div class="help-bar">
+                        <button class="help-btn" id="helpBtn">
+                            <i class="fas fa-question"></i>
+                        </button>
+                    </div>
             </header>
             <div class="stats-panel">
                 <div class="stat-card">
@@ -101,6 +102,9 @@
                                 <button class="action-btn btn-edit" data-id="{{ documento.id }}" title="Editar">
                                     <i class="fas fa-pencil-alt"></i>
                                 </button>
+                                <button class="action-btn btn-delete" data-id="{{ documento.id }}" title="Eliminar">
+                                    <i class="fas fa-trash"></i>
+                                </button>
             
                             </div>
                         </div>
@@ -169,13 +173,30 @@
             <li><i class="fas fa-file-pdf"></i> <strong>Subir PDF:</strong> Ir al admin para subir archivos PDF</li>
             <li><i class="fas fa-pencil-alt"></i> <strong>Editar:</strong> Modificar metadatos</li>
             <li><i class="fas fa-file-pdf"></i> <strong>PDF:</strong> Subir/editar archivo PDF</li>
+            <li><i class="fas fa-trash"></i> <strong>Eliminar:</strong> Eliminar documento permanentemente</li>
         </ul>
         <p><strong>Para subir PDFs:</strong> Use el botón <i class="fas fa-file-pdf"></i> o vaya al Panel Admin</p>
         <button class="close-help" id="closeHelp">Cerrar</button>
     </div>
 
+    <!-- Notificación -->
+    <div class="notification" id="notification"></div>
 
-    
+
+    <!-- Modal de confirmación de eliminación -->
+    <div class="confirm-modal" id="confirmModal">
+        <div class="confirm-modal-content">
+            <div class="confirm-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h3>Confirmar Eliminación</h3>
+            <p id="confirmMessage">¿Está seguro de que desea eliminar este documento? Esta acción no se puede deshacer.</p>
+            <div class="confirm-buttons">
+                <button class="btn-cancel-delete" id="cancelDeleteBtn">Cancelar</button>
+                <button class="btn-confirm-delete" id="confirmDeleteBtn">Sí, Eliminar</button>
+            </div>
+        </div>
+    </div>
 
     <script src="{% static 'js/superadministrador/gestion_documento.js' %}"></script>
 

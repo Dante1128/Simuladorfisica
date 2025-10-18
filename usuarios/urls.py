@@ -4,11 +4,11 @@ from . import views
 
 urlpatterns = [
     path('', views.index, name='index'),
-    path('login/', views.login_view, name='login'),
+    path('login/', views.login, name='login'),
     path('panel_superadmin/',views.panel_superadmin, name='panel_superadmin'),
     #RUTAS DE GESTIÓN
     path('gestion_colegios/', views.gestion_colegios, name='gestion_colegios'),
-    path('gestion_administradores/', views.gestion_administradores, name='gestion_administradores'),
+    #path('gestion_administradores/', views.gestion_administradores, name='gestion_administradores'),
     path('gestion_profesor/', views.gestion_profesor, name='gestion_profesor'),
     path('gestion_estudiante/', views.gestion_estudiante, name='gestion_estudiante'),
     path('panel_admin/', views.panel_admin, name='panel_admin'),
@@ -46,7 +46,9 @@ urlpatterns = [
     path('reportes/laboratorios/', views.generar_reporte_pdf, {'tipo_reporte': 'laboratorios'}, name='reporte_laboratorios'),
     
     # URLs para AJAX y búsquedas
-    path('gestion-documentos/', views.gestion_documentos, name='gestion_documentos'),
+    path('gestion-documentos-profesor/', views.gestion_documentos_profesor, name='gestion_documentos_profesor'),
+    path('gestion-documentos-administrador/', views.gestion_documentos_administrador, name='gestion_documentos_administrador'),
+    path('gestion-documentos-superadministrador/', views.gestion_documentos_superadministrador, name='gestion_documentos_superadministrador'),
     path('contenido-teorico/', views.contenido_teorico, name='contenido_teorico'),
     path('documentos/<int:documento_id>/descargar/', views.descargar_documento, name='descargar_documento'),
     path('documentos/<int:documento_id>/preview/', views.preview_documento, name='preview_documento')

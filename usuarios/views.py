@@ -1,108 +1,53 @@
-# ======================
-# IMPORTS DE DJANGO
-# ======================
+from django.contrib.auth.hashers import make_password
+from django.shortcuts import render, redirect
+from django.contrib.auth.hashers import make_password
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.hashers import check_password
 from django.contrib import messages
-from django.contrib.auth.hashers import make_password, check_password
+from .models import Usuario  
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
+from .models import Laboratorio
 from django.utils import timezone
-from django.http import JsonResponse, HttpResponse
+from django.db.models import Q
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.db.models import Q, Count, Sum
-from django.db import models
-from django.contrib.admin.views.decorators import staff_member_required
-
-# ======================
-# IMPORTS DE MODELOS
-# ======================
-from .models import (
-    Usuario, Persona, Colegio, Estudiante, Profesor, Administrador,
-    Suscripcion, Membresia, Curso, Temas, Laboratorio, Componente,
-    Pago, Rol, Documento
-)
-
-# ======================
-# IMPORTS DE FORMULARIOS
-# ======================
+from .models import Componente
 from .forms import ComponenteForm
-
-# ======================
-# IMPORTS DE UTILIDADES / LIBRERÍAS EXTERNAS
-# ======================
+from django.shortcuts import get_object_or_404
+from .models import Colegio
+from django.http import JsonResponse, HttpResponse
+from django.db.models import Q
 import csv
 import json
-import io
-import base64
-from datetime import datetime
+from django.db import models
 
-# ======================
-# IMPORTS DE REPORTLAB (PDF)
-# ======================
+# LIBRERIAS AGREGADAS
+from django.db.models import Count, Q, Sum
+from .models import (
+    Usuario, Colegio, Estudiante, Profesor, 
+    Administrador, Suscripcion, Membresia, 
+    Curso, Temas, Laboratorio, Pago, Rol
+)
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter, A4
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
-
+import io
+from datetime import datetime
+from django.shortcuts import render, get_object_or_404
+from django.http import HttpResponse
+from django.db.models import Q
+import base64
+from .models import Documento  
+from django.http import JsonResponse
+from django.contrib.admin.views.decorators import staff_member_required
+import json
 
 def index(request):
     return render(request, 'paginaWeb/index.html')
-
 def base_cliente(request):
     return render(request, 'cliente/baseCliente.html')
-
-#===========================================
-#LOGIN
-#====================================================================
-def login_view(request):
-    if request.method == 'POST':
-        correo = request.POST.get('correo')
-        contrasenia = request.POST.get('contrasenia')
-
-        # Validar campos vacíos
-        if not correo or not contrasenia:
-            messages.error(request, "Todos los campos son obligatorios")
-            return render(request, 'registration/login.html', {'correo': correo})
-
-        # Buscar usuario por correo
-        usuario = Usuario.objects.filter(correo=correo, estado='Activo').first()
-        if not usuario:
-            messages.error(request, "El correo ingresado no está registrado o está inactivo")
-            return render(request, 'registration/login.html', {'correo': correo})
-
-        # Validar contraseña
-        if not check_password(contrasenia, usuario.contrasenia):
-            messages.error(request, "La contraseña es incorrecta")
-            return render(request, 'registration/login.html', {'correo': correo})
-
-        # Guardar sesión
-        request.session['usuario_id'] = usuario.id
-
-        # Redirigir según rol
-        if usuario.rol and usuario.rol.tipo:
-            # Obtener el tipo de rol y eliminar espacios
-            rol_tipo = usuario.rol.tipo.strip()
-            
-            # Comparar con los valores exactos de la base de datos (camelCase)
-            if rol_tipo == 'SuperAdmin':
-                return redirect('dashboard_superadmin')
-            elif rol_tipo == 'Administrador':
-                return redirect('dashboard_administrador')
-            elif rol_tipo == 'Profesor':
-                return redirect('dashboard_profesor')
-            elif rol_tipo == 'Estudiante':
-                return redirect('dashboard_estudiante')
-            else:
-                messages.error(request, f'Rol no reconocido: {usuario.rol.tipo}')
-                return render(request, 'registration/login.html')
-        else:
-            messages.error(request, 'El usuario no tiene rol asignado.')
-            return render(request, 'registration/login.html')
-        
-    # Si no es POST, mostrar el formulario de login
-    return render(request, 'registration/login.html')
-
 
 #====================================================================
 #SUPERADMINISTRADOR
@@ -123,19 +68,8 @@ def base_superadmin(request):
     """Vista básica para base de administración"""
     return render(request, 'administrador/base_admin.html')
 
-def gestion_colegios(request):
-    # CAMBIO DE ESTADO
-    estado_id = request.GET.get('estado_id')
-    if estado_id:
-        try:
-            colegio = Colegio.objects.get(id=estado_id)
-            colegio.estado = 'Inactivo' if colegio.estado == 'Activo' else 'Activo'
-            colegio.save()
-            messages.success(request, f'Estado del colegio "{colegio.nombre}" actualizado a {colegio.estado}.')
-        except Colegio.DoesNotExist:
-            messages.error(request, 'Colegio no encontrado.')
-        return HttpResponse(status=204)
 
+def gestion_colegios(request):
     # CREAR COLEGIO
     if request.method == 'POST' and 'crear' in request.POST:
         nombre = request.POST.get('nombre', '').strip()
@@ -166,123 +100,217 @@ def gestion_colegios(request):
         else:
             messages.error(request, 'Todos los campos son obligatorios para editar.')
 
-    # FILTRO
-    search_term = request.GET.get('search', '').strip()
-    if search_term:
+    # ELIMINAR COLEGIO
+    eliminar_id = request.GET.get('eliminar')
+    if eliminar_id:
+        colegio = Colegio.objects.filter(id=eliminar_id).first()
+        if colegio:
+            colegio.delete()
+            messages.success(request, 'Colegio eliminado correctamente.')
+        else:
+            messages.error(request, 'Colegio no encontrado.')
+
+    # FILTRAR COLEGIOS
+    filtro = request.GET.get('filtro', '').strip()
+    if filtro:
         colegios = Colegio.objects.filter(
-            Q(nombre__icontains=search_term) | Q(direccion__icontains=search_term)
-        ).order_by('-id')  
+            Q(nombre__icontains=filtro) | Q(direccion__icontains=filtro)
+        ).order_by('nombre')
     else:
-        colegios = Colegio.objects.all().order_by('-id')  
-
-    return render(request, 'superadministrador/gestion_colegios.html', {'colegios': colegios})
-
-
-def gestion_administradores(request):
-    administradores = Administrador.objects.all().select_related('usuario', 'persona', 'colegio')
-    colegios = Colegio.objects.filter(estado='Activo')
-
-    # ===========================
-    # CREAR ADMINISTRADOR
-    # ===========================
-    if request.method == "POST" and request.POST.get('crear') == '1':
-        correo = request.POST.get('correo')
-        contrasenia = request.POST.get('contrasenia')
-        nombre = request.POST.get('nombre')
-        apellidoPaterno = request.POST.get('apellidoPaterno')
-        apellidoMaterno = request.POST.get('apellidoMaterno')
-        colegio_id = request.POST.get('colegio') or None
-
-        try:
-            rol_admin = Rol.objects.get(tipo='Administrador')
-
-            usuario = Usuario.objects.create(
-                correo=correo,
-                contrasenia=make_password(contrasenia),
-                estado='Activo',
-                rol=rol_admin
-            )
-
-            persona = Persona.objects.create(
-                usuario=usuario,
-                nombre=nombre,
-                apellidoPaterno=apellidoPaterno,
-                apellidoMaterno=apellidoMaterno,
-                estado='Activo'
-            )
-
-            Administrador.objects.create(
-                usuario=usuario,
-                persona=persona,
-                colegio_id=colegio_id,
-                estado='Activo'
-            )
-
-            messages.success(request, "Administrador creado correctamente.")
-            return redirect('gestion_administradores')
-
-        except Exception as e:
-            messages.error(request, f"Error al crear administrador: {str(e)}")
-
-    # ===========================
-    # EDITAR ADMINISTRADOR
-    # ===========================
-    elif request.method == "POST" and request.POST.get('editar') == '1':
-        admin_id = request.POST.get('admin_id')
-        admin = get_object_or_404(Administrador, id=admin_id)
-        usuario = admin.usuario
-        persona = admin.persona
-
-        correo = request.POST.get('correo')
-        nombre = request.POST.get('nombre')
-        apellidoPaterno = request.POST.get('apellidoPaterno')
-        apellidoMaterno = request.POST.get('apellidoMaterno')
-        colegio_id = request.POST.get('colegio') or None
-
-        try:
-            # Actualizar usuario
-            usuario.correo = correo
-            usuario.save()
-
-            # Actualizar persona
-            persona.nombre = nombre
-            persona.apellidoPaterno = apellidoPaterno
-            persona.apellidoMaterno = apellidoMaterno
-            persona.save()
-
-            # Actualizar administrador
-            admin.colegio_id = colegio_id
-            admin.save()
-
-            messages.success(request, "Administrador actualizado correctamente.")
-            return redirect('gestion_administradores')
-        except Exception as e:
-            messages.error(request, f"Error al editar administrador: {str(e)}")
-
-    # ===========================
-    # CAMBIAR ESTADO ADMINISTRADOR
-    # ===========================
-    elif request.method == "POST" and request.POST.get('cambiar_estado') == '1':
-        admin_id = request.POST.get('admin_id')
-        admin = get_object_or_404(Administrador, id=admin_id)
-        try:
-            admin.estado = 'Inactivo' if admin.estado == 'Activo' else 'Activo'
-            admin.save()
-            messages.success(request, f"Estado cambiado a {admin.estado} correctamente.")
-            return redirect('gestion_administradores')
-        except Exception as e:
-            messages.error(request, f"Error al cambiar estado: {str(e)}")
+        colegios = Colegio.objects.all().order_by('nombre')
 
     context = {
-        'administradores': administradores,
-        'colegios': colegios
+        'colegios': colegios,
     }
-    return render(request, 'superadministrador/gestion_administradores.html', context)
+    return render(request, 'superadministrador/gestion_colegios.html', context)
 
 
-#====================================================================
+def editar_colegio(request, colegio_id):
+    """
+    Vista para editar un colegio existente
+    """
+    try:
+        colegio = get_object_or_404(Colegio, id=colegio_id)
+        
+        if request.method == 'GET':
+            # Devolver datos del colegio para edición
+            return JsonResponse({
+                'success': True,
+                'colegio': {
+                    'id': colegio.id,
+                    'nombre': colegio.nombre,
+                    'direccion': colegio.direccion
+                }
+            })
+        
+        elif request.method == 'POST':
+            # Actualizar el colegio
+            data = json.loads(request.body)
+            nombre = data.get('nombre', '').strip()
+            direccion = data.get('direccion', '').strip()
+            
+            if not nombre or not direccion:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Nombre y dirección son campos obligatorios'
+                }, status=400)
+            
+            # Verificar si el nombre ya existe (excluyendo el actual)
+            if Colegio.objects.filter(nombre__iexact=nombre).exclude(id=colegio_id).exists():
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Ya existe otro colegio con ese nombre'
+                }, status=400)
+            
+            # Actualizar el colegio
+            colegio.nombre = nombre
+            colegio.direccion = direccion
+            colegio.save()
+            
+            print(f"Colegio actualizado en usuarios_colegios: ID {colegio.id}")
+            
+            return JsonResponse({
+                'success': True,
+                'message': f'Colegio "{colegio.nombre}" actualizado correctamente',
+                'colegio': {
+                    'id': colegio.id,
+                    'nombre': colegio.nombre,
+                    'direccion': colegio.direccion
+                }
+            })
+            
+    except Exception as e:
+        print(f"Error en editar_colegio: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'message': f'Error al procesar la solicitud: {str(e)}'
+        }, status=500)
+
+
+def eliminar_colegio(request, colegio_id):
+    """
+    Vista para eliminar un colegio
+    """
+    try:
+        colegio = get_object_or_404(Colegio, id=colegio_id)
+        nombre_colegio = colegio.nombre
+        colegio.delete()
+        
+        print(f"Colegio eliminado de usuarios_colegios: ID {colegio_id}")
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Colegio "{nombre_colegio}" eliminado correctamente'
+        })
+        
+    except Exception as e:
+        print(f"Error en eliminar_colegio: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'message': f'Error al eliminar el colegio: {str(e)}'
+        }, status=500)
+
+def buscar_colegios(request):
+    """
+    Vista para búsqueda de colegios
+    """
+    try:
+        query = request.GET.get('q', '').strip()
+        
+        if not query:
+            colegios = Colegio.objects.all().order_by('nombre')
+        else:
+            colegios = Colegio.objects.filter(
+                Q(nombre__icontains=query) |
+                Q(direccion__icontains=query)
+            ).order_by('nombre')
+        
+        colegios_data = []
+        for colegio in colegios:
+            colegios_data.append({
+                'id': colegio.id,
+                'nombre': colegio.nombre,
+                'direccion': colegio.direccion
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'colegios': colegios_data
+        })
+    
+    except Exception as e:
+        print(f"Error en buscar_colegios: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'message': f'Error en la búsqueda: {str(e)}'
+        }, status=500)
+
+def exportar_colegios(request):
+    """
+    Vista para exportar la lista de colegios a CSV
+    """
+    try:
+        response = HttpResponse(content_type='text/csv; charset=utf-8')
+        response['Content-Disposition'] = 'attachment; filename="colegios.csv"'
+        
+        writer = csv.writer(response)
+        writer.writerow(['ID', 'Nombre', 'Dirección'])
+        
+        colegios = Colegio.objects.all().order_by('nombre')
+        for colegio in colegios:
+            writer.writerow([
+                colegio.id, 
+                colegio.nombre, 
+                colegio.direccion
+            ])
+        
+        return response
+    
+    except Exception as e:
+        print(f"Error en exportar_colegios: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'message': f'Error al exportar: {str(e)}'
+        })
+    
+def gestion_cursos(request):
+    """Vista básica para base de administración"""
+    return render(request, 'superadministrador/gestion_cursos.html')
+
+def gestion_estudiante(request):
+    """Vista básica para base de administración"""
+    return render(request, 'superadministrador/gestion_estudiante.html')
+#estudiante
+def panel_estudiante(request):
+    """Vista básica para panel de administración"""
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        return redirect('login')
+    try:
+        usuario = Usuario.objects.get(id=usuario_id)
+        return render(request, 'estudiante/panel_estudiante.html', {"usuario": usuario})
+    except Usuario.DoesNotExist:
+        return redirect('login')
+
+def base_estudiante(request):
+    """Vista básica para base de administración"""
+    return render(request, 'estudiante/base_estudiante.html')
+
+def perfil_estudiante(request):
+    """Vista básica para perfil de administración"""
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        return redirect('login')
+    
+    try:
+        usuario = Usuario.objects.get(id=usuario_id)
+        return render(request, 'estudiante/perfil_estudiante.html', {"usuario": usuario})
+    except Usuario.DoesNotExist:
+        return redirect('login')
+    #====================================================================
 # CRUD PROFESORES
 #====================================================================
+from .models import Profesor, Colegio, Usuario
 
 def gestion_profesor(request):
     # CREAR PROFESOR
@@ -296,12 +324,10 @@ def gestion_profesor(request):
         curso = request.POST.get('curso', '').strip()
         if nombre and apellidoPaterno and apellidoMaterno and correo and contrasenia and colegio_id and curso:
             if not Usuario.objects.filter(correo=correo).exists():
-                rol_profesor = Rol.objects.get(id=3)
                 usuario = Usuario.objects.create(
                     correo=correo,
-                    contrasenia=make_password(contrasenia),
-                    estado='Activo',
-                    rol=rol_profesor
+                    contrasenia=contrasenia,
+                    estado='A',
                 )
                 from .models import Persona
                 persona = Persona.objects.create(
@@ -362,16 +388,16 @@ def gestion_profesor(request):
         else:
             messages.error(request, 'Todos los campos son obligatorios para editar.')
 
-    if request.method == "POST" and request.POST.get('cambiar_estado') == '1':
-        profesor_id = request.POST.get('profesor_id')
-        profesor = Profesor.objects.filter(id=profesor_id).first()
+    # ELIMINAR PROFESOR
+    eliminar_id = request.GET.get('eliminar')
+    if eliminar_id:
+        profesor = Profesor.objects.filter(id=eliminar_id).first()
         if profesor:
-            profesor.estado = 'Inactivo' if profesor.estado == 'Activo' else 'Activo'
-            profesor.save()
-            messages.success(request, f"Estado del profesor cambiado a {profesor.estado}.")
+            profesor.usuario.delete()
+            profesor.delete()
+            messages.success(request, 'Profesor eliminado correctamente.')
         else:
             messages.error(request, 'Profesor no encontrado.')
-        return redirect('gestion_profesor')
 
     # LISTAR PROFESORES
     profesores = Profesor.objects.select_related('usuario', 'colegio').all().order_by('usuario__correo')
@@ -381,105 +407,6 @@ def gestion_profesor(request):
         'colegios': colegios,
     }
     return render(request, 'superadministrador/gestion_profesor.html', context)
-
-
-def gestion_estudiante(request):
-    estudiantes = Estudiante.objects.all()
-    colegios = Colegio.objects.all()
-
-    if request.method == 'POST':
-        estudiante_id = request.POST.get('alumno-id')
-        nombres = request.POST.get('alumno-nombres')
-        apellidos = request.POST.get('alumno-apellidos')
-        curso = request.POST.get('alumno-curso')
-        colegio_id = request.POST.get('alumno-colegio')
-        correo = request.POST.get('alumno-email')
-        contrasenia = request.POST.get('alumno-password')
-
-        colegio = get_object_or_404(Colegio, id=colegio_id)
-
-        if estudiante_id:  # Editar estudiante
-            estudiante = get_object_or_404(Estudiante, id=estudiante_id)
-            # Actualizar persona
-            estudiante.persona.nombre = nombres
-            estudiante.persona.apellidoPaterno = apellidos.split()[0]
-            estudiante.persona.apellidoMaterno = ' '.join(apellidos.split()[1:]) if len(apellidos.split()) > 1 else ''
-            estudiante.persona.save()
-
-            # Actualizar usuario
-            estudiante.persona.usuario.correo = correo
-            if contrasenia:
-                estudiante.persona.usuario.contrasenia = make_password(contrasenia)
-            estudiante.persona.usuario.save()
-
-            # Actualizar estudiante
-            estudiante.curso = curso
-            estudiante.colegio = colegio
-            estudiante.save()
-
-            messages.success(request, f"Estudiante {estudiante.persona.nombre} actualizado correctamente")
-
-        else:  # Crear nuevo estudiante
-            #  Crear usuario primero
-            usuario = Usuario.objects.create(
-                correo=correo,
-                contrasenia=make_password(contrasenia)
-                
-            )
-
-            #  Crear persona vinculada al usuario
-            persona = Persona.objects.create(
-                usuario=usuario,
-                nombre=nombres,
-                apellidoPaterno=apellidos.split()[0],
-                apellidoMaterno=' '.join(apellidos.split()[1:]) if len(apellidos.split()) > 1 else ''
-            )
-
-            #  Crear estudiante
-            Estudiante.objects.create(
-                persona=persona,
-                colegio=colegio,
-                curso=curso
-            )
-
-            messages.success(request, f"Estudiante {persona.nombre} registrado correctamente")
-
-        return redirect('gestion_estudiante')
-
-    return render(request, 'superAdministrador/gestion_estudiante.html', {
-        'estudiantes': estudiantes,
-        'colegios': colegios
-    })
-
-
-#estudiante
-def panel_estudiante(request):
-    """Vista básica para panel de administración"""
-    usuario_id = request.session.get('usuario_id')
-    if not usuario_id:
-        return redirect('login')
-    try:
-        usuario = Usuario.objects.get(id=usuario_id)
-        return render(request, 'estudiante/panel_estudiante.html', {"usuario": usuario})
-    except Usuario.DoesNotExist:
-        return redirect('login')
-
-def base_estudiante(request):
-    """Vista básica para base de administración"""
-    return render(request, 'estudiante/base_estudiante.html')
-
-def perfil_estudiante(request):
-    """Vista básica para perfil de administración"""
-    usuario_id = request.session.get('usuario_id')
-    if not usuario_id:
-        return redirect('login')
-    
-    try:
-        usuario = Usuario.objects.get(id=usuario_id)
-        return render(request, 'estudiante/perfil_estudiante.html', {"usuario": usuario})
-    except Usuario.DoesNotExist:
-        return redirect('login')
-
 
 def panel_admin(request):
     """Vista básica para panel de administración"""
@@ -598,7 +525,51 @@ def panel_profesor(request):
         return render(request, 'profesor/panel_profesor.html', {"usuario": usuario})
     except Usuario.DoesNotExist:
         return redirect('login')
+#===========================================
+#LOGIN
+#====================================================================
+def login(request):
+    if request.method == 'POST':
+        correo = request.POST.get('correo')
+        contrasenia = request.POST.get('contrasenia')
 
+        # Validar campos vacíos
+        if not correo or not contrasenia:
+            messages.error(request, "Todos los campos son obligatorios")
+            return render(request, 'registration/login.html', {'correo': correo})
+
+        # Buscar usuario por correo
+        usuario = Usuario.objects.filter(correo=correo, estado='A').first()
+        if not usuario:
+            messages.error(request, "El correo ingresado no está registrado o está inactivo")
+            return render(request, 'registration/login.html', {'correo': correo})
+
+        # Validar contraseña
+        if not check_password(contrasenia, usuario.contrasenia):
+            messages.error(request, "La contraseña es incorrecta")
+            return render(request, 'registration/login.html', {'correo': correo})
+
+        # Guardar sesión
+        request.session['usuario_id'] = usuario.id
+
+        # Redirigir según rol
+        if usuario.rol and usuario.rol.tipo:
+            rol_lower = usuario.rol.tipo.lower()
+                
+            if rol_lower == 'superadministrador':
+                return redirect('panel_superadmin')
+            elif rol_lower == 'administrador':
+                return redirect('panel_admin')
+            elif rol_lower == 'profesor':
+                return redirect('panel_profesor')
+            else:
+                return redirect('panel_estudiante')
+        else:
+            messages.error(request, 'El usuario no tiene rol asignado.')
+            return render(request, 'registration/login.html')
+        
+    # ⚠️ Muy importante: SIEMPRE retornar algo si no es POST
+    return render(request, 'registration/login.html')
 
 # ====================================================================
 # DECORATOR PERSONALIZADO PARA AUTENTICACIÓN
@@ -623,10 +594,9 @@ def dashboard_superadmin(request):
         usuario = Usuario.objects.get(id=usuario_id)
         
         # Verificar que sea superadministrador
-        if not usuario.rol or usuario.rol.tipo != 'SuperAdmin':
+        if not usuario.rol or usuario.rol.tipo.lower() != 'superadministrador':
             messages.error(request, 'No tiene permisos para acceder a esta página')
-            return redirect('dashboard_superadmin')
-
+            return redirect('panel_admin')
         
         # FILTROS
         fecha_inicio = request.GET.get('fecha_inicio', '')
@@ -756,17 +726,17 @@ def dashboard_administrador(request):
             messages.error(request, 'Usuario sin rol asignado')
             return redirect('panel_admin')
 
-        rol_tipo = usuario.rol.tipo.strip()
+        rol_lower = usuario.rol.tipo.strip().lower()
 
         # Solo administradores o superadministradores pueden acceder
-        if rol_tipo not in ['Administrador', 'SuperAdmin']:
+        if rol_lower not in ['administrador', 'superadministrador']:
             messages.error(request, f'No tiene permisos para acceder al dashboard. Rol actual: {usuario.rol.tipo}')
             
             # Redirigir según su rol real
-            if rol_tipo == 'Profesor':
-                return redirect('dashboard_profesor')
-            elif rol_tipo == 'Estudiante':
-                return redirect('dashboard_estudiante')
+            if rol_lower == 'profesor':
+                return redirect('panel_profesor')
+            elif rol_lower == 'estudiante':
+                return redirect('panel_estudiante')
             else:
                 return redirect('login')
 
@@ -927,16 +897,16 @@ def dashboard_profesor(request):
     try:
         usuario = Usuario.objects.get(id=usuario_id)
         
-        # Verificar que sea profesor
+        # Verificar que sea profesor - CORREGIDO
         if not usuario.rol:
             messages.error(request, 'Usuario sin rol asignado')
-            return redirect('panel_profesor')
+            return redirect('panel_profesor')  # Redirigir a su propio panel
         
-        if usuario.rol.tipo.strip() != 'Profesor':
+        if usuario.rol.tipo.lower() != 'profesor':
             messages.error(request, 'No tiene permisos para acceder a esta página')
-            return redirect('panel_profesor')
+            return redirect('panel_profesor')  # Redirigir a su propio panel
         
-        # Obtener el profesor
+        # Obtener el profesor - CORREGIDO
         profesor = Profesor.objects.filter(usuario=usuario).first()
         
         if not profesor:
@@ -966,7 +936,7 @@ def dashboard_profesor(request):
         fecha_fin = request.GET.get('fecha_fin', '')
         curso_filtro = request.GET.get('curso', '')
         
-        # Consultas base del profesor CON ANNOTATE
+        # Consultas base del profesor CON ANNOTATE - CORREGIDO
         cursos_query = Curso.objects.filter(profesor=profesor).annotate(total_temas=Count('temas'))
         temas_query = Temas.objects.filter(curso__profesor=profesor)
         
@@ -1050,10 +1020,10 @@ def dashboard_estudiante(request):
             return redirect('login')
 
         # Normalizar el tipo de rol
-        rol_tipo = usuario.rol.tipo.strip()
+        rol_tipo = usuario.rol.tipo.strip().lower()
 
         # Verificar que sea estudiante
-        if rol_tipo != 'Estudiante':
+        if rol_tipo != 'estudiante':
             messages.error(request, f'Acceso denegado: su rol es "{usuario.rol.tipo}".')
             return redirect('login')
 
@@ -1127,7 +1097,7 @@ def generar_reporte_pdf(request, tipo_reporte):
     
     try:
         usuario = Usuario.objects.get(id=usuario_id)
-        rol = usuario.rol.tipo.strip() if usuario.rol else ''
+        rol = usuario.rol.tipo.lower() if usuario.rol else ''
         
         # Crear el response PDF
         buffer = io.BytesIO()
@@ -1143,13 +1113,13 @@ def generar_reporte_pdf(request, tipo_reporte):
         elements.append(Spacer(1, 12))
         
         # CONTENIDO DEL REPORTE SEGÚN ROL Y TIPO
-        if rol == 'SuperAdmin':
+        if rol == 'superadministrador':
             data = generar_reporte_superadmin(tipo_reporte, usuario)
-        elif rol == 'Administrador':
+        elif rol == 'administrador':
             data = generar_reporte_administrador(tipo_reporte, usuario)
-        elif rol == 'Profesor':
+        elif rol == 'profesor':
             data = generar_reporte_profesor(tipo_reporte, usuario)
-        elif rol == 'Estudiante':
+        elif rol == 'estudiante':
             data = generar_reporte_estudiante(tipo_reporte, usuario)
         else:
             data = [['No hay datos disponibles para este rol']]
@@ -1319,12 +1289,12 @@ def api_estadisticas_tiempo_real(request):
     
     try:
         usuario = Usuario.objects.get(id=usuario_id)
-        rol = usuario.rol.tipo.strip() if usuario.rol else ''
+        rol = usuario.rol.tipo.lower() if usuario.rol else ''
         
         data = {}
         hoy = timezone.now().date()
         
-        if rol == 'SuperAdmin':
+        if rol == 'superadministrador':
             # Estadísticas en tiempo real para superadmin
             data = {
                 'total_usuarios': Usuario.objects.count(),
@@ -1338,7 +1308,7 @@ def api_estadisticas_tiempo_real(request):
                 ).count(),
             }
             
-        elif rol == 'Administrador':
+        elif rol == 'administrador':
             # Estadísticas para administrador
             colegio_admin = Colegio.objects.first()  # En realidad vendría de la relación
             data = {
@@ -1347,7 +1317,7 @@ def api_estadisticas_tiempo_real(request):
                 'cursos_totales': Curso.objects.filter(profesor__colegio=colegio_admin).count(),
             }
             
-        elif rol == 'Profesor':
+        elif rol == 'profesor':
             # Estadísticas para profesor
             profesor = Profesor.objects.filter(usuario=usuario).first()
             if profesor:
@@ -1360,7 +1330,7 @@ def api_estadisticas_tiempo_real(request):
                     ).count(),
                 }
                 
-        elif rol == 'Estudiante':
+        elif rol == 'estudiante':
             # Estadísticas para estudiante
             persona = usuario.personas.first()
             estudiante = Estudiante.objects.filter(persona=persona).first()
@@ -1392,15 +1362,15 @@ def informes_principal(request):
     
     try:
         usuario = Usuario.objects.get(id=usuario_id)
-        rol = usuario.rol.tipo.strip() if usuario.rol else ''
+        rol = usuario.rol.tipo.lower() if usuario.rol else ''
         
-        if rol == 'SuperAdmin':
+        if rol == 'superadministrador':
             return redirect('dashboard_superadmin')
-        elif rol == 'Administrador':
+        elif rol == 'administrador':
             return redirect('dashboard_administrador')
-        elif rol == 'Profesor':
+        elif rol == 'profesor':
             return redirect('dashboard_profesor')
-        elif rol == 'Estudiante':
+        elif rol == 'estudiante':
             return redirect('dashboard_estudiante')
         else:
             messages.error(request, 'Rol no reconocido')
@@ -1409,10 +1379,24 @@ def informes_principal(request):
     except Usuario.DoesNotExist:
         messages.error(request, 'Usuario no encontrado')
         return redirect('login')
-
 ##VISTA PARA CONTENIDO TEORICO##
 
-def gestion_documentos(request):
+def gestion_documentos_profesor(request):
+    """
+    Vista exclusiva para profesores para gestionar documentos
+    """
+    documentos = Documento.objects.all().order_by('-fecha_creacion')
+    
+    if request.method == 'POST':
+        # Manejar AJAX requests para crear/editar/eliminar
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return manejar_ajax_documentos(request)
+    
+    return render(request, 'profesor/gestion_documentos.html', {
+        'documentos': documentos
+    })
+
+def gestion_documentos_administrador(request):
     """
     Vista exclusiva para administradores para gestionar documentos
     """
@@ -1423,7 +1407,22 @@ def gestion_documentos(request):
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return manejar_ajax_documentos(request)
     
-    return render(request, 'profesor/gestion_documentos.html', {
+    return render(request, 'administrador/gestion_documentos.html', {
+        'documentos': documentos
+    })
+
+def gestion_documentos_superadministrador(request):
+    """
+    Vista exclusiva para superadministradores para gestionar documentos
+    """
+    documentos = Documento.objects.all().order_by('-fecha_creacion')
+    
+    if request.method == 'POST':
+        # Manejar AJAX requests para crear/editar/eliminar
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return manejar_ajax_documentos(request)
+    
+    return render(request, 'superadministrador/gestion_documentos.html', {
         'documentos': documentos
     })
     
@@ -1532,6 +1531,8 @@ def eliminar_documento_ajax(data):
         return JsonResponse({'error': 'Documento no encontrado'}, status=404)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+    
+
 
 
 def contenido_teorico(request):
@@ -1623,3 +1624,4 @@ def preview_documento(request, documento_id):
         
     except Exception as e:
         return HttpResponse(f'Error al visualizar el documento: {str(e)}', status=500)
+    
