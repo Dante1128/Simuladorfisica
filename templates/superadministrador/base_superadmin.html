@@ -7,6 +7,7 @@
     <title>{% block title %}Superadministrador{% endblock %}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/superadministrador/base_superadmin.css' %}">
+    <link rel="stylesheet" href="{% static 'usuarios/css/superadministrador/superadmin.css' %}">
     {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -22,36 +23,36 @@
         
         <div class="nav-container">
             <nav>
-                <a href="{% url 'panel_superadmin' %}" class="nav-item">
+                <a href="{% url 'panel_superadmin' %}" class="nav-item" style="text-decoration: none;">
                     <i class="fas fa-home"></i>
                     <span>Inicio</span>
                 </a>
-                <a href="{% url 'gestion_colegios' %}" class="nav-item">
+                <a href="{% url 'gestion_colegios' %}" class="nav-item" style="text-decoration: none;">
                     <i class="fas fa-school"></i>
                     <span>Colegios</span>
                 </a>
-                <a href="{% url 'gestion_administradores' %}" class="nav-item">
+                <a href="{% url 'gestion_administradores' %}" class="nav-item" style="text-decoration: none;">
                     <i class="fas fa-book"></i>
                     <span>Administrador Acadamico</span>
                 </a>
-                <a href="{% url 'gestion_profesor' %}" class="nav-item">
+                <a href="{% url 'gestion_profesor' %}" class="nav-item" style="text-decoration: none;">
                     <i class="fas fa-book"></i>
                     <span>Profesores</span>
                 </a>
-                <a href="{% url 'gestion_estudiante' %}" class="nav-item">
+                <a href="{% url 'gestion_estudiante' %}" class="nav-item" style="text-decoration: none;">
                     <i class="fas fa-book"></i>
                     <span>Alumnos</span>
                 </a>
                 
-                <span class="nav-item disabled">
+                <a href="{% url 'laboratorios_list' %}" class="nav-item" style="text-decoration: none;">
                     <i class="fas fa-flask"></i>
                     <span>Laboratorios</span>
-                </span>
-                <span class="nav-item disabled">
+                </a>
+                <a href="{% url 'superadmin_componentes_list' %}" class="nav-item" style="text-decoration: none;">
                     <i class="fas fa-puzzle-piece"></i>
                     <span>Componentes</span>
-                </span>
-               <a href="{% url 'dashboard_superadmin' %}" class="nav-item">
+                </a>
+               <a href="{% url 'dashboard_superadmin' %}" class="nav-item" style="text-decoration: none;">
                     <i class="fas fa-book"></i>
                     <span>Reportes</span>
                 </a>

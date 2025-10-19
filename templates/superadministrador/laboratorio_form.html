@@ -1,0 +1,38 @@
+{% extends 'superadministrador/base_superadmin.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container">
+    <div class="admin-card">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+            <h2>{{ accion }} Laboratorio</h2>
+            <a href="{% url 'laboratorios_list' %}" class="btn btn-secondary">← Volver</a>
+        </div>
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+
+            <div style="display:grid;grid-template-columns:1fr;gap:12px;margin-top:12px">
+                <div>
+                    {{ form.nombre.label_tag }}
+                    {{ form.nombre }}
+                </div>
+                <div>
+                    {{ form.archivo_zip.label_tag }}
+                    {{ form.archivo_zip }}
+                </div>
+                <div>
+                    {{ form.estado.label_tag }}
+                    {{ form.estado }}
+                </div>
+            </div>
+
+            <div style="margin-top:12px">
+                <button class="btn btn-success" type="submit">Guardar</button>
+                <a href="{% url 'laboratorios_list' %}" class="btn btn-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

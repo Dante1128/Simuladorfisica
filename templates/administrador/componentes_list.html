@@ -5,13 +5,12 @@
 <div class="container">
     <div class="admin-card">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">
-            <h2>Administrar Componentes</h2>
+            <h2>Lista de Componentes</h2>
             <div style="display:flex;gap:8px;align-items:center">
                 <form method="get" style="display:flex;gap:8px;align-items:center">
                     <input type="text" name="q" placeholder="Buscar por nombre o tema..." class="form-control" value="{{ q|default:'' }}" />
                     <button type="submit" class="btn btn-secondary">Buscar</button>
                 </form>
-                <a href="{% url 'componente_create' %}" class="btn btn-primary">➕ Agregar Componente</a>
             </div>
         </div>
     </div>
@@ -25,32 +24,45 @@
     {% endif %}
 
     {% if componentes %}
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px;margin-top:18px">
-        {% for c in componentes %}
-        <div class="component-card">
-            <div style="display:flex;gap:14px;align-items:center">
-                <div style="width:96px;height:96px;border-radius:10px;overflow:hidden;background:linear-gradient(180deg,#f8fbff,#eef7ff);display:flex;align-items:center;justify-content:center">
-                    {% if c.imagen %}
-                        <img src="{{ c.imagen.url }}" alt="{{ c.nombre }}" style="width:100%;height:100%;object-fit:cover" />
-                    {% else %}
-                        <span style="font-size:34px;opacity:0.75">🧩</span>
-                    {% endif %}
-                </div>
-                <div style="flex:1">
-                    <h3 style="margin:0 0 6px 0">{{ c.nombre }}</h3>
-                    <div class="component-meta">{{ c.tema.nombre_archivo }}{% if c.laboratorio %} · {{ c.laboratorio.nombre }}{% endif %}</div>
-                    {% if c.descripcion %}
-                        <p style="margin-top:10px;color:#445">{{ c.descripcion|truncatechars:140 }}</p>
-                    {% endif %}
-                    <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
-                        <a href="{% url 'componente_update' c.id %}" class="btn btn-secondary">✏️ Editar</a>
-                        <a href="{% url 'componente_delete_confirm' c.id %}" class="btn btn-danger">🗑️ Eliminar</a>
-                        <div style="margin-left:auto"> <span class="tag">Ver componente</span></div>
-                    </div>
-                </div>
-            </div>
+    <div class="admin-card" style="margin-top:18px">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Imagen</th>
+                        <th>Nombre</th>
+                        <th>Tema</th>
+                        <th>Laboratorio</th>
+                        <th>Descripción</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in componentes %}
+                    <tr>
+                        <td style="width: 80px">
+                            {% if c.imagen %}
+                                <img src="{{ c.imagen.url }}" alt="{{ c.nombre }}" style="width:60px;height:60px;object-fit:cover;border-radius:8px" />
+                            {% else %}
+                                <span style="font-size:24px">🧩</span>
+                            {% endif %}
+                        </td>
+                        <td><strong>{{ c.nombre }}</strong></td>
+                        <td>{{ c.tema.nombre_archivo }}</td>
+                        <td>{% if c.laboratorio %}{{ c.laboratorio.nombre }}{% else %}-{% endif %}</td>
+                        <td>{% if c.descripcion %}{{ c.descripcion|truncatechars:100 }}{% else %}-{% endif %}</td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="{% url 'componente_update' c.id %}" class="btn btn-sm btn-secondary">Editar</a>
+                                <button onclick="confirmarEliminacion('{{ c.id }}', '{{ c.nombre|escapejs }}')" class="btn btn-sm btn-danger">Eliminar</button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
-        {% endfor %}
+    </div>
     </div>
     <div style="margin-top:18px;display:flex;gap:8px;align-items:center;justify-content:center">
         {% if page_obj.has_previous %}
@@ -64,6 +76,61 @@
     {% else %}
         <div class="admin-card" style="margin-top:18px">No hay componentes registrados.</div>
     {% endif %}
-
 </div>
+
+<!-- Modal de Confirmación -->
+<div class="modal-overlay" id="modalConfirmacion" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000;justify-content:center;align-items:center;">
+    <div class="modal-content" style="background:white;padding:24px;border-radius:12px;width:90%;max-width:400px;box-shadow:0 4px 20px rgba(0,0,0,0.15);">
+        <h3 style="margin:0 0 16px 0;color:#1e293b">Confirmar eliminación</h3>
+        <p style="margin:0 0 20px 0;color:#475569">¿Está seguro que desea eliminar el componente <strong id="componenteNombre"></strong>?</p>
+        <p style="margin:0 0 24px 0;color:#dc2626;font-size:0.9em">Esta acción no se puede deshacer.</p>
+        <div style="display:flex;gap:12px;justify-content:flex-end">
+            <button onclick="cerrarModal()" class="btn btn-secondary">Cancelar</button>
+            <form id="formEliminar" method="post" style="margin:0">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">Eliminar</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmarEliminacion(id, nombre) {
+    // Configurar el modal
+    document.getElementById('componenteNombre').textContent = nombre;
+    document.getElementById('formEliminar').action = '/componentes/' + id + '/eliminar/';
+    
+    // Mostrar el modal con animación
+    const modal = document.getElementById('modalConfirmacion');
+    modal.style.display = 'flex';
+    modal.style.opacity = '0';
+    setTimeout(() => {
+        modal.style.opacity = '1';
+        modal.style.transition = 'opacity 0.2s ease-in-out';
+    }, 10);
+}
+
+function cerrarModal() {
+    // Ocultar el modal con animación
+    const modal = document.getElementById('modalConfirmacion');
+    modal.style.opacity = '0';
+    setTimeout(() => {
+        modal.style.display = 'none';
+    }, 200);
+}
+
+// Cerrar el modal al hacer clic fuera de él
+document.getElementById('modalConfirmacion').addEventListener('click', function(e) {
+    if (e.target === this) {
+        cerrarModal();
+    }
+});
+
+// Cerrar el modal con la tecla Escape
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        cerrarModal();
+    }
+});
+</script>
 {% endblock %}
