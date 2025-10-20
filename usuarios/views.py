@@ -1,12 +1,33 @@
 # ======================
 # IMPORTS DE DJANGO
 # ======================
+from .views_superadmin_componentes import (
+    superadmin_componentes_list,
+    superadmin_componente_create,
+    superadmin_componente_update,
+    superadmin_componente_delete_confirm
+)
+from .views_superadmin_componentes import (
+    superadmin_componente_form_partial,
+)
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.hashers import make_password, check_password
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.utils import timezone
+from django.db.models import Q
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from .models import Componente
+from .forms import ComponenteForm
+from django.shortcuts import get_object_or_404
+from .models import Laboratorio
+from .forms import LaboratorioForm
+import zipfile, os
+from django.conf import settings
+from django.utils.text import slugify
+from django.http import Http404
+from .models import Colegio
 from django.http import JsonResponse, HttpResponse
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q, Count, Sum
@@ -35,6 +56,9 @@ import json
 import io
 import base64
 from datetime import datetime
+from django.db import models
+import mimetypes
+import shutil
 
 # ======================
 # IMPORTS DE REPORTLAB (PDF)
@@ -45,6 +69,18 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
 
+import io
+from datetime import datetime
+from django.shortcuts import render, get_object_or_404
+from django.http import HttpResponse
+from django.db.models import Q
+import base64
+from .models import Documento  
+from django.http import JsonResponse
+from django.contrib.admin.views.decorators import staff_member_required
+import json
+from django.http import FileResponse
+from django.urls import reverse
 
 def index(request):
     return render(request, 'paginaWeb/index.html')
@@ -509,7 +545,7 @@ def componentes_list(request):
     if not usuario_id:
         return redirect('login')
     q = request.GET.get('q', '').strip()
-    qs = Componente.objects.select_related('tema', 'laboratorio').all()
+    qs = Componente.objects.select_related('tema', 'laboratorio').all().order_by('nombre')
     if q:
         qs = qs.filter(Q(nombre__icontains=q) | Q(tema__nombre_archivo__icontains=q))
 
@@ -599,6 +635,506 @@ def panel_profesor(request):
     except Usuario.DoesNotExist:
         return redirect('login')
 
+def componentes_estudiante(request):
+    """Vista para mostrar componentes a los estudiantes"""
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        return redirect('login')
+
+    # Búsqueda
+    q = request.GET.get('q', '').strip()
+    qs = Componente.objects.select_related('tema', 'laboratorio').all().order_by('nombre')
+    
+    if q:
+        qs = qs.filter(Q(nombre__icontains=q) | Q(tema__nombre_archivo__icontains=q))
+
+    # Preparar datos para JSON
+    componentes_json = []
+    for comp in qs:
+        componentes_json.append({
+            'id': comp.id,
+            'nombre': comp.nombre,
+            'descripcion': comp.descripcion,
+            'especificaciones': comp.especificaciones if hasattr(comp, 'especificaciones') else None,
+            'imagen_url': comp.imagen.url if comp.imagen else None,
+            'modelo3D_url': comp.modelo3D.url if hasattr(comp, 'modelo3D') and comp.modelo3D else None,
+            'video_explicacion': comp.video_explicacion if hasattr(comp, 'video_explicacion') else None,
+            'tema_nombre': comp.tema.nombre_archivo if comp.tema else None,
+            'laboratorio_nombre': comp.laboratorio.nombre if comp.laboratorio else None
+        })
+
+    # Paginación
+    page = request.GET.get('page', 1)
+    paginator = Paginator(qs, 12)  # 12 componentes por página
+    
+    try:
+        componentes_page = paginator.page(page)
+    except PageNotAnInteger:
+        componentes_page = paginator.page(1)
+    except EmptyPage:
+        componentes_page = paginator.page(paginator.num_pages)
+
+    import json
+    context = {
+        'componentes': componentes_page,
+        'componentes_json': json.dumps(componentes_json),
+        'page_obj': componentes_page,
+        'paginator': paginator,
+        'q': q,
+    }
+    
+    return render(request, 'estudiante/componentes_tarjetas.html', context)
+
+
+
+### --- VISTAS PARA LABORATORIOS (SUPERADMIN) --- ###
+def laboratorios_list(request):
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        return redirect('login')
+    labs = Laboratorio.objects.all()
+    return render(request, 'superadministrador/laboratorios_list.html', {'laboratorios': labs})
+
+
+def laboratorio_create(request):
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        return redirect('login')
+
+    if request.method == 'POST':
+        form = LaboratorioForm(request.POST, request.FILES)
+        if form.is_valid():
+            lab = form.save(commit=False)
+            lab.save()
+
+            archivo_zip = request.FILES.get('archivo_zip')
+            if archivo_zip and zipfile.is_zipfile(archivo_zip):
+                target_dir = os.path.join(settings.MEDIA_ROOT, 'laboratorios', str(lab.id))
+                os.makedirs(target_dir, exist_ok=True)
+                tmp_zip_path = os.path.join(target_dir, f'tmp_{lab.id}.zip')
+                with open(tmp_zip_path, 'wb') as f:
+                    for chunk in archivo_zip.chunks():
+                        f.write(chunk)
+                allowed_exts = {'.html', '.htm', '.png', '.jpg', '.jpeg', '.gif', '.css', '.js', '.glb', '.gltf', '.obj', '.mtl', '.bin', '.svg'}
+                import shutil as _shutil
+                with zipfile.ZipFile(tmp_zip_path, 'r') as z:
+                    for member in z.infolist():
+                        name = member.filename
+                        norm_name = os.path.normpath(name)
+                        if norm_name.startswith('..') or os.path.isabs(norm_name):
+                            continue
+                        if name.endswith('/') or name.endswith('\\'):
+                            continue
+                        ext = os.path.splitext(name)[1].lower()
+                        if ext not in allowed_exts:
+                            continue
+                        parts = [p for p in name.split('/') if p and p != '..']
+                        dest_path = os.path.join(target_dir, *parts)
+                        dest_dir = os.path.dirname(dest_path)
+                        os.makedirs(dest_dir, exist_ok=True)
+                        with z.open(member) as source, open(dest_path, 'wb') as target:
+                            shutil.copyfileobj(source, target)
+                os.remove(tmp_zip_path)
+                rel_path = os.path.join('laboratorios', str(lab.id))
+                lab.carpeta = rel_path
+                lab.save()
+
+            messages.success(request, 'Laboratorio creado correctamente')
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return HttpResponse('OK')
+            return redirect('laboratorios_list')
+        else:
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return render(request, 'superadministrador/laboratorio_form_modal.html', {'form': form, 'action_url': request.path})
+    else:
+        form = LaboratorioForm()
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return render(request, 'superadministrador/laboratorio_form_modal.html', {'form': form, 'action_url': request.path})
+
+    return render(request, 'superadministrador/laboratorio_form.html', {'form': form, 'accion': 'Agregar'})
+
+
+def laboratorio_update(request, pk):
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        return redirect('login')
+
+    lab = get_object_or_404(Laboratorio, pk=pk)
+    if request.method == 'POST':
+        form = LaboratorioForm(request.POST, request.FILES, instance=lab)
+        if form.is_valid():
+            lab = form.save()
+            archivo_zip = request.FILES.get('archivo_zip')
+            if archivo_zip and zipfile.is_zipfile(archivo_zip):
+                target_dir = os.path.join(settings.MEDIA_ROOT, 'laboratorios', str(lab.id))
+                os.makedirs(target_dir, exist_ok=True)
+                tmp_zip_path = os.path.join(target_dir, f'tmp_{lab.id}.zip')
+                with open(tmp_zip_path, 'wb') as f:
+                    for chunk in archivo_zip.chunks():
+                        f.write(chunk)
+                allowed_exts = {'.html', '.htm', '.png', '.jpg', '.jpeg', '.gif', '.css', '.js', '.glb', '.gltf', '.obj', '.mtl', '.bin', '.svg'}
+                with zipfile.ZipFile(tmp_zip_path, 'r') as z:
+                    for member in z.infolist():
+                        name = member.filename
+                        norm_name = os.path.normpath(name)
+                        if norm_name.startswith('..') or os.path.isabs(norm_name):
+                            continue
+                        if name.endswith('/') or name.endswith('\\'):
+                            continue
+                        ext = os.path.splitext(name)[1].lower()
+                        if ext not in allowed_exts:
+                            continue
+                        parts = [p for p in name.split('/') if p and p != '..']
+                        dest_path = os.path.join(target_dir, *parts)
+                        dest_dir = os.path.dirname(dest_path)
+                        os.makedirs(dest_dir, exist_ok=True)
+                        with z.open(member) as source, open(dest_path, 'wb') as target:
+                            shutil.copyfileobj(source, target)
+                os.remove(tmp_zip_path)
+                lab.carpeta = os.path.join('laboratorios', str(lab.id))
+                lab.save()
+
+            messages.success(request, 'Laboratorio actualizado correctamente')
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return HttpResponse('OK')
+            return redirect('laboratorios_list')
+        else:
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return render(request, 'superadministrador/laboratorio_form_modal.html', {'form': form, 'action_url': request.path})
+    else:
+        form = LaboratorioForm(instance=lab)
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return render(request, 'superadministrador/laboratorio_form_modal.html', {'form': form, 'action_url': request.path})
+
+    return render(request, 'superadministrador/laboratorio_form.html', {'form': form, 'accion': 'Editar', 'laboratorio': lab})
+
+
+def laboratorio_delete_confirm(request, pk):
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        return redirect('login')
+
+    lab = get_object_or_404(Laboratorio, pk=pk)
+    if request.method == 'POST':
+        # eliminar carpeta y archivo si existen
+        if lab.carpeta:
+            full_dir = os.path.join(settings.MEDIA_ROOT, lab.carpeta)
+            if os.path.exists(full_dir):
+                # eliminar recursivamente
+                import shutil
+                shutil.rmtree(full_dir)
+        lab.delete()
+        messages.success(request, 'Laboratorio eliminado')
+        return redirect('laboratorios_list')
+
+    return render(request, 'superadministrador/laboratorio_confirm_delete.html', {'laboratorio': lab})
+
+
+### --- VISTAS ESTUDIANTES (INTERFAZ) --- ###
+def estudiantes_laboratorios_list(request):
+    # lista pública (o basada en sesión) de laboratorios disponibles
+    labs = Laboratorio.objects.filter(estado='activo')
+    return render(request, 'estudiantes/laboratorios_list.html', {'laboratorios': labs})
+
+
+def laboratorio_access_confirm(request, pk):
+    lab = get_object_or_404(Laboratorio, pk=pk)
+    return render(request, 'estudiantes/laboratorio_confirm.html', {'laboratorio': lab})
+
+
+def laboratorio_entrar(request, pk):
+    lab = get_object_or_404(Laboratorio, pk=pk)
+    # buscar archivo HTML principal en la carpeta extraída
+    if not lab.carpeta:
+        raise Http404('El laboratorio no tiene recursos cargados.')
+
+    carpeta_fs = os.path.join(settings.MEDIA_ROOT, lab.carpeta)
+    if not os.path.isdir(carpeta_fs):
+        raise Http404('Los archivos del laboratorio no existen.')
+
+    # preferir index.html
+    index_candidate = os.path.join(carpeta_fs, 'index.html')
+    if os.path.exists(index_candidate):
+        index_rel = os.path.join(settings.MEDIA_URL, lab.carpeta, 'index.html')
+    else:
+        # buscar primer .html en la carpeta
+        html_files = [f for f in os.listdir(carpeta_fs) if f.lower().endswith('.html')]
+        if not html_files:
+            raise Http404('No hay archivo HTML en la carpeta del laboratorio.')
+        index_rel = os.path.join(settings.MEDIA_URL, lab.carpeta, html_files[0])
+
+    # pasar la URL pública del HTML al template para incrustarlo en un iframe
+    # Usar una vista segura para servir los recursos del laboratorio
+    if index_candidate and os.path.exists(index_candidate):
+        filename = 'index.html'
+    else:
+        filename = html_files[0]
+
+    html_url = reverse('laboratorio_serve', kwargs={'pk': lab.id, 'filename': filename})
+    return render(request, 'estudiantes/laboratorio_view.html', {'laboratorio': lab, 'html_url': html_url})
+
+
+def laboratorio_serve(request, pk, filename):
+    """Sirve archivos de laboratorio de forma segura desde MEDIA_ROOT/<lab.carpeta>/<filename>.
+    Evita path traversal y restringe extensiones permitidas.
+    """
+    lab = get_object_or_404(Laboratorio, pk=pk)
+    if not lab.carpeta:
+        raise Http404('Recursos no disponibles')
+
+    # normalizar filename y prevenir traversal
+    safe_rel = os.path.normpath(filename)
+    if safe_rel.startswith('..') or os.path.isabs(safe_rel):
+        raise Http404('Archivo no permitido')
+
+    media_base = os.path.abspath(os.path.join(settings.MEDIA_ROOT, lab.carpeta))
+    full_path = os.path.abspath(os.path.join(media_base, safe_rel))
+    if not full_path.startswith(media_base):
+        raise Http404('Acceso denegado')
+    if not os.path.exists(full_path):
+        raise Http404('Archivo no encontrado')
+
+    allowed_exts = {'.html', '.htm', '.png', '.jpg', '.jpeg', '.gif', '.css', '.js', '.glb', '.gltf', '.obj', '.mtl', '.bin', '.svg'}
+    ext = os.path.splitext(full_path)[1].lower()
+    if ext not in allowed_exts:
+        raise Http404('Tipo de archivo no permitido')
+
+    mime, _ = mimetypes.guess_type(full_path)
+    if not mime:
+        mime = 'application/octet-stream'
+
+    response = FileResponse(open(full_path, 'rb'), content_type=mime)
+    response['X-Content-Type-Options'] = 'nosniff'
+    # CSP básica para HTML
+    if mime == 'text/html':
+        response['Content-Security-Policy'] = "default-src 'self' 'unsafe-inline' data: blob:; frame-ancestors 'self';"
+
+    return response
+
+
+### --- VISTAS PARA LABORATORIOS (SUPERADMIN) --- ###
+def laboratorios_list(request):
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        return redirect('login')
+    labs = Laboratorio.objects.all()
+    return render(request, 'superadministrador/laboratorios_list.html', {'laboratorios': labs})
+
+
+def laboratorio_create(request):
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        return redirect('login')
+
+    if request.method == 'POST':
+        form = LaboratorioForm(request.POST, request.FILES)
+        if form.is_valid():
+            lab = form.save(commit=False)
+            lab.save()
+
+            archivo_zip = request.FILES.get('archivo_zip')
+            if archivo_zip and zipfile.is_zipfile(archivo_zip):
+                target_dir = os.path.join(settings.MEDIA_ROOT, 'laboratorios', str(lab.id))
+                os.makedirs(target_dir, exist_ok=True)
+                tmp_zip_path = os.path.join(target_dir, f'tmp_{lab.id}.zip')
+                with open(tmp_zip_path, 'wb') as f:
+                    for chunk in archivo_zip.chunks():
+                        f.write(chunk)
+                allowed_exts = {'.html', '.htm', '.png', '.jpg', '.jpeg', '.gif', '.css', '.js', '.glb', '.gltf', '.obj', '.mtl', '.bin', '.svg'}
+                import shutil as _shutil
+                with zipfile.ZipFile(tmp_zip_path, 'r') as z:
+                    for member in z.infolist():
+                        name = member.filename
+                        norm_name = os.path.normpath(name)
+                        if norm_name.startswith('..') or os.path.isabs(norm_name):
+                            continue
+                        if name.endswith('/') or name.endswith('\\'):
+                            continue
+                        ext = os.path.splitext(name)[1].lower()
+                        if ext not in allowed_exts:
+                            continue
+                        parts = [p for p in name.split('/') if p and p != '..']
+                        dest_path = os.path.join(target_dir, *parts)
+                        dest_dir = os.path.dirname(dest_path)
+                        os.makedirs(dest_dir, exist_ok=True)
+                        with z.open(member) as source, open(dest_path, 'wb') as target:
+                            shutil.copyfileobj(source, target)
+                os.remove(tmp_zip_path)
+                rel_path = os.path.join('laboratorios', str(lab.id))
+                lab.carpeta = rel_path
+                lab.save()
+
+            messages.success(request, 'Laboratorio creado correctamente')
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return HttpResponse('OK')
+            return redirect('laboratorios_list')
+        else:
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return render(request, 'superadministrador/laboratorio_form_modal.html', {'form': form, 'action_url': request.path})
+    else:
+        form = LaboratorioForm()
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return render(request, 'superadministrador/laboratorio_form_modal.html', {'form': form, 'action_url': request.path})
+
+    return render(request, 'superadministrador/laboratorio_form.html', {'form': form, 'accion': 'Agregar'})
+
+
+def laboratorio_update(request, pk):
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        return redirect('login')
+
+    lab = get_object_or_404(Laboratorio, pk=pk)
+    if request.method == 'POST':
+        form = LaboratorioForm(request.POST, request.FILES, instance=lab)
+        if form.is_valid():
+            lab = form.save()
+            archivo_zip = request.FILES.get('archivo_zip')
+            if archivo_zip and zipfile.is_zipfile(archivo_zip):
+                target_dir = os.path.join(settings.MEDIA_ROOT, 'laboratorios', str(lab.id))
+                os.makedirs(target_dir, exist_ok=True)
+                tmp_zip_path = os.path.join(target_dir, f'tmp_{lab.id}.zip')
+                with open(tmp_zip_path, 'wb') as f:
+                    for chunk in archivo_zip.chunks():
+                        f.write(chunk)
+                allowed_exts = {'.html', '.htm', '.png', '.jpg', '.jpeg', '.gif', '.css', '.js', '.glb', '.gltf', '.obj', '.mtl', '.bin', '.svg'}
+                with zipfile.ZipFile(tmp_zip_path, 'r') as z:
+                    for member in z.infolist():
+                        name = member.filename
+                        norm_name = os.path.normpath(name)
+                        if norm_name.startswith('..') or os.path.isabs(norm_name):
+                            continue
+                        if name.endswith('/') or name.endswith('\\'):
+                            continue
+                        ext = os.path.splitext(name)[1].lower()
+                        if ext not in allowed_exts:
+                            continue
+                        parts = [p for p in name.split('/') if p and p != '..']
+                        dest_path = os.path.join(target_dir, *parts)
+                        dest_dir = os.path.dirname(dest_path)
+                        os.makedirs(dest_dir, exist_ok=True)
+                        with z.open(member) as source, open(dest_path, 'wb') as target:
+                            shutil.copyfileobj(source, target)
+                os.remove(tmp_zip_path)
+                lab.carpeta = os.path.join('laboratorios', str(lab.id))
+                lab.save()
+
+            messages.success(request, 'Laboratorio actualizado correctamente')
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return HttpResponse('OK')
+            return redirect('laboratorios_list')
+        else:
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return render(request, 'superadministrador/laboratorio_form_modal.html', {'form': form, 'action_url': request.path})
+    else:
+        form = LaboratorioForm(instance=lab)
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return render(request, 'superadministrador/laboratorio_form_modal.html', {'form': form, 'action_url': request.path})
+
+    return render(request, 'superadministrador/laboratorio_form.html', {'form': form, 'accion': 'Editar', 'laboratorio': lab})
+
+
+def laboratorio_delete_confirm(request, pk):
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        return redirect('login')
+
+    lab = get_object_or_404(Laboratorio, pk=pk)
+    if request.method == 'POST':
+        # eliminar carpeta y archivo si existen
+        if lab.carpeta:
+            full_dir = os.path.join(settings.MEDIA_ROOT, lab.carpeta)
+            if os.path.exists(full_dir):
+                # eliminar recursivamente
+                import shutil
+                shutil.rmtree(full_dir)
+        lab.delete()
+        messages.success(request, 'Laboratorio eliminado')
+        return redirect('laboratorios_list')
+
+    return render(request, 'superadministrador/laboratorio_confirm_delete.html', {'laboratorio': lab})
+
+
+### --- VISTAS ESTUDIANTES (INTERFAZ) --- ###
+def estudiantes_laboratorios_list(request):
+    # lista pública (o basada en sesión) de laboratorios disponibles
+    labs = Laboratorio.objects.filter(estado='activo')
+    return render(request, 'estudiantes/laboratorios_list.html', {'laboratorios': labs})
+
+
+def laboratorio_access_confirm(request, pk):
+    lab = get_object_or_404(Laboratorio, pk=pk)
+    return render(request, 'estudiantes/laboratorio_confirm.html', {'laboratorio': lab})
+
+
+def laboratorio_entrar(request, pk):
+    lab = get_object_or_404(Laboratorio, pk=pk)
+    # buscar archivo HTML principal en la carpeta extraída
+    if not lab.carpeta:
+        raise Http404('El laboratorio no tiene recursos cargados.')
+
+    carpeta_fs = os.path.join(settings.MEDIA_ROOT, lab.carpeta)
+    if not os.path.isdir(carpeta_fs):
+        raise Http404('Los archivos del laboratorio no existen.')
+
+    # preferir index.html
+    index_candidate = os.path.join(carpeta_fs, 'index.html')
+    if os.path.exists(index_candidate):
+        index_rel = os.path.join(settings.MEDIA_URL, lab.carpeta, 'index.html')
+    else:
+        # buscar primer .html en la carpeta
+        html_files = [f for f in os.listdir(carpeta_fs) if f.lower().endswith('.html')]
+        if not html_files:
+            raise Http404('No hay archivo HTML en la carpeta del laboratorio.')
+        index_rel = os.path.join(settings.MEDIA_URL, lab.carpeta, html_files[0])
+
+    # pasar la URL pública del HTML al template para incrustarlo en un iframe
+    # Usar una vista segura para servir los recursos del laboratorio
+    if index_candidate and os.path.exists(index_candidate):
+        filename = 'index.html'
+    else:
+        filename = html_files[0]
+
+    html_url = reverse('laboratorio_serve', kwargs={'pk': lab.id, 'filename': filename})
+    return render(request, 'estudiantes/laboratorio_view.html', {'laboratorio': lab, 'html_url': html_url})
+
+
+def laboratorio_serve(request, pk, filename):
+    """Sirve archivos de laboratorio de forma segura desde MEDIA_ROOT/<lab.carpeta>/<filename>.
+    Evita path traversal y restringe extensiones permitidas.
+    """
+    lab = get_object_or_404(Laboratorio, pk=pk)
+    if not lab.carpeta:
+        raise Http404('Recursos no disponibles')
+
+    # normalizar filename y prevenir traversal
+    safe_rel = os.path.normpath(filename)
+    if safe_rel.startswith('..') or os.path.isabs(safe_rel):
+        raise Http404('Archivo no permitido')
+
+    media_base = os.path.abspath(os.path.join(settings.MEDIA_ROOT, lab.carpeta))
+    full_path = os.path.abspath(os.path.join(media_base, safe_rel))
+    if not full_path.startswith(media_base):
+        raise Http404('Acceso denegado')
+    if not os.path.exists(full_path):
+        raise Http404('Archivo no encontrado')
+
+    allowed_exts = {'.html', '.htm', '.png', '.jpg', '.jpeg', '.gif', '.css', '.js', '.glb', '.gltf', '.obj', '.mtl', '.bin', '.svg'}
+    ext = os.path.splitext(full_path)[1].lower()
+    if ext not in allowed_exts:
+        raise Http404('Tipo de archivo no permitido')
+
+    mime, _ = mimetypes.guess_type(full_path)
+    if not mime:
+        mime = 'application/octet-stream'
+
+    response = FileResponse(open(full_path, 'rb'), content_type=mime)
+    response['X-Content-Type-Options'] = 'nosniff'
+    # CSP básica para HTML
+    if mime == 'text/html':
+        response['Content-Security-Policy'] = "default-src 'self' 'unsafe-inline' data: blob:; frame-ancestors 'self';"
+
+    return response
 
 # ====================================================================
 # DECORATOR PERSONALIZADO PARA AUTENTICACIÓN
@@ -1623,3 +2159,54 @@ def preview_documento(request, documento_id):
         
     except Exception as e:
         return HttpResponse(f'Error al visualizar el documento: {str(e)}', status=500)
+
+# =====================
+# COMPONENTES EN TARJETAS PARA PROFESOR
+# =====================
+from django.core.serializers.json import DjangoJSONEncoder
+
+def componentes_profesor_tarjetas(request):
+    componentes = Componente.objects.all().select_related('tema', 'laboratorio')
+    # Serializar componentes para JS
+    componentes_json = []
+    for c in componentes:
+        componentes_json.append({
+            'id': c.id,
+            'nombre': c.nombre,
+            'descripcion': c.descripcion,
+            'especificaciones': c.especificaciones,
+            'imagen_url': c.imagen.url if c.imagen else '',
+            'modelo3D_url': c.modelo3D.url if c.modelo3D else '',
+            'video_explicacion': c.video_explicacion,
+            'tema_nombre': c.tema.nombre_archivo if c.tema else '',
+            'laboratorio_nombre': c.laboratorio.nombre if c.laboratorio else '',
+        })
+    context = {
+        'componentes': componentes,
+        'componentes_json': json.dumps(componentes_json, cls=DjangoJSONEncoder)
+    }
+    return render(request, 'profesor/componentes_tarjetas.html', context)
+
+# =====================
+# COMPONENTES EN TARJETAS PARA ESTUDIANTE
+# =====================
+def componentes_estudiante_tarjetas(request):
+    componentes = Componente.objects.all().select_related('tema', 'laboratorio')
+    componentes_json = []
+    for c in componentes:
+        componentes_json.append({
+            'id': c.id,
+            'nombre': c.nombre,
+            'descripcion': c.descripcion,
+            'especificaciones': c.especificaciones,
+            'imagen_url': c.imagen.url if c.imagen else '',
+            'modelo3D_url': c.modelo3D.url if c.modelo3D else '',
+            'video_explicacion': c.video_explicacion,
+            'tema_nombre': c.tema.nombre_archivo if c.tema else '',
+            'laboratorio_nombre': c.laboratorio.nombre if c.laboratorio else '',
+        })
+    context = {
+        'componentes': componentes,
+        'componentes_json': json.dumps(componentes_json, cls=DjangoJSONEncoder)
+    }
+    return render(request, 'estudiante/componentes_tarjetas.html', context)

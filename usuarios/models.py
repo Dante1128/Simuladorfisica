@@ -225,7 +225,8 @@ class Temas(models.Model):
 # ======================
 class Laboratorio(models.Model):
     nombre = models.CharField(max_length=200)
-    archivo = models.FileField(upload_to='laboratorios/')
+    # ruta relativa dentro de MEDIA_ROOT donde se extrae el paquete (por ejemplo: 'laboratorios/23/')
+    carpeta = models.CharField(max_length=300, blank=True, null=True)
     estado = models.CharField(max_length=50, choices=[
         ('activo', 'Activo'),
         ('inactivo', 'Inactivo'),
