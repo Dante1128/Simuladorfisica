@@ -1,367 +1,783 @@
- :root {
-        --color-fondo: #F3F3E0;
-        --color-primario: #133E87;
-        --color-secundario: #608BC1;
-        --color-terciario: #CBDCEB;
-        --color-exito: #28a745;
-        --color-error: #dc3545;
-        --color-advertencia: #ffc107;
+:root {
+    --color-fondo: #F3F3E0;
+    --color-primario: #133E87;
+    --color-secundario: #608BC1;
+    --color-terciario: #CBDCEB;
+    --color-exito: #28a745;
+    --color-error: #dc3545;
+    --color-advertencia: #ffc107;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+    min-height: 100vh;
+    padding: 0px;
+}
+
+.administradores-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(19, 62, 135, 0.12);
+    overflow: hidden;
+}
+
+/* Header mejorado */
+.page-header {
+    background: linear-gradient(135deg, #133E87 0%, #0A2952 100%);
+    padding: 32px 40px;
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.page-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 400px;
+    height: 400px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 50%;
+}
+
+.page-header h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.page-header p {
+    font-size: 0.95rem;
+    opacity: 0.9;
+    position: relative;
+    z-index: 1;
+}
+
+/* Toolbar mejorado */
+.toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 40px;
+    gap: 20px;
+    flex-wrap: wrap;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.search-container {
+    position: relative;
+    flex: 1;
+    max-width: 450px;
+}
+
+.search-container input {
+    width: 100%;
+    padding: 14px 50px 14px 48px;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 15px;
+    transition: all 0.3s;
+    background: #f8fafc;
+}
+
+.search-container input:focus {
+    outline: none;
+    border-color: #133E87;
+    box-shadow: 0 0 0 4px rgba(19, 62, 135, 0.08);
+    background: white;
+}
+
+.search-container .search-icon {
+    position: absolute;
+    left: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #64748b;
+    font-size: 16px;
+}
+
+.search-container .clear-search {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    display: none;
+    padding: 4px;
+    transition: color 0.2s;
+}
+
+.search-container .clear-search:hover {
+    color: #133E87;
+}
+
+.actions-container {
+    display: flex;
+    gap: 12px;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #133E87 0%, #0A2952 100%);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 14px 24px;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 4px 12px rgba(19, 62, 135, 0.25);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.btn-primary:hover::before {
+    left: 100%;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(19, 62, 135, 0.35);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+/* Tabla profesional */
+.table-wrapper {
+    padding: 0 40px 40px 40px;
+}
+
+.table-container {
+    overflow-x: auto;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.administradores-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    min-width: 700px;
+}
+
+.administradores-table thead {
+    background: linear-gradient(180deg, #133E87 0%, #0e3270 100%);
+}
+
+.administradores-table th {
+    padding: 18px 20px;
+    text-align: left;
+    color: white;
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.administradores-table th:last-child {
+    text-align: center;
+}
+
+.administradores-table tbody tr {
+    border-bottom: 1px solid #e2e8f0;
+    transition: all 0.2s;
+}
+
+.administradores-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+.administradores-table td {
+    padding: 20px;
+    color: #334155;
+    font-size: 15px;
+}
+
+/* Información del administrador */
+.admin-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.admin-icon {
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(135deg, #133E87 0%, #0A2952 100%);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.admin-details .admin-name {
+    font-weight: 600;
+    color: #133E87;
+    margin-bottom: 4px;
+    font-size: 15px;
+}
+
+.admin-details .admin-email {
+    font-size: 0.8rem;
+    color: #94a3b8;
+}
+
+.school-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #64748b;
+}
+
+.school-cell i {
+    color: #94a3b8;
+    font-size: 14px;
+}
+
+.acciones {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+.btn-icon {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 15px;
+    padding: 10px;
+    border-radius: 8px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+}
+
+.btn-view {
+    color: #133E87;
+    background: rgba(19, 62, 135, 0.08);
+}
+
+.btn-view:hover {
+    background: #133E87;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(19, 62, 135, 0.25);
+}
+
+.btn-edit {
+    color: #133E87;
+    background: rgba(19, 62, 135, 0.08);
+}
+
+.btn-edit:hover {
+    background: #133E87;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(19, 62, 135, 0.25);
+}
+
+/* Modal profesional - MEJORADO */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s;
+    padding: 20px;
+}
+
+.modal-content {
+    background: #fff;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 700px;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { 
+        opacity: 0;
+        transform: translateY(40px) scale(0.95);
     }
-    
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    to { 
+        opacity: 1;
+        transform: translateY(0) scale(1);
     }
-    
-    .administradores-container {
-        max-width: 1200px;
-        margin: 0 auto;
+}
+
+.modal-header {
+    background: linear-gradient(135deg, #133E87 0%, #0A2952 100%);
+    color: white;
+    padding: 28px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.modal-header h3 {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.close-modal {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: white;
+    font-size: 22px;
+    cursor: pointer;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.close-modal:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: rotate(90deg);
+}
+
+.modal-body {
+    padding: 32px;
+}
+
+/* Diseño de dos columnas para formularios */
+.form-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: start;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #133E87;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 15px;
+    transition: all 0.3s;
+    background: #f8fafc;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #133E87;
+    box-shadow: 0 0 0 4px rgba(19, 62, 135, 0.08);
+    background: white;
+}
+
+.form-control::placeholder {
+    color: #94a3b8;
+    font-size: 14px;
+}
+
+/* Contenedor de contraseña con toggle */
+.password-container {
+    position: relative;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #64748b;
+    cursor: pointer;
+    padding: 4px;
+    transition: color 0.2s;
+    z-index: 2;
+}
+
+.toggle-password:hover {
+    color: #133E87;
+}
+
+/* Checkbox para editar contraseña */
+.password-toggle-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+    padding: 12px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+.password-toggle-group input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #133E87;
+}
+
+.password-toggle-group label {
+    margin-bottom: 0;
+    font-weight: 600;
+    color: #334155;
+    text-transform: none;
+    letter-spacing: normal;
+    cursor: pointer;
+}
+
+/* Campos de contraseña ocultos inicialmente */
+.password-fields {
+    display: none;
+    animation: fadeIn 0.3s ease-in;
+}
+
+.password-fields.show {
+    display: block;
+}
+
+.modal-footer {
+    padding: 24px 32px;
+    background: #f8fafc;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    border-top: 1px solid #e2e8f0;
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+}
+
+.btn-secondary {
+    background: #64748b;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 24px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 600;
+    font-size: 15px;
+}
+
+.btn-secondary:hover {
+    background: #475569;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(100, 116, 139, 0.3);
+}
+
+/* Estilos para el modal de visualización */
+.info-group {
+    margin-bottom: 20px;
+    padding: 16px;
+    background: #f8fafc;
+    border-radius: 10px;
+    border-left: 4px solid #133E87;
+}
+
+.info-label {
+    font-weight: 600;
+    color: #133E87;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.info-value {
+    color: #334155;
+    font-size: 15px;
+    font-weight: 500;
+}
+
+/* Empty state mejorado */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.empty-state i {
+    font-size: 72px;
+    margin-bottom: 24px;
+    color: #cbd5e1;
+}
+
+.empty-state h3 {
+    margin-bottom: 12px;
+    color: #133E87;
+    font-size: 1.4rem;
+}
+
+.empty-state p {
+    color: #64748b;
+    font-size: 15px;
+}
+
+/* Sistema de notificaciones premium */
+.custom-alert {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    min-width: 320px;
+    max-width: 450px;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    z-index: 1100;
+    transform: translateX(150%);
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    overflow: hidden;
+}
+
+.custom-alert.show {
+    transform: translateX(0);
+}
+
+.alert-header {
+    display: flex;
+    align-items: center;
+    padding: 18px 24px;
+    color: white;
+    font-weight: 600;
+    font-size: 15px;
+}
+
+.alert-body {
+    padding: 18px 24px;
+    background: white;
+    color: #334155;
+    font-size: 14px;
+}
+
+.alert-success .alert-header {
+    background: linear-gradient(135deg, #5fb699 0%, #059669 100%);
+}
+
+.alert-error .alert-header {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+.alert-icon {
+    margin-right: 12px;
+    font-size: 1.3rem;
+}
+
+.alert-close {
+    margin-left: auto;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    cursor: pointer;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.alert-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Toggle Switch Redondo (Bolita) */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: 0.4s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.4s;
+}
+
+input:checked + .slider {
+    background-color: var(--color-exito, #27ae60);
+}
+
+input:focus + .slider {
+    box-shadow: 0 0 1px var(--color-exito, #27ae60);
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+/* Hace el switch completamente redondo */
+.slider.round {
+    border-radius: 24px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .page-header {
+        padding: 24px 20px;
+    }
+
+    .toolbar {
+        flex-direction: column;
+        align-items: stretch;
         padding: 20px;
     }
-    
-    .administradores-container h2 {
-        color: var(--color-primario);
-        font-size: 28px;
-        font-weight: 600;
-        margin-bottom: 25px;
-        padding-bottom: 15px;
-        border-bottom: 2px solid var(--color-secundario);
-        display: flex;
-        align-items: center;
-        gap: 10px;
+
+    .search-container {
+        max-width: 100%;
     }
-    
-    .administradores-container h2::before {
-        content: '\f505';
-        font-family: 'Font Awesome 6 Free';
-        font-weight: 900;
+
+    .table-wrapper {
+        padding: 20px;
     }
-    
-    #newAdminBtn {
-        background-color: var(--color-primario);
-        color: white;
-        border: none;
-        border-radius: 4px;
-        padding: 12px 24px;
-        cursor: pointer;
-        font-weight: 500;
-        font-size: 15px;
-        transition: background-color 0.3s;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: 20px;
-    }
-    
-    #newAdminBtn::before {
-        content: '\f067';
-        font-family: 'Font Awesome 6 Free';
-        font-weight: 900;
-    }
-    
-    #newAdminBtn:hover {
-        background-color: var(--color-secundario);
-    }
-    
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        background-color: white;
-        border-radius: 8px;
-        overflow: hidden;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    }
-    
-    thead {
-        background-color: var(--color-primario);
-        color: white;
-    }
-    
-    th {
-        padding: 16px 20px;
-        text-align: left;
-        font-weight: 600;
-        font-size: 15px;
-    }
-    
-    tbody tr {
-        border-bottom: 1px solid var(--color-terciario);
-        transition: background-color 0.2s;
-    }
-    
-    tbody tr:hover {
-        background-color: var(--color-terciario);
-    }
-    
-    td {
-        padding: 14px 20px;
+
+    .administradores-table th, .administradores-table td {
+        padding: 12px;
         font-size: 14px;
     }
-    
-    td:last-child {
-        display: flex;
-        gap: 8px;
-        align-items: center;
+
+    .admin-icon {
+        width: 38px;
+        height: 38px;
+        font-size: 16px;
+    }
+
+    .custom-alert {
+        right: 10px;
+        left: 10px;
+        min-width: auto;
+    }
+
+    .modal-body {
+        padding: 24px;
+    }
+
+    .modal-footer {
+        padding: 20px 24px;
+    }
+
+    .form-columns {
+        grid-template-columns: 1fr;
+        gap: 20px;
     }
     
-    .viewBtn, .editBtn {
-        padding: 8px 12px;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 13px;
-        font-weight: 500;
-        transition: all 0.2s;
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-    }
-    
-    .viewBtn {
-        background-color: var(--color-secundario);
-        color: white;
-    }
-    
-    .viewBtn:hover {
-        background-color: var(--color-primario);
-    }
-    
-    .viewBtn::before {
-        content: '\f06e';
-        font-family: 'Font Awesome 6 Free';
-        font-weight: 900;
-    }
-    
-    .editBtn {
-        background-color: var(--color-secundario);
-        color: white;
-    }
-    
-    .editBtn:hover {
-        background-color: var(--color-primario);
-    }
-    
-    .editBtn::before {
-        content: '\f044';
-        font-family: 'Font Awesome 6 Free';
-        font-weight: 900;
-    }
-    
-    td form button {
-        padding: 8px 12px;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 13px;
-        font-weight: 500;
-        transition: all 0.2s;
-        color: white;
-    }
-    
-    td form button[type="submit"] {
-        background-color: var(--color-exito);
-    }
-    
-    td form button[type="submit"]:hover {
-        background-color: #218838;
-    }
-    
-    tbody tr:has(td:contains("Desactivar")) form button {
-        background-color: var(--color-error);
-    }
-    
-    tbody tr:has(td:contains("Desactivar")) form button:hover {
-        background-color: #c0392b;
-    }
-    
-    /* Estilos para modales */
-    .modal {
-        display: none;
-        position: fixed;
-        z-index: 1000;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        overflow: auto;
-        background-color: rgba(0, 0, 0, 0.5);
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
-    
-    .modal[style*="display: block"] {
-        opacity: 1;
+    .form-group.full-width {
+        grid-column: 1;
     }
     
     .modal-content {
-        background-color: white;
-        margin: 5% auto;
-        padding: 0;
-        border-radius: 8px;
-        width: 90%;
-        max-width: 500px;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-        transform: translateY(-20px);
-        transition: transform 0.3s ease;
+        max-width: 95%;
+        margin: 10px auto;
     }
-    
-    .modal[style*="display: block"] .modal-content {
-        transform: translateY(0);
-    }
-    
-    .modal-content h3 {
-        background-color: var(--color-primario);
-        color: white;
-        padding: 20px;
-        margin: 0;
-        border-radius: 8px 8px 0 0;
-        font-size: 20px;
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-    
-    .modal-content h3::before {
-        font-family: 'Font Awesome 6 Free';
-        font-weight: 900;
-    }
-    
-    #adminModal h3::before {
-        content: '\f234';
-    }
-    
-    #editModal h3::before {
-        content: '\f304';
-    }
-    
-    #viewModal h3::before {
-        content: '\f2bb';
-    }
-    
-    .modal-content form {
-        padding: 20px;
-    }
-    
-    .modal-content label {
-        display: block;
-        margin-top: 15px;
-        margin-bottom: 5px;
-        font-weight: 500;
-        color: var(--color-primario);
-        font-size: 14px;
-    }
-    
-    .modal-content input,
-    .modal-content select {
-        width: 100%;
-        padding: 10px 15px;
-        margin-top: 5px;
-        border: 1px solid var(--color-secundario);
-        border-radius: 4px;
-        font-size: 14px;
-        transition: border-color 0.2s;
-    }
-    
-    .modal-content input:focus,
-    .modal-content select:focus {
-        outline: none;
-        border-color: var(--color-primario);
-    }
-    
-    .modal-content button[type="submit"] {
-        margin-top: 20px;
-        padding: 10px 20px;
-        background-color: var(--color-primario);
-        color: white;
-        border: none;
-        cursor: pointer;
-        border-radius: 4px;
-        font-weight: 500;
-        width: 100%;
-        font-size: 15px;
-        transition: background-color 0.3s;
-    }
-    
-    .modal-content button[type="submit"]:hover {
-        background-color: var(--color-secundario);
-    }
-    
-    .close,
-    .close-edit,
-    .close-view {
-        color: white;
-        float: right;
-        font-size: 28px;
-        font-weight: bold;
-        cursor: pointer;
-        line-height: 1;
-        transition: opacity 0.2s;
-    }
-    
-    .close:hover,
-    .close-edit:hover,
-    .close-view:hover {
-        opacity: 0.7;
-    }
-    
-    #viewModal .modal-content {
-        padding: 0;
-    }
-    
-    #viewModal .modal-content > div {
-        padding: 20px;
-    }
-    
-    #viewModal p {
-        margin: 15px 0;
-        padding: 12px;
-        background-color: var(--color-fondo);
-        border-radius: 4px;
-        font-size: 14px;
-    }
-    
-    #viewModal p strong {
-        color: var(--color-primario);
-        display: inline-block;
-        min-width: 140px;
-    }
-    
-    tbody tr td:first-child {
-        color: var(--color-primario);
-        font-weight: 500;
-    }
-    
-    tbody tr:empty td {
-        text-align: center;
-        padding: 40px 20px;
-        color: #666;
-        font-style: italic;
-    }
-    
-    @media (max-width: 768px) {
-        .administradores-container {
-            padding: 15px;
-        }
-        
-        th, td {
-            padding: 12px 15px;
-            font-size: 13px;
-        }
-        
-        .administradores-container h2 {
-            font-size: 24px;
-        }
-        
-        td:last-child {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-        
-        .modal-content {
-            width: 95%;
-            margin: 10% auto;
-        }
-    }
+}

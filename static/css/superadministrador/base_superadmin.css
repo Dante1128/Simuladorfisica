@@ -299,7 +299,7 @@ body {
 .main-content {
     flex: 1;
     margin-left: 280px;
-    padding: 40px;
+    padding: 30px;
     min-height: 100vh;
     background: #F3F3E0;
     position: relative;

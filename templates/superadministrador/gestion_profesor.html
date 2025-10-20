@@ -1,325 +1,547 @@
 {% extends 'superadministrador/base_superadmin.html' %}
 {% load static %}
-{% block title %}Gestión de Profesores{% endblock %}
+{% block title %}Gestión de Profesores - Sistema de Laboratorios{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="{% static 'css/superadministrador/gestion_profesor.css' %}">
+{% endblock %}
 
 {% block content %}
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{% static 'css/superadministrador/gestion_profesor.css' %}">
+<div class="profesores-container">
+    <!-- Header profesional -->
+    <div class="page-header">
+        <h2><i class="fas fa-chalkboard-teacher"></i> Gestión de Profesores</h2>
+        <p>Administre y organice los profesores del sistema</p>
+    </div>
 
-    <div class="container">
-        <header>
-            <h1><i class="fas fa-chalkboard-teacher"></i> Gestión de Profesores</h1>
-            <div class="search-bar">
-                <input type="text" placeholder="Buscar profesor...">
-                <button><i class="fas fa-search"></i> Buscar</button>
-            </div>
-        </header>
-        
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <div class="search-container">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" id="searchInput" placeholder="Buscar profesor...">
+            <button class="clear-search" id="clearSearch">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="actions-container">
+            <button class="btn-primary" id="newProfessorBtn">
+                <i class="fas fa-plus"></i> Nuevo Profesor
+            </button>
+        </div>
+    </div>
+
+    <!-- Tabla profesional -->
+    <div class="table-wrapper">
         <div class="table-container">
-            <table>
+            <table class="profesores-table">
                 <thead>
                     <tr>
-                    
+                        <th>Profesor</th>
                         <th>Curso</th>
-                        <th>Nombre Profesor</th>
                         <th>Colegio</th>
-                        <th>Correo Usuario</th>
+                        <th>Correo</th>
+                        <th>Estado</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="tableBody">
                     {% for profesor in profesores %}
                     <tr>
+                        <td>
+                            <div class="profesor-info">
+                                <div class="profesor-icon">
+                                    <i class="fas fa-chalkboard-teacher"></i>
+                                </div>
+                                <div class="profesor-details">
+                                    <div class="profesor-name">
+                                        {% with persona=profesor.usuario.personas.first %}
+                                            {% if persona %}
+                                                {{ persona.nombre }} {{ persona.apellidoPaterno }} {{ persona.apellidoMaterno }}
+                                            {% else %}
+                                                <span style="color:#94a3b8">Sin nombre</span>
+                                            {% endif %}
+                                        {% endwith %}
+                                    </div>
+                                    <div class="profesor-id">ID: {{ profesor.id }}</div>
+                                </div>
+                            </div>
+                        </td>
                         <td>{{ profesor.curso }}</td>
                         <td>
-                            {% with persona=profesor.usuario.personas.first %}
-                                {% if persona %}
-                                    {{ persona.nombre }} {{ persona.apellidoPaterno }} {{ persona.apellidoMaterno }}
-                                {% else %}
-                                    <span style="color:#888">Sin nombre</span>
-                                {% endif %}
-                            {% endwith %}
+                            <div class="school-cell">
+                                <i class="fas fa-school"></i>
+                                {{ profesor.colegio.nombre }}
+                            </div>
                         </td>
-                        <td>{{ profesor.colegio.nombre }}</td>
-                        <td>{{ profesor.usuario.correo }}</td>
-                        <td class="actions">
-                            <button class="btn btn-edit" onclick="openEditModal(
-                                '{{ profesor.id }}', 
-                                '{{ profesor.usuario.correo|escapejs }}', 
-                                '{{ profesor.colegio.id }}', 
-                                '{{ profesor.curso|escapejs }}'
-                            )">
-                                <i class="fas fa-edit"></i> Editar
-                            </button>
-                          <label class="switch">
-    <input type="checkbox" onchange="this.form.submit()" {% if profesor.estado == 'Activo' %}checked{% endif %}>
-    <span class="slider round"></span>
-</label>
-
-
+                        <td>
+                            <div class="email-cell">
+                                <i class="fas fa-envelope"></i>
+                                {{ profesor.usuario.correo }}
+                            </div>
+                        </td>
+                        <td>
+                            <form method="POST" class="estado-form" id="form-estado-{{ profesor.id }}">
+                                {% csrf_token %}
+                                <input type="hidden" name="cambiar_estado" value="1">
+                                <input type="hidden" name="profesor_id" value="{{ profesor.id }}">
+                                <label class="switch">
+                                    <input type="checkbox" class="toggle-estado" 
+                                           name="nuevo_estado"
+                                           value="{% if profesor.estado == 'Activo' %}Inactivo{% else %}Activo{% endif %}"
+                                           {% if profesor.estado == 'Activo' %}checked{% endif %}>
+                                    <span class="slider round"></span>
+                                </label>
+                            </form>
+                        </td>
+                        <td>
+                            <div class="acciones">
+                                <button class="btn-icon btn-edit" title="Editar" onclick="openEditModal(
+                                    '{{ profesor.id }}', 
+                                    '{{ profesor.usuario.correo|escapejs }}', 
+                                    '{{ profesor.colegio.id }}', 
+                                    '{{ profesor.curso|escapejs }}',
+                                    '{% with persona=profesor.usuario.personas.first %}{% if persona %}{{ persona.nombre|escapejs }}{% endif %}{% endwith %}',
+                                    '{% with persona=profesor.usuario.personas.first %}{% if persona %}{{ persona.apellidoPaterno|escapejs }}{% endif %}{% endwith %}',
+                                    '{% with persona=profesor.usuario.personas.first %}{% if persona %}{{ persona.apellidoMaterno|escapejs }}{% endif %}{% endwith %}'
+                                )">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="6" class="empty-state">
-                            <i class="fas fa-users"></i>
-                            <p>No hay profesores registrados</p>
+                        <td colspan="6">
+                            <div class="empty-state">
+                                <i class="fas fa-users"></i>
+                                <h3>No hay profesores registrados</h3>
+                                <p>Haga clic en "Nuevo Profesor" para agregar uno</p>
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
-        
-        <footer>
-            <div class="pagination">
-                <button class="active">1</button>
-                <button>2</button>
-                <button>3</button>
-                <button>...</button>
-                <button>10</button>
-            </div>
-            <button class="add-btn" onclick="openCreateModal()">
-                <i class="fas fa-plus"></i> Agregar Profesor
-            </button>
-        </footer>
     </div>
-    
-    <!-- Modal para crear profesor -->
-    <div class="modal-overlay" id="createModal">
-        <div class="modal">
-            <div class="modal-header">
-                <h2><i class="fas fa-user-plus"></i> Agregar Nuevo Profesor</h2>
-                <button class="close-btn" onclick="closeCreateModal()">
-                    <i class="fas fa-times"></i>
+</div>
+
+<!-- Modal Crear Profesor - CON 2 COLUMNAS -->
+<div class="modal-overlay" id="professorModal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-user-plus"></i> Nuevo Profesor</h3>
+            <button class="close-modal" id="closeModal" type="button">&times;</button>
+        </div>
+        <form id="professorForm" method="post" action="">
+            {% csrf_token %}
+            <input type="hidden" name="crear" value="1">
+            <div class="modal-body">
+                <div class="form-columns">
+                    <!-- Columna Izquierda -->
+                    <div>
+                        <div class="form-group">
+                            <label for="create_nombre">
+                                <i class="fas fa-user"></i> Nombre
+                            </label>
+                            <input type="text" id="create_nombre" name="nombre" class="form-control" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="create_apellidoPaterno">
+                                <i class="fas fa-user"></i> Apellido Paterno
+                            </label>
+                            <input type="text" id="create_apellidoPaterno" name="apellidoPaterno" class="form-control" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="create_apellidoMaterno">
+                                <i class="fas fa-user"></i> Apellido Materno
+                            </label>
+                            <input type="text" id="create_apellidoMaterno" name="apellidoMaterno" class="form-control" required>
+                        </div>
+                    </div>
+
+                    <!-- Columna Derecha -->
+                    <div>
+                        <div class="form-group">
+                            <label for="create_correo">
+                                <i class="fas fa-envelope"></i> Correo Electrónico
+                            </label>
+                            <input type="email" id="create_correo" name="correo" class="form-control" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="create_contrasenia">
+                                <i class="fas fa-lock"></i> Contraseña
+                            </label>
+                            <div class="password-container">
+                                <input type="password" id="create_contrasenia" name="contrasenia" class="form-control" required>
+                                <button type="button" class="toggle-password" data-target="create_contrasenia">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="create_colegio">
+                                <i class="fas fa-school"></i> Colegio
+                            </label>
+                            <select id="create_colegio" name="colegio" class="form-control" required>
+                                <option value="">Seleccione un colegio...</option>
+                                {% for colegio in colegios %}
+                                <option value="{{ colegio.id }}">{{ colegio.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="create_curso">
+                                <i class="fas fa-book"></i> Curso
+                            </label>
+                            <input type="text" id="create_curso" name="curso" class="form-control" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" id="cancelBtn">Cancelar</button>
+                <button type="submit" class="btn-primary" id="saveBtn">
+                    <i class="fas fa-save"></i> Crear Profesor
                 </button>
             </div>
-            <form method="post" action="">
-                {% csrf_token %}
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="create_nombre"><i class="fas fa-user"></i> Nombre</label>
-                        <input type="text" id="create_nombre" name="nombre" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="create_apellidoPaterno"><i class="fas fa-user"></i> Apellido Paterno</label>
-                        <input type="text" id="create_apellidoPaterno" name="apellidoPaterno" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="create_apellidoMaterno"><i class="fas fa-user"></i> Apellido Materno</label>
-                        <input type="text" id="create_apellidoMaterno" name="apellidoMaterno" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="create_correo"><i class="fas fa-envelope"></i> Correo Electrónico</label>
-                        <input type="email" id="create_correo" name="correo" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="create_contrasenia"><i class="fas fa-lock"></i> Contraseña</label>
-                        <input type="password" id="create_contrasenia" name="contrasenia" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="create_colegio"><i class="fas fa-school"></i> Colegio</label>
-                        <select id="create_colegio" name="colegio" required>
-                            <option value="">Seleccione un colegio...</option>
-                            {% for colegio in colegios %}
-                            <option value="{{ colegio.id }}">{{ colegio.nombre }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="create_curso"><i class="fas fa-book"></i> Curso</label>
-                        <input type="text" id="create_curso" name="curso" required>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn-cancel" onclick="closeCreateModal()">Cancelar</button>
-                    <button type="submit" class="btn-save" name="crear">
-                        <i class="fas fa-save"></i> Guardar
-                    </button>
-                </div>
-            </form>
-        </div>
+        </form>
     </div>
-    
-    <!-- Modal para editar profesor -->
-    <div class="modal-overlay" id="editModal">
-        <div class="modal">
-            <div class="modal-header">
-                <h2><i class="fas fa-user-edit"></i> Editar Profesor</h2>
-                <button class="close-btn" onclick="closeEditModal()">
-                    <i class="fas fa-times"></i>
+</div>
+
+<!-- Modal Editar Profesor - COMPLETO CON NOMBRE Y APELLIDOS -->
+<div class="modal-overlay" id="editModal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-edit"></i> Editar Profesor</h3>
+            <button class="close-modal" id="closeEditModal" type="button">&times;</button>
+        </div>
+        <form id="editProfessorForm" method="post" action="">
+            {% csrf_token %}
+            <input type="hidden" name="editar" value="1">
+            <input type="hidden" id="edit_id" name="editar_id">
+            <div class="modal-body">
+                <div class="form-columns">
+                    <!-- Columna Izquierda -->
+                    <div>
+                        <div class="form-group">
+                            <label for="edit_nombre">
+                                <i class="fas fa-user"></i> Nombre
+                            </label>
+                            <input type="text" id="edit_nombre" name="editar_nombre" class="form-control" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="edit_apellidoPaterno">
+                                <i class="fas fa-user"></i> Apellido Paterno
+                            </label>
+                            <input type="text" id="edit_apellidoPaterno" name="editar_apellidoPaterno" class="form-control" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="edit_apellidoMaterno">
+                                <i class="fas fa-user"></i> Apellido Materno
+                            </label>
+                            <input type="text" id="edit_apellidoMaterno" name="editar_apellidoMaterno" class="form-control" required>
+                        </div>
+                    </div>
+
+                    <!-- Columna Derecha -->
+                    <div>
+                        <div class="form-group">
+                            <label for="edit_correo">
+                                <i class="fas fa-envelope"></i> Correo Electrónico
+                            </label>
+                            <input type="email" id="edit_correo" name="editar_correo" class="form-control" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="edit_contrasenia">
+                                <i class="fas fa-lock"></i> Contraseña
+                            </label>
+                            <div class="password-container">
+                                <input type="password" id="edit_contrasenia" name="editar_contrasenia" class="form-control" 
+                                       placeholder="Dejar en blanco para no cambiar">
+                                <button type="button" class="toggle-password" data-target="edit_contrasenia">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="edit_colegio">
+                                <i class="fas fa-school"></i> Colegio
+                            </label>
+                            <select id="edit_colegio" name="editar_colegio" class="form-control" required>
+                                <option value="">Seleccione un colegio...</option>
+                                {% for colegio in colegios %}
+                                <option value="{{ colegio.id }}">{{ colegio.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="edit_curso">
+                                <i class="fas fa-book"></i> Curso
+                            </label>
+                            <input type="text" id="edit_curso" name="editar_curso" class="form-control" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" id="cancelEditBtn">Cancelar</button>
+                <button type="submit" class="btn-primary" id="updateBtn">
+                    <i class="fas fa-save"></i> Actualizar
                 </button>
             </div>
-            <form method="post" action="">
-                {% csrf_token %}
-                <input type="hidden" id="edit_id" name="editar_id">
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="edit_correo"><i class="fas fa-envelope"></i> Correo Electrónico</label>
-                        <input type="email" id="edit_correo" name="editar_correo" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="edit_contrasenia"><i class="fas fa-lock"></i> Contraseña (dejar en blanco para no cambiar)</label>
-                        <input type="password" id="edit_contrasenia" name="editar_contrasenia">
-                    </div>
-                    <div class="form-group">
-                        <label for="edit_colegio"><i class="fas fa-school"></i> Colegio</label>
-                        <select id="edit_colegio" name="editar_colegio" required>
-                            <option value="">Seleccione un colegio...</option>
-                            {% for colegio in colegios %}
-                            <option value="{{ colegio.id }}">{{ colegio.nombre }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="edit_curso"><i class="fas fa-book"></i> Curso</label>
-                        <input type="text" id="edit_curso" name="editar_curso" required>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn-cancel" onclick="closeEditModal()">Cancelar</button>
-                    <button type="submit" class="btn-save" name="editar">
-                        <i class="fas fa-save"></i> Actualizar
-                    </button>
-                </div>
-            </form>
-        </div>
+        </form>
     </div>
-    
-    <!-- Notificaciones -->
-    <div class="notification notification-success" id="successNotification">
-        <i class="fas fa-check-circle"></i>
-        <span id="successMessage">Operación completada con éxito</span>
+</div>
+
+<!-- Notificación -->
+<div class="custom-alert" id="customAlert">
+    <div class="alert-header">
+        <i class="fas fa-check-circle alert-icon" id="alertIcon"></i>
+        <span id="alertTitle">Éxito</span>
+        <button class="alert-close" id="alertClose">&times;</button>
     </div>
-    
-    <div class="notification notification-error" id="errorNotification">
-        <i class="fas fa-exclamation-circle"></i>
-        <span id="errorMessage">Ha ocurrido un error</span>
+    <div class="alert-body">
+        <p id="alertMessage">Operación realizada correctamente.</p>
     </div>
-    
-    <div class="notification notification-warning" id="warningNotification">
-        <i class="fas fa-exclamation-triangle"></i>
-        <span id="warningMessage">Advertencia</span>
-    </div>
+</div>
 
-    <style>
-        .switch {
-  position: relative;
-  display: inline-block;
-  width: 50px;
-  height: 24px;
-}
-.switch input {display:none;}
-.slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background-color: #ccc;
-  transition: .4s;
-  border-radius: 24px;
-}
-.slider:before {
-  position: absolute;
-  content: "";
-  height: 18px;
-  width: 18px;
-  left: 3px;
-  bottom: 3px;
-  background-color: white;
-  transition: .4s;
-  border-radius: 50%;
-}
-input:checked + .slider {
-  background-color: #007bff;
-}
-input:checked + .slider:before {
-  transform: translateX(26px);
-}
+<script>
+    // Mostrar notificaciones basadas en parámetros de URL
+    window.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        if (urlParams.get('creado') === 'true') {
+            showAlert('Profesor creado exitosamente', 'success');
+        }
+        
+        if (urlParams.get('editado') === 'true') {
+            showAlert('Profesor actualizado exitosamente', 'success');
+        }
+        
+        if (urlParams.get('eliminado') === 'true') {
+            showAlert('Profesor eliminado exitosamente', 'success');
+        }
+        
+        if (urlParams.get('error') === 'true') {
+            showAlert('Ha ocurrido un error en la operación', 'error');
+        }
+    });
 
-</style>
-    <script>
-        // Mostrar notificaciones basadas en parámetros de URL
-        window.addEventListener('DOMContentLoaded', function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            
-            if (urlParams.get('creado') === 'true') {
-                showNotification('success', 'Profesor creado exitosamente');
-            }
-            
-            if (urlParams.get('editado') === 'true') {
-                showNotification('success', 'Profesor actualizado exitosamente');
-            }
-            
-            if (urlParams.get('eliminado') === 'true') {
-                showNotification('success', 'Profesor eliminado exitosamente');
-            }
-            
-            if (urlParams.get('error') === 'true') {
-                showNotification('error', 'Ha ocurrido un error en la operación');
-            }
-        });
+    // Modales
+    const modal = document.getElementById('professorModal');
+    const editModal = document.getElementById('editModal');
+    const newProfessorBtn = document.getElementById('newProfessorBtn');
+    const closeModalBtn = document.getElementById('closeModal');
+    const closeEditModalBtn = document.getElementById('closeEditModal');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const cancelEditBtn = document.getElementById('cancelEditBtn');
+    const searchInput = document.getElementById('searchInput');
+    const clearSearch = document.getElementById('clearSearch');
+    const tableBody = document.getElementById('tableBody');
+    const customAlert = document.getElementById('customAlert');
+    const alertClose = document.getElementById('alertClose');
 
-        // Funciones para el modal de creación
-        function openCreateModal() {
-            document.getElementById('createModal').classList.add('active');
-            document.getElementById('create_correo').focus();
-        }
-        
-        function closeCreateModal() {
-            document.getElementById('createModal').classList.remove('active');
-        }
-        
-        // Funciones para el modal de edición
-        function openEditModal(id, correo, colegioId, curso) {
-            document.getElementById('edit_id').value = id;
-            document.getElementById('edit_correo').value = correo;
-            document.getElementById('edit_colegio').value = colegioId;
-            document.getElementById('edit_curso').value = curso;
-            document.getElementById('editModal').classList.add('active');
-        }
-        
-        function closeEditModal() {
-            document.getElementById('editModal').classList.remove('active');
-        }
-        
-        // Confirmación para eliminar
-        function confirmDelete() {
-            return confirm('¿Está seguro de que desea eliminar este profesor?');
-        }
-        
-        // Función para mostrar notificaciones
-        function showNotification(type, message) {
-            const notification = document.getElementById(`${type}Notification`);
-            const messageElement = document.getElementById(`${type}Message`);
-            
-            messageElement.textContent = message;
-            notification.classList.add('show');
-            
-            setTimeout(() => {
-                notification.classList.remove('show');
-            }, 5000);
-        }
-        
-        // Cerrar modales al hacer clic fuera de ellos
-        document.addEventListener('click', function(event) {
-            const createModal = document.getElementById('createModal');
-            const editModal = document.getElementById('editModal');
-            
-            if (event.target === createModal) {
-                closeCreateModal();
-            }
-            
-            if (event.target === editModal) {
-                closeEditModal();
-            }
-        });
+    // Función para abrir modal de crear profesor
+    function openModal() {
+        modal.style.display = 'flex';
+        document.getElementById('create_correo').focus();
+    }
 
-        // Cerrar modales con tecla Escape
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape') {
-                closeCreateModal();
-                closeEditModal();
+    // Función para cerrar modal de crear profesor
+    function closeModal() {
+        modal.style.display = 'none';
+        document.getElementById('professorForm').reset();
+    }
+
+    // Función para abrir modal de editar profesor
+    function openEditModal(id, correo, colegioId, curso, nombre, apellidoPaterno, apellidoMaterno) {
+        document.getElementById('edit_id').value = id;
+        document.getElementById('edit_correo').value = correo;
+        document.getElementById('edit_colegio').value = colegioId;
+        document.getElementById('edit_curso').value = curso;
+        document.getElementById('edit_nombre').value = nombre || '';
+        document.getElementById('edit_apellidoPaterno').value = apellidoPaterno || '';
+        document.getElementById('edit_apellidoMaterno').value = apellidoMaterno || '';
+        
+        // Limpiar campo de contraseña al abrir el modal
+        document.getElementById('edit_contrasenia').value = '';
+        
+        editModal.style.display = 'flex';
+    }
+
+    // Función para cerrar modal de editar profesor
+    function closeEditModal() {
+        editModal.style.display = 'none';
+        document.getElementById('editProfessorForm').reset();
+    }
+
+    // Función para mostrar alertas
+    function showAlert(message, type = 'success') {
+        const config = {
+            success: {
+                title: 'Éxito',
+                icon: 'fa-check-circle',
+                className: 'alert-success'
+            },
+            error: {
+                title: 'Error',
+                icon: 'fa-exclamation-circle',
+                className: 'alert-error'
+            },
+            warning: {
+                title: 'Advertencia',
+                icon: 'fa-exclamation-triangle',
+                className: 'alert-warning'
             }
-        });
-    </script>
+        };
+        
+        const { title, icon, className } = config[type];
+        
+        document.getElementById('alertTitle').textContent = title;
+        document.getElementById('alertIcon').className = `fas ${icon} alert-icon`;
+        document.getElementById('alertMessage').textContent = message;
+        customAlert.className = `custom-alert ${className}`;
+        customAlert.classList.add('show');
+        
+        setTimeout(() => {
+            customAlert.classList.remove('show');
+        }, 5000);
+    }
+
+    // Funcionalidad para mostrar/ocultar contraseña
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.toggle-password')) {
+            const button = e.target.closest('.toggle-password');
+            const targetId = button.getAttribute('data-target');
+            const passwordInput = document.getElementById(targetId);
+            const icon = button.querySelector('i');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.className = 'fas fa-eye-slash';
+            } else {
+                passwordInput.type = 'password';
+                icon.className = 'fas fa-eye';
+            }
+        }
+    });
+
+    // Event listeners para modales
+    newProfessorBtn.addEventListener('click', openModal);
+    closeModalBtn.addEventListener('click', closeModal);
+    closeEditModalBtn.addEventListener('click', closeEditModal);
+    cancelBtn.addEventListener('click', closeModal);
+    cancelEditBtn.addEventListener('click', closeEditModal);
+    alertClose.addEventListener('click', () => customAlert.classList.remove('show'));
+
+    // Funcionalidad de búsqueda
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const rows = tableBody.getElementsByTagName('tr');
+        let visibleCount = 0;
+        
+        clearSearch.style.display = searchTerm ? 'block' : 'none';
+        
+        for (let row of rows) {
+            const text = row.textContent.toLowerCase();
+            if (text.includes(searchTerm)) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        }
+        
+        if (visibleCount === 0 && searchTerm) {
+            if (!document.getElementById('noResults')) {
+                const noResults = document.createElement('tr');
+                noResults.id = 'noResults';
+                noResults.innerHTML = `
+                    <td colspan="6">
+                        <div class="empty-state">
+                            <i class="fas fa-search"></i>
+                            <h3>No se encontraron resultados</h3>
+                            <p>Intente con otros términos de búsqueda</p>
+                        </div>
+                    </td>
+                `;
+                tableBody.appendChild(noResults);
+            }
+        } else {
+            const noResults = document.getElementById('noResults');
+            if (noResults) noResults.remove();
+        }
+    });
+
+    // Limpiar búsqueda
+    clearSearch.addEventListener('click', () => {
+        searchInput.value = '';
+        clearSearch.style.display = 'none';
+        const rows = tableBody.getElementsByTagName('tr');
+        for (let row of rows) {
+            row.style.display = '';
+        }
+        const noResults = document.getElementById('noResults');
+        if (noResults) noResults.remove();
+    });
+
+    // Cerrar modales al hacer clic fuera
+    window.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+        if (e.target === editModal) closeEditModal();
+    });
+
+    // Cerrar modales con tecla Escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            if (modal.style.display === 'flex') closeModal();
+            if (editModal.style.display === 'flex') closeEditModal();
+        }
+    });
+
+    // Toggle estado con bolita redonda
+    document.querySelectorAll('.toggle-estado').forEach(sw => {
+        sw.addEventListener('change', function(){
+            const form = this.closest('.estado-form');
+            const profesorId = form.querySelector('input[name="profesor_id"]').value;
+            
+            // Crear FormData para enviar el formulario
+            const formData = new FormData(form);
+            
+            fetch('', {  // URL vacía para enviar a la misma vista
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    showAlert('Estado del profesor actualizado correctamente', 'success');
+                } else {
+                    showAlert('Error al cambiar el estado', 'error');
+                    // Revertir el cambio visual si falla
+                    this.checked = !this.checked;
+                }
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                showAlert('Error al cambiar el estado', 'error');
+                this.checked = !this.checked;
+            });
+        }); 
+    });
+</script>
 {% endblock %}

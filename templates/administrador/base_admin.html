@@ -1,125 +1,1273 @@
-{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <link rel="stylesheet" href="{% static 'css/admin.css' %}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Educativo Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body{
-                color: rgb(0, 0, 0);
-                border: none;
-                padding: 12px 16px;
-                border-radius: 8px;
-                cursor: pointer;
-                font-size: 1.2rem;
-                box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            }
-        
-        .mobile-menu-btn {
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --color-light: #F3F3E0;
+            --color-primary: #133E87;
+            --color-secondary: #608BC1;
+            --color-accent: #CBDCEB;
+            --color-success: #28a745;
+            --color-warning: #ffc107;
+            --color-danger: #dc3545;
+            --color-dark: #343a40;
+            --color-gray: #6c757d;
+            --color-light-gray: #e9ecef;
+            --border-radius: 10px;
+            --box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            --transition: all 0.3s ease;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e0 100%);
+            min-height: 100vh;
+            display: flex;
+            color: var(--color-dark);
+        }
+
+        /* Sidebar Navbar */
+        nav {
+            width: 280px;
+            background: linear-gradient(180deg, var(--color-primary) 0%, #0f2c5e 100%);
+            padding: 1.5rem 0;
+            box-shadow: 4px 0 12px rgba(19, 62, 135, 0.3);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+            transition: var(--transition);
+        }
+
+        /* Logo */
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.8rem;
+            color: var(--color-light);
+            font-size: 1.2rem;
+            font-weight: 700;
+            text-decoration: none;
+            padding: 1.5rem 1rem;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid var(--color-secondary);
+        }
+
+        .nav-logo i {
+            font-size: 1.8rem;
+            color: var(--color-accent);
+        }
+
+        /* Menu Items */
+        .nav-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            list-style: none;
+            flex: 1;
+            padding: 0 0.8rem;
+        }
+
+        .nav-item {
+            position: relative;
+        }
+
+        .nav-link {
+            color: var(--color-light);
+            text-decoration: none;
+            padding: 1rem 1.2rem;
+            border-radius: var(--border-radius);
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            transition: var(--transition);
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-link i {
+            font-size: 1.1rem;
+            min-width: 1.5rem;
+        }
+
+        .nav-link:hover {
+            background: var(--color-secondary);
+            color: var(--color-light);
+            transform: translateX(5px);
+            box-shadow: 0 4px 8px rgba(96, 139, 193, 0.3);
+        }
+
+        .nav-link.active {
+            background: var(--color-accent);
+            color: var(--color-primary);
+            font-weight: 600;
+            border-left: 3px solid var(--color-primary);
+        }
+
+        /* Right Section - Perfil y Config */
+        .nav-right {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            padding: 0 0.8rem;
+            margin-top: auto;
+            padding-bottom: 1rem;
+            border-top: 2px solid var(--color-secondary);
+            padding-top: 1rem;
+        }
+
+        .nav-btn {
+            background: var(--color-accent);
+            color: var(--color-primary);
+            border: none;
+            padding: 0.8rem 1.2rem;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            font-weight: 600;
+            transition: var(--transition);
+            font-size: 0.9rem;
+        }
+
+        .nav-btn:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(203, 220, 235, 0.4);
+            background: var(--color-light);
+        }
+
+        .nav-btn i {
+            min-width: 1.2rem;
+        }
+
+        /* Modal Config */
+        .modal {
             display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background: var(--color-light);
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .close-modal {
+            color: var(--color-primary);
+            float: right;
+            font-size: 1.8rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .close-modal:hover {
+            color: #133E87;
+            transform: scale(1.2);
+        }
+
+        .modal h2 {
+            color: var(--color-primary);
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+        }
+
+        .color-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .color-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--color-primary);
+            font-weight: 600;
+        }
+
+        .color-picker-wrapper {
+            display: flex;
+            gap: 0.8rem;
+            align-items: center;
+        }
+
+        input[type="color"] {
+            width: 60px;
+            height: 40px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .color-value {
+            background: var(--color-accent);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            color: var(--color-primary);
+            font-family: monospace;
+            font-weight: 600;
+        }
+
+        .save-config-btn {
+            width: 100%;
+            padding: 0.8rem;
+            background: var(--color-secondary);
+            color: var(--color-light);
+            border: none;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-top: 1rem;
+        }
+
+        .save-config-btn:hover {
+            background: var(--color-primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(19, 62, 135, 0.3);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 2rem;
+            transition: var(--transition);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .content-section {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .section-header {
+            color: var(--color-primary);
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .card {
+            background: var(--color-light);
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 1.5rem;
+            transition: var(--transition);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+        }
+
+        /* Dashboard Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--color-light);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: var(--transition);
+            border-left: 4px solid var(--color-primary);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            background: var(--color-accent);
+            color: var(--color-primary);
+        }
+
+        .stat-info h3 {
+            font-size: 1.8rem;
+            color: var(--color-primary);
+            margin-bottom: 0.2rem;
+        }
+
+        .stat-info p {
+            color: var(--color-gray);
+            font-size: 0.9rem;
+        }
+
+        /* Tables */
+        .table-container {
+            overflow-x: auto;
+            margin-bottom: 2rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--color-light);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--box-shadow);
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--color-light-gray);
+        }
+
+        th {
+            background: var(--color-primary);
+            color: var(--color-light);
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background: var(--color-accent);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.6rem 1.2rem;
+            border-radius: var(--border-radius);
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--color-primary);
+            color: var(--color-light);
+        }
+
+        .btn-primary:hover {
+            background: #0f2c5e;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(19, 62, 135, 0.3);
+        }
+
+        .btn-success {
+            background: var(--color-success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+
+        .btn-warning {
+            background: var(--color-warning);
+            color: var(--color-dark);
+        }
+
+        .btn-warning:hover {
+            background: #e0a800;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: var(--color-danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--color-primary);
+            font-weight: 600;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid var(--color-light-gray);
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--color-secondary);
+            box-shadow: 0 0 0 3px rgba(96, 139, 193, 0.2);
+        }
+
+        /* Charts */
+        .chart-container {
+            background: var(--color-light);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 2rem;
+        }
+
+        .chart-placeholder {
+            height: 300px;
+            background: var(--color-accent);
+            border-radius: var(--border-radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-primary);
+            font-weight: 600;
+        }
+
+        /* Calendar */
+        .calendar-container {
+            background: var(--color-light);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 2rem;
+        }
+
+        .calendar-placeholder {
+            height: 400px;
+            background: var(--color-accent);
+            border-radius: var(--border-radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-primary);
+            font-weight: 600;
+        }
+
+        /* Notifications */
+        .notification-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 3000;
+        }
+
+        .notification {
+            padding: 1rem 1.5rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 1rem;
+            box-shadow: var(--box-shadow);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            animation: slideIn 0.3s ease;
+        }
+
+        .notification.success {
+            background: var(--color-success);
+            color: white;
+        }
+
+        .notification.error {
+            background: var(--color-danger);
+            color: white;
+        }
+
+        .notification.warning {
+            background: var(--color-warning);
+            color: var(--color-dark);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Scrollbar personalizado */
+        nav::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        nav::-webkit-scrollbar-track {
+            background: rgba(96, 139, 193, 0.1);
+        }
+
+        nav::-webkit-scrollbar-thumb {
+            background: var(--color-accent);
+            border-radius: 3px;
+        }
+
+        nav::-webkit-scrollbar-thumb:hover {
+            background: var(--color-secondary);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+
+            nav {
+                width: 100%;
+                height: auto;
+                position: relative;
+                left: 0;
+                top: 0;
+                flex-direction: row;
+                align-items: center;
+                padding: 1rem;
+            }
+
+            .nav-logo {
+                padding: 0;
+                margin: 0;
+                border-bottom: none;
+            }
+
+            .nav-menu {
+                flex-direction: row;
+                padding: 0;
+                margin: 0 1rem;
+                flex: 1;
+                gap: 0;
+            }
+
+            .nav-link {
+                padding: 0.6rem 0.8rem;
+                font-size: 0.8rem;
+            }
+
+            .nav-link span {
+                display: none;
+            }
+
+            .nav-right {
+                flex-direction: row;
+                padding: 0;
+                margin: 0;
+                border-top: none;
+                gap: 0.5rem;
+            }
+
+            .nav-btn {
+                padding: 0.6rem;
+            }
+
+            .nav-btn span {
+                display: none;
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 1rem;
+            }
+
+            .section-header {
+                font-size: 1.5rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- Mobile Menu Button -->
-    <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
-
-    <!-- Sidebar -->
-    <div class="sidebar" id="sidebar">
-        <div class="logo">
-        <img src="{% static 'usuarios/img/logo.png' %}" alt="Logo Laboratorios RV" style="height: 60px;">
-        <h1>Laboratorios <span>RV</span></h1>
-        <div class="logo-subtitle">Virtual Reality Labs</div>
-    </div>
-
-        <ul class="menu">
-            <div class="menu-section">
-                <div class="menu-section-title">Principal</div>
-                <a href="#" class="menu-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
-                    <i>📊</i>
-                    <span class="menu-item-text">Resumen General</span>
-                </a>
-               
-                <a href="#" class="menu-item {% if request.resolver_match.url_name == 'laboratorios' %}active{% endif %}">
-                    <i>🔬</i>
-                    <span class="menu-item-text">Laboratorios RV</span>
-                    <span class="menu-badge">15</span>
-                </a>
-                <a href="#" class="menu-item {% if request.resolver_match.url_name == 'contenido' %}active{% endif %}">
-                    <i>📚</i>
-                    <span class="menu-item-text">Contenido Teórico</span>
-                </a>
-            </div>
-            
-            <div class="menu-section">
-                <div class="menu-section-title">Administración</div>
-                <a href="#" class="menu-item {% if request.resolver_match.url_name == 'usuarios' %}active{% endif %}">
-                    <i>👥</i>
-                    <span class="menu-item-text">Gestión de Usuarios</span>
-                    <span class="menu-badge">3</span>
-                </a>
-                <a href="{% url 'panel_admin' %}" class="menu-item {% if request.resolver_match.url_name == 'membresias' %}active{% endif %}">
-                    <i>💳</i>
-                    <span class="menu-item-text">Membresías</span>
-                </a>
-                <a href="#" class="menu-item {% if request.resolver_match.url_name == 'reportes' %}active{% endif %}">
-                    <i>📈</i>
-                    <span class="menu-item-text">Reportes</span>
-                </a>
-                {% load menu_tags %}
-                {% componentes_menu %}
-            </div>
-            
-            <div class="menu-section">
-                <div class="menu-section-title">Cuenta</div>
-                <a href="#" class="menu-item {% if request.resolver_match.url_name == 'perfil' %}active{% endif %}">
-                    <i>👤</i>
-                    <span class="menu-item-text">Mi Perfil</span>
-                </a>
-                <a href="#" class="menu-item {% if request.resolver_match.url_name == 'configuracion' %}active{% endif %}">
-                    <i>⚙️</i>
-                    <span class="menu-item-text">Configuración</span>
-                </a>
-            </div>
-        </ul>
-    </div>
-    
-    <div class="sidebar-footer">
-        <a href="#" class="user-profile-mini">
-            <div class="user-avatar-mini">{{ user.initials|default:"AD" }}</div>
-            <div class="user-info-mini">
-                <div class="user-name-mini">{{ user.first_name|default:"Admin" }}</div>
-                <div class="user-role-mini">En línea</div>
-            </div>
+    <nav>
+        <a class="nav-logo" href="#home">
+            <i class="fas fa-graduation-cap"></i>
+            <span>EduSystem</span>
         </a>
+
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a class="nav-link active" onclick="showSection('dashboard')">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" onclick="showSection('estudiantes')">
+                    <i class="fas fa-users"></i>
+                    <span>Estudiantes</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" onclick="showSection('cursos')">
+                    <i class="fas fa-book"></i>
+                    <span>Cursos</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" onclick="showSection('profesores')">
+                    <i class="fas fa-chalkboard-user"></i>
+                    <span>Profesores</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" onclick="showSection('componentes')">
+                    <i class="fas fa-puzzle-piece"></i>
+                    <span>Componentes</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" onclick="showSection('laboratorios')">
+                    <i class="fas fa-flask"></i>
+                    <span>Laboratorios</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" onclick="showSection('reportes')">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Reportes</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" onclick="showSection('calendario')">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Calendario</span>
+                </a>
+            </li>
+        </ul>
+
+        <div class="nav-right">
+            <button class="nav-btn" onclick="showSection('perfil')">
+                <i class="fas fa-user-circle"></i>
+                <span>Perfil</span>
+            </button>
+            <button class="nav-btn" onclick="openConfigModal()">
+                <i class="fas fa-cog"></i>
+                <span>Configurar</span>
+            </button>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <div class="container">
+            <!-- Sección Dashboard -->
+            <section id="dashboard" class="content-section active">
+                <div class="section-header">
+                    <i class="fas fa-tachometer-alt"></i>
+                    Dashboard Principal
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>1,254</h3>
+                            <p>Estudiantes Activos</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-book"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>42</h3>
+                            <p>Cursos Disponibles</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-chalkboard-teacher"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>68</h3>
+                            <p>Profesores</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-flask"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>12</h3>
+                            <p>Laboratorios Activos</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3 style="color: var(--color-primary); margin-bottom: 1rem;">Actividad Reciente</h3>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Usuario</th>
+                                    <th>Actividad</th>
+                                    <th>Fecha</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>María González</td>
+                                    <td>Completó el curso de Matemáticas Avanzadas</td>
+                                    <td>15/10/2023</td>
+                                    <td><span style="color: var(--color-success);">Completado</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Prof. Rodríguez</td>
+                                    <td>Subió nuevo material para Física</td>
+                                    <td>14/10/2023</td>
+                                    <td><span style="color: var(--color-success);">Publicado</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Carlos López</td>
+                                    <td>Se inscribió en el curso de Programación</td>
+                                    <td>13/10/2023</td>
+                                    <td><span style="color: var(--color-warning);">Pendiente</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Ana Martínez</td>
+                                    <td>Solicitó acceso al laboratorio de Química</td>
+                                    <td>12/10/2023</td>
+                                    <td><span style="color: var(--color-warning);">En revisión</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <h3 style="color: var(--color-primary); margin-bottom: 1rem;">Rendimiento Estudiantil</h3>
+                    <div class="chart-placeholder">
+                        Gráfico de Rendimiento (Se integraría con una librería como Chart.js)
+                    </div>
+                </div>
+            </section>
+
+            <!-- Sección Estudiantes -->
+            <section id="estudiantes" class="content-section">
+                <div class="section-header">
+                    <i class="fas fa-users"></i>
+                    Gestión de Estudiantes
+                </div>
+                
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h3 style="color: var(--color-primary);">Lista de Estudiantes</h3>
+                        <button class="btn btn-primary">
+                            <i class="fas fa-plus"></i>
+                            <span>Agregar Estudiante</span>
+                        </button>
+                    </div>
+                    
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="Buscar estudiante...">
+                    </div>
+                    
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Email</th>
+                                    <th>Curso</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>EST001</td>
+                                    <td>María González</td>
+                                    <td>maria.gonzalez@email.com</td>
+                                    <td>Matemáticas Avanzadas</td>
+                                    <td><span style="color: var(--color-success);">Activo</span></td>
+                                    <td>
+                                        <button class="btn btn-primary" style="padding: 0.4rem 0.8rem;">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-danger" style="padding: 0.4rem 0.8rem;">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>EST002</td>
+                                    <td>Carlos López</td>
+                                    <td>carlos.lopez@email.com</td>
+                                    <td>Programación Básica</td>
+                                    <td><span style="color: var(--color-success);">Activo</span></td>
+                                    <td>
+                                        <button class="btn btn-primary" style="padding: 0.4rem 0.8rem;">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-danger" style="padding: 0.4rem 0.8rem;">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>EST003</td>
+                                    <td>Ana Martínez</td>
+                                    <td>ana.martinez@email.com</td>
+                                    <td>Química Orgánica</td>
+                                    <td><span style="color: var(--color-warning);">Inactivo</span></td>
+                                    <td>
+                                        <button class="btn btn-primary" style="padding: 0.4rem 0.8rem;">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-danger" style="padding: 0.4rem 0.8rem;">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Sección Cursos -->
+            <section id="cursos" class="content-section">
+                <div class="section-header">
+                    <i class="fas fa-book"></i>
+                    Gestión de Cursos
+                </div>
+                
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h3 style="color: var(--color-primary);">Cursos Disponibles</h3>
+                        <button class="btn btn-primary">
+                            <i class="fas fa-plus"></i>
+                            <span>Agregar Curso</span>
+                        </button>
+                    </div>
+                    
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="Buscar curso...">
+                    </div>
+                    
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Profesor</th>
+                                    <th>Estudiantes</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>CUR001</td>
+                                    <td>Matemáticas Avanzadas</td>
+                                    <td>Prof. Rodríguez</td>
+                                    <td>45</td>
+                                    <td><span style="color: var(--color-success);">Activo</span></td>
+                                    <td>
+                                        <button class="btn btn-primary" style="padding: 0.4rem 0.8rem;">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-danger" style="padding: 0.4rem 0.8rem;">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>CUR002</td>
+                                    <td>Programación Básica</td>
+                                    <td>Prof. García</td>
+                                    <td>32</td>
+                                    <td><span style="color: var(--color-success);">Activo</span></td>
+                                    <td>
+                                        <button class="btn btn-primary" style="padding: 0.4rem 0.8rem;">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-danger" style="padding: 0.4rem 0.8rem;">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>CUR003</td>
+                                    <td>Química Orgánica</td>
+                                    <td>Prof. Martínez</td>
+                                    <td>28</td>
+                                    <td><span style="color: var(--color-warning);">En preparación</span></td>
+                                    <td>
+                                        <button class="btn btn-primary" style="padding: 0.4rem 0.8rem;">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-danger" style="padding: 0.4rem 0.8rem;">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Sección Profesores -->
+            <section id="profesores" class="content-section">
+                <div class="section-header">
+                    <i class="fas fa-chalkboard-user"></i>
+                    Gestión de Profesores
+                </div>
+                <div class="card">
+                    <p>Administra el registro de profesores, sus asignaciones y perfil académico en el sistema.</p>
+                    <button class="btn btn-primary" style="margin-top: 1rem;">
+                        <i class="fas fa-plus"></i>
+                        <span>Agregar Profesor</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Sección Componentes -->
+            <section id="componentes" class="content-section">
+                <div class="section-header">
+                    <i class="fas fa-puzzle-piece"></i>
+                    Visualización de Componentes
+                </div>
+                <div class="card">
+                    <p>Revisa todos los componentes del sistema y su estado actual. Monitorea el funcionamiento de cada módulo.</p>
+                </div>
+            </section>
+
+            <!-- Sección Laboratorios -->
+            <section id="laboratorios" class="content-section">
+                <div class="section-header">
+                    <i class="fas fa-flask"></i>
+                    Gestión de Laboratorios
+                </div>
+                <div class="card">
+                    <p>Visualiza y administra los laboratorios disponibles, sus horarios y recursos asignados.</p>
+                    <button class="btn btn-primary" style="margin-top: 1rem;">
+                        <i class="fas fa-plus"></i>
+                        <span>Agregar Laboratorio</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Sección Reportes -->
+            <section id="reportes" class="content-section">
+                <div class="section-header">
+                    <i class="fas fa-chart-bar"></i>
+                    Reportes y Análisis
+                </div>
+                
+                <div class="card">
+                    <h3 style="color: var(--color-primary); margin-bottom: 1rem;">Generar Reportes</h3>
+                    
+                    <div class="form-group">
+                        <label for="reportType">Tipo de Reporte</label>
+                        <select id="reportType" class="form-control">
+                            <option value="estudiantes">Reporte de Estudiantes</option>
+                            <option value="cursos">Reporte de Cursos</option>
+                            <option value="profesores">Reporte de Profesores</option>
+                            <option value="rendimiento">Reporte de Rendimiento</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="dateRange">Rango de Fechas</label>
+                        <input type="text" id="dateRange" class="form-control" placeholder="Seleccionar rango de fechas">
+                    </div>
+                    
+                    <button class="btn btn-success">
+                        <i class="fas fa-download"></i>
+                        <span>Generar Reporte</span>
+                    </button>
+                </div>
+                
+                <div class="chart-container">
+                    <h3 style="color: var(--color-primary); margin-bottom: 1rem;">Estadísticas del Sistema</h3>
+                    <div class="chart-placeholder">
+                        Gráficos de Estadísticas (Se integraría con una librería como Chart.js)
+                    </div>
+                </div>
+            </section>
+
+            <!-- Sección Calendario -->
+            <section id="calendario" class="content-section">
+                <div class="section-header">
+                    <i class="fas fa-calendar-alt"></i>
+                    Calendario Académico
+                </div>
+                
+                <div class="calendar-container">
+                    <div class="calendar-placeholder">
+                        Calendario Interactivo (Se integraría con una librería como FullCalendar)
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3 style="color: var(--color-primary); margin-bottom: 1rem;">Próximos Eventos</h3>
+                    <ul style="list-style-type: none;">
+                        <li style="padding: 0.8rem 0; border-bottom: 1px solid var(--color-light-gray);">
+                            <strong>Exámenes Finales</strong> - 20 de Noviembre, 2023
+                        </li>
+                        <li style="padding: 0.8rem 0; border-bottom: 1px solid var(--color-light-gray);">
+                            <strong>Reunión de Profesores</strong> - 15 de Noviembre, 2023
+                        </li>
+                        <li style="padding: 0.8rem 0; border-bottom: 1px solid var(--color-light-gray);">
+                            <strong>Inscripciones Nuevo Semestre</strong> - 5 de Diciembre, 2023
+                        </li>
+                        <li style="padding: 0.8rem 0;">
+                            <strong>Ceremonia de Graduación</strong> - 20 de Diciembre, 2023
+                        </li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Sección Perfil -->
+            <section id="perfil" class="content-section">
+                <div class="section-header">
+                    <i class="fas fa-user-circle"></i>
+                    Mi Perfil
+                </div>
+                
+                <div class="card">
+                    <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 1.5rem;">
+                        <div style="width: 100px; height: 100px; border-radius: 50%; background: var(--color-accent); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: var(--color-primary);">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div>
+                            <h3 style="color: var(--color-primary);">Administrador del Sistema</h3>
+                            <p style="color: var(--color-gray);">admin@edusystem.com</p>
+                        </div>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                        <div class="form-group">
+                            <label for="nombre">Nombre</label>
+                            <input type="text" id="nombre" class="form-control" value="Administrador del Sistema">
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" class="form-control" value="admin@edusystem.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="telefono">Teléfono</label>
+                            <input type="text" id="telefono" class="form-control" value="+1 234 567 8900">
+                        </div>
+                        <div class="form-group">
+                            <label for="rol">Rol</label>
+                            <input type="text" id="rol" class="form-control" value="Administrador" disabled>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="direccion">Dirección</label>
+                        <textarea id="direccion" class="form-control" rows="3">123 Calle Principal, Ciudad, País</textarea>
+                    </div>
+                    
+                    <button class="btn btn-primary">
+                        <i class="fas fa-save"></i>
+                        <span>Guardar Cambios</span>
+                    </button>
+                </div>
+            </section>
+        </div>
     </div>
 
-    <!-- CONTENIDO -->
-    <main class="main-content">
-        {% block content %}  
-        {% endblock %}
-    </main>
+    <!-- Modal de Configuración -->
+    <div id="configModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeConfigModal()">&times;</span>
+            <h2><i class="fas fa-palette"></i> Configuración de Colores</h2>
+
+            <div class="color-group">
+                <label for="colorLight">Color Claro:</label>
+                <div class="color-picker-wrapper">
+                    <input type="color" id="colorLight" value="#F3F3E0">
+                    <span class="color-value" id="lightValue">#F3F3E0</span>
+                </div>
+            </div>
+
+            <div class="color-group">
+                <label for="colorPrimary">Color Primario:</label>
+                <div class="color-picker-wrapper">
+                    <input type="color" id="colorPrimary" value="#133E87">
+                    <span class="color-value" id="primaryValue">#133E87</span>
+                </div>
+            </div>
+
+            <div class="color-group">
+                <label for="colorSecondary">Color Secundario:</label>
+                <div class="color-picker-wrapper">
+                    <input type="color" id="colorSecondary" value="#608BC1">
+                    <span class="color-value" id="secondaryValue">#608BC1</span>
+                </div>
+            </div>
+
+            <div class="color-group">
+                <label for="colorAccent">Color Acento:</label>
+                <div class="color-picker-wrapper">
+                    <input type="color" id="colorAccent" value="#CBDCEB">
+                    <span class="color-value" id="accentValue">#CBDCEB</span>
+                </div>
+            </div>
+
+            <button class="save-config-btn" onclick="saveColors()">
+                <i class="fas fa-save"></i> Guardar Configuración
+            </button>
+        </div>
+    </div>
+
+    <div class="notification-container" id="notificationContainer"></div>
 
     <script>
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const footer = document.querySelector('.sidebar-footer');
-            sidebar.classList.toggle('active');
-            footer.classList.toggle('active');
+        function showSection(sectionId) {
+            // Ocultar todas las secciones
+            const sections = document.querySelectorAll('.content-section');
+            sections.forEach(section => section.classList.remove('active'));
+
+            // Mostrar la sección seleccionada
+            document.getElementById(sectionId).classList.add('active');
+
+            // Actualizar enlace activo
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => link.classList.remove('active'));
+            event.target.closest('.nav-link').classList.add('active');
+            
+            // Mostrar notificación
+            showNotification(`Sección ${sectionId} cargada correctamente`, 'success');
         }
 
-        // Cerrar sidebar al hacer clic fuera en móvil
-        document.addEventListener('click', function(event) {
-            const sidebar = document.getElementById('sidebar');
-            const menuBtn = document.querySelector('.mobile-menu-btn');
+        function openConfigModal() {
+            document.getElementById('configModal').style.display = 'block';
+            updateColorValues();
+        }
+
+        function closeConfigModal() {
+            document.getElementById('configModal').style.display = 'none';
+        }
+
+        function updateColorValues() {
+            document.getElementById('lightValue').textContent = document.getElementById('colorLight').value;
+            document.getElementById('primaryValue').textContent = document.getElementById('colorPrimary').value;
+            document.getElementById('secondaryValue').textContent = document.getElementById('colorSecondary').value;
+            document.getElementById('accentValue').textContent = document.getElementById('colorAccent').value;
+        }
+
+        // Event listeners para actualizar valores en tiempo real
+        document.getElementById('colorLight').addEventListener('change', updateColorValues);
+        document.getElementById('colorPrimary').addEventListener('change', updateColorValues);
+        document.getElementById('colorSecondary').addEventListener('change', updateColorValues);
+        document.getElementById('colorAccent').addEventListener('change', updateColorValues);
+
+        function saveColors() {
+            const light = document.getElementById('colorLight').value;
+            const primary = document.getElementById('colorPrimary').value;
+            const secondary = document.getElementById('colorSecondary').value;
+            const accent = document.getElementById('colorAccent').value;
+
+            document.documentElement.style.setProperty('--color-light', light);
+            document.documentElement.style.setProperty('--color-primary', primary);
+            document.documentElement.style.setProperty('--color-secondary', secondary);
+            document.documentElement.style.setProperty('--color-accent', accent);
+
+            closeConfigModal();
+            showNotification('Colores guardados exitosamente', 'success');
+        }
+
+        // Función para mostrar notificaciones
+        function showNotification(message, type) {
+            const notificationContainer = document.getElementById('notificationContainer');
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'exclamation-triangle'}"></i>
+                <span>${message}</span>
+            `;
             
-            if (window.innerWidth <= 992) {
-                if (!sidebar.contains(event.target) && !menuBtn.contains(event.target)) {
-                    sidebar.classList.remove('active');
-                    document.querySelector('.sidebar-footer').classList.remove('active');
-                }
+            notificationContainer.appendChild(notification);
+            
+            // Eliminar la notificación después de 5 segundos
+            setTimeout(() => {
+                notification.remove();
+            }, 5000);
+        }
+
+        // Cerrar modal al hacer clic fuera
+        window.onclick = function(event) {
+            const modal = document.getElementById('configModal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
             }
-        });
+        }
     </script>
 </body>
 </html>

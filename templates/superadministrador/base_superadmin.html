@@ -13,8 +13,8 @@
     <!-- Sidebar/Navbar -->
     <div class="sidebar">
         <div class="sidebar-header">
-            <div class="user-avatar">SU</div>
-            <div>
+            <div class="user-avatar"></div>
+            <div class="user-info">
                 <h2>SuperUsuario <span class="superuser-badge">Admin</span></h2>
                 <p>Panel de Control</p>
             </div>
@@ -23,41 +23,45 @@
         <div class="nav-container">
             <nav>
                 <a href="{% url 'panel_superadmin' %}" class="nav-item">
-                    <i class="fas fa-home"></i>
-                    <span>Inicio</span>
+                    <i class="fas fa-home nav-icon"></i>
+                    <span class="nav-label">Inicio</span>
+                </a>
+                <a href="{% url 'perfil_superadmin' %}" class="nav-item">
+                    <i class="fas fa-user-circle nav-icon"></i>
+                    <span class="nav-label">Perfil</span>
                 </a>
                 <a href="{% url 'gestion_colegios' %}" class="nav-item">
-                    <i class="fas fa-school"></i>
-                    <span>Colegios</span>
+                    <i class="fas fa-school nav-icon"></i>
+                    <span class="nav-label">Colegios</span>
                 </a>
                 <a href="{% url 'gestion_administradores' %}" class="nav-item">
-                    <i class="fas fa-book"></i>
-                    <span>Administrador Acadamico</span>
+                    <i class="fas fa-user-tie nav-icon"></i>
+                    <span class="nav-label">Administrador Académico</span>
                 </a>
                 <a href="{% url 'gestion_profesor' %}" class="nav-item">
-                    <i class="fas fa-book"></i>
-                    <span>Profesores</span>
+                    <i class="fas fa-chalkboard-teacher nav-icon"></i>
+                    <span class="nav-label">Profesores</span>
                 </a>
                 <a href="{% url 'gestion_estudiante' %}" class="nav-item">
-                    <i class="fas fa-book"></i>
-                    <span>Alumnos</span>
+                    <i class="fas fa-user-graduate nav-icon"></i>
+                    <span class="nav-label">Alumnos</span>
                 </a>
                 
                 <span class="nav-item disabled">
-                    <i class="fas fa-flask"></i>
-                    <span>Laboratorios</span>
+                    <i class="fas fa-flask nav-icon"></i>
+                    <span class="nav-label">Laboratorios</span>
                 </span>
                 <span class="nav-item disabled">
-                    <i class="fas fa-puzzle-piece"></i>
-                    <span>Componentes</span>
+                    <i class="fas fa-puzzle-piece nav-icon"></i>
+                    <span class="nav-label">Componentes</span>
                 </span>
                <a href="{% url 'dashboard_superadmin' %}" class="nav-item">
-                    <i class="fas fa-book"></i>
-                    <span>Reportes</span>
+                    <i class="fas fa-chart-bar nav-icon"></i>
+                    <span class="nav-label">Reportes</span>
                 </a>
             </nav>
             
-            <button class="btn btn-logout" onclick="logout()">
+            <button class="btn-logout" onclick="logout()">
                 <i class="fas fa-sign-out-alt"></i>
                 <span>Cerrar Sesión</span>
             </button>
@@ -70,7 +74,28 @@
         {% endblock %}
     </main>
     
-    <script src="{% static 'js/superadministrador/superadmin.js' %}"></script>
+    <script>
+        // Función para cerrar sesión
+        function logout() {
+            // Mostrar confirmación
+            if (confirm('¿Está seguro de que desea cerrar sesión?')) {
+                // Redirigir a la página de login
+                window.location.href = "{% url 'login' %}";
+            }
+        }
 
+        // Detectar la página actual y marcar como activa
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentUrl = window.location.href;
+            const navItems = document.querySelectorAll('.nav-item');
+            
+            navItems.forEach(item => {
+                if (item.href === currentUrl) {
+                    item.classList.add('active');
+                }
+            });
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

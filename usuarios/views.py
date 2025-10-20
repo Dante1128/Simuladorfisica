@@ -86,7 +86,7 @@ def login_view(request):
             
             # Comparar con los valores exactos de la base de datos (camelCase)
             if rol_tipo == 'SuperAdmin':
-                return redirect('dashboard_superadmin')
+                return redirect('panel_superadmin')
             elif rol_tipo == 'Administrador':
                 return redirect('dashboard_administrador')
             elif rol_tipo == 'Profesor':
@@ -108,20 +108,45 @@ def login_view(request):
 #SUPERADMINISTRADOR
 #====================================================================
 def panel_superadmin(request):
-    """Vista básica para panel de administración"""
     usuario_id = request.session.get('usuario_id')
     if not usuario_id:
         return redirect('login')
     
     try:
         usuario = Usuario.objects.get(id=usuario_id)
-        return render(request, 'superadministrador/panel_superadmin.html', {"usuario": usuario})
+        
+        context = {
+            'usuario': usuario,
+            'total_colegios': Colegio.objects.count(),
+            'total_usuarios': Usuario.objects.count(),
+            'total_estudiantes': Estudiante.objects.count(),
+            'total_profesores': Profesor.objects.count(),
+            'total_cursos': Curso.objects.count(),
+            'total_laboratorios': Laboratorio.objects.count(),
+            
+        
+        }
+        
+        return render(request, 'superadministrador/panel_superadmin.html', context)
+        
     except Usuario.DoesNotExist:
         return redirect('login')
 
 def base_superadmin(request):
     """Vista básica para base de administración"""
-    return render(request, 'administrador/base_admin.html')
+    return render(request, 'superadministrador/base_superadmin.html')
+
+def perfil_superadmin(request):
+    """Vista básica para perfil de administración"""
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        return redirect('login')
+    
+    try:
+        usuario = Usuario.objects.get(id=usuario_id)
+        return render(request, 'superadministrador/perfil_superadmin.html', {"usuario": usuario})
+    except Usuario.DoesNotExist:
+        return redirect('login')
 
 def gestion_colegios(request):
     # CAMBIO DE ESTADO
@@ -384,73 +409,104 @@ def gestion_profesor(request):
 
 
 def gestion_estudiante(request):
-    estudiantes = Estudiante.objects.all()
-    colegios = Colegio.objects.all()
+    # CREAR ESTUDIANTE
+    if request.method == 'POST' and 'crear' in request.POST:
+        nombre = request.POST.get('nombre', '').strip()
+        apellidoPaterno = request.POST.get('apellidoPaterno', '').strip()
+        apellidoMaterno = request.POST.get('apellidoMaterno', '').strip()
+        correo = request.POST.get('correo', '').strip()
+        contrasenia = request.POST.get('contrasenia', '').strip()
+        colegio_id = request.POST.get('colegio')
+        curso = request.POST.get('curso', '').strip()
+        
+        if nombre and apellidoPaterno and apellidoMaterno and correo and contrasenia and colegio_id and curso:
+            if not Usuario.objects.filter(correo=correo).exists():
+                rol_estudiante = Rol.objects.get(id=4)  # ID 4 para estudiantes
+                usuario = Usuario.objects.create(
+                    correo=correo,
+                    contrasenia=make_password(contrasenia),
+                    estado='Activo',
+                    rol=rol_estudiante
+                )
+                from .models import Persona
+                persona = Persona.objects.create(
+                    usuario=usuario,
+                    nombre=nombre,
+                    apellidoPaterno=apellidoPaterno,
+                    apellidoMaterno=apellidoMaterno
+                )
+                estudiante = Estudiante.objects.create(
+                    persona=persona,
+                    colegio_id=colegio_id,
+                    curso=curso,
+                    activo=True  # Estado inicial activo
+                )
+                messages.success(request, 'Estudiante creado correctamente.')
+                return redirect('gestion_estudiante')
+            else:
+                messages.error(request, 'Ya existe un usuario con ese correo.')
+        else:
+            messages.error(request, 'Todos los campos son obligatorios.')
 
-    if request.method == 'POST':
-        estudiante_id = request.POST.get('alumno-id')
-        nombres = request.POST.get('alumno-nombres')
-        apellidos = request.POST.get('alumno-apellidos')
-        curso = request.POST.get('alumno-curso')
-        colegio_id = request.POST.get('alumno-colegio')
-        correo = request.POST.get('alumno-email')
-        contrasenia = request.POST.get('alumno-password')
-
-        colegio = get_object_or_404(Colegio, id=colegio_id)
-
-        if estudiante_id:  # Editar estudiante
-            estudiante = get_object_or_404(Estudiante, id=estudiante_id)
-            # Actualizar persona
-            estudiante.persona.nombre = nombres
-            estudiante.persona.apellidoPaterno = apellidos.split()[0]
-            estudiante.persona.apellidoMaterno = ' '.join(apellidos.split()[1:]) if len(apellidos.split()) > 1 else ''
-            estudiante.persona.save()
-
-            # Actualizar usuario
-            estudiante.persona.usuario.correo = correo
-            if contrasenia:
-                estudiante.persona.usuario.contrasenia = make_password(contrasenia)
-            estudiante.persona.usuario.save()
-
-            # Actualizar estudiante
-            estudiante.curso = curso
-            estudiante.colegio = colegio
-            estudiante.save()
-
-            messages.success(request, f"Estudiante {estudiante.persona.nombre} actualizado correctamente")
-
-        else:  # Crear nuevo estudiante
-            #  Crear usuario primero
-            usuario = Usuario.objects.create(
-                correo=correo,
-                contrasenia=make_password(contrasenia)
+    # EDITAR ESTUDIANTE
+    if request.method == 'POST' and 'editar_id' in request.POST:
+        editar_id = request.POST.get('editar_id')
+        nombre = request.POST.get('editar_nombre', '').strip()
+        apellidoPaterno = request.POST.get('editar_apellidoPaterno', '').strip()
+        apellidoMaterno = request.POST.get('editar_apellidoMaterno', '').strip()
+        correo = request.POST.get('editar_correo', '').strip()
+        contrasenia = request.POST.get('editar_contrasenia', '').strip()
+        colegio_id = request.POST.get('editar_colegio')
+        curso = request.POST.get('editar_curso', '').strip()
+        
+        estudiante = Estudiante.objects.filter(id=editar_id).first()
+        if estudiante and nombre and apellidoPaterno and apellidoMaterno and correo and colegio_id and curso:
+            usuario = estudiante.persona.usuario
+            if not Usuario.objects.filter(correo=correo).exclude(id=usuario.id).exists():
+                usuario.correo = correo
+                if contrasenia:
+                    usuario.contrasenia = make_password(contrasenia)
+                usuario.save()
                 
-            )
+                persona = estudiante.persona
+                persona.nombre = nombre
+                persona.apellidoPaterno = apellidoPaterno
+                persona.apellidoMaterno = apellidoMaterno
+                persona.save()
+                
+                estudiante.colegio_id = colegio_id
+                estudiante.curso = curso
+                estudiante.save()
+                
+                messages.success(request, 'Estudiante editado correctamente.')
+                return redirect('gestion_estudiante')
+            else:
+                messages.error(request, 'Ya existe un usuario con ese correo.')
+        else:
+            messages.error(request, 'Todos los campos son obligatorios para editar.')
 
-            #  Crear persona vinculada al usuario
-            persona = Persona.objects.create(
-                usuario=usuario,
-                nombre=nombres,
-                apellidoPaterno=apellidos.split()[0],
-                apellidoMaterno=' '.join(apellidos.split()[1:]) if len(apellidos.split()) > 1 else ''
-            )
-
-            #  Crear estudiante
-            Estudiante.objects.create(
-                persona=persona,
-                colegio=colegio,
-                curso=curso
-            )
-
-            messages.success(request, f"Estudiante {persona.nombre} registrado correctamente")
-
+    # CAMBIAR ESTADO DEL ESTUDIANTE
+    if request.method == "POST" and request.POST.get('cambiar_estado') == '1':
+        estudiante_id = request.POST.get('estudiante_id')
+        estudiante = Estudiante.objects.filter(id=estudiante_id).first()
+        if estudiante:
+            estudiante.activo = not estudiante.activo  # Cambiar estado booleano
+            estudiante.save()
+            estado_texto = "Activo" if estudiante.activo else "Inactivo"
+            messages.success(request, f"Estado del estudiante cambiado a {estado_texto}.")
+        else:
+            messages.error(request, 'Estudiante no encontrado.')
         return redirect('gestion_estudiante')
 
-    return render(request, 'superAdministrador/gestion_estudiante.html', {
+    # LISTAR ESTUDIANTES
+    estudiantes = Estudiante.objects.select_related('persona', 'persona__usuario', 'colegio').all().order_by('persona__usuario__correo')
+    colegios = Colegio.objects.all().order_by('nombre')
+    
+    context = {
         'estudiantes': estudiantes,
-        'colegios': colegios
-    })
-
+        'colegios': colegios,
+    }
+    return render(request, 'superadministrador/gestion_estudiante.html', context)
 
 #estudiante
 def panel_estudiante(request):

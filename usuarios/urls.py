@@ -6,6 +6,7 @@ urlpatterns = [
     path('', views.index, name='index'),
     path('login/', views.login_view, name='login'),
     path('panel_superadmin/',views.panel_superadmin, name='panel_superadmin'),
+    path('perfil_superadmin/',views.perfil_superadmin, name='perfil_superadmin'),
     #RUTAS DE GESTIÓN
     path('gestion_colegios/', views.gestion_colegios, name='gestion_colegios'),
     path('gestion_administradores/', views.gestion_administradores, name='gestion_administradores'),
