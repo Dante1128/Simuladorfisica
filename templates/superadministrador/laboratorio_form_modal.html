@@ -1,25 +1,277 @@
 {% load static %}
 <form method="post" enctype="multipart/form-data" id="labFormModal" action="{{ action_url|default:'' }}">
     {% csrf_token %}
-    {{ form.non_field_errors }}
-    <div style="display:grid;grid-template-columns:1fr;gap:12px;margin-top:12px">
-        <div>
-            {{ form.nombre.label_tag }}
-            {{ form.nombre }}
-        </div>
-        <div>
-            {{ form.archivo_zip.label_tag }}
-            {{ form.archivo_zip }}
-        </div>
-        <div>
-            {{ form.estado.label_tag }}
-            {{ form.estado }}
-        </div>
+    
+    {% if form.non_field_errors %}
+    <div class="alert alert-danger" style="margin-bottom: 20px; padding: 12px 16px; background: #fee2e2; border: 1px solid #fecaca; border-radius: 8px; color: #991b1b;">
+        <i class="fas fa-exclamation-circle"></i>
+        {{ form.non_field_errors }}
     </div>
-    <div style="margin-top:12px">
-        <button class="btn btn-success" type="submit">Guardar</button>
-        <button type="button" class="btn btn-secondary" onclick="closeLabModal()">Cancelar</button>
+    {% endif %}
+    
+    <div class="form-group">
+        <label for="{{ form.nombre.id_for_label }}">
+            <i class="fas fa-flask"></i> Nombre del Laboratorio
+        </label>
+        {{ form.nombre }}
+        {% if form.nombre.errors %}
+        <div class="form-error">
+            <i class="fas fa-exclamation-triangle"></i>
+            {{ form.nombre.errors|first }}
+        </div>
+        {% endif %}
+        {% if form.nombre.help_text %}
+        <small class="form-help">{{ form.nombre.help_text }}</small>
+        {% endif %}
+    </div>
+    
+    <div class="form-group">
+        <label for="{{ form.archivo_zip.id_for_label }}">
+            <i class="fas fa-file-archive"></i> Archivo ZIP
+        </label>
+        <div class="file-input-wrapper">
+            {{ form.archivo_zip }}
+            <div class="file-input-label">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <span>Seleccionar archivo...</span>
+            </div>
+        </div>
+        {% if form.archivo_zip.errors %}
+        <div class="form-error">
+            <i class="fas fa-exclamation-triangle"></i>
+            {{ form.archivo_zip.errors|first }}
+        </div>
+        {% endif %}
+        {% if form.archivo_zip.help_text %}
+        <small class="form-help">{{ form.archivo_zip.help_text }}</small>
+        {% endif %}
+    </div>
+    
+    <div class="form-group">
+        <label for="{{ form.estado.id_for_label }}">
+            <i class="fas fa-toggle-on"></i> Estado
+        </label>
+        {{ form.estado }}
+        {% if form.estado.errors %}
+        <div class="form-error">
+            <i class="fas fa-exclamation-triangle"></i>
+            {{ form.estado.errors|first }}
+        </div>
+        {% endif %}
+        {% if form.estado.help_text %}
+        <small class="form-help">{{ form.estado.help_text }}</small>
+        {% endif %}
     </div>
 </form>
+
+<div class="modal-footer">
+    <button type="button" class="btn-secondary" onclick="closeLabModal()">
+        <i class="fas fa-times"></i>
+        Cancelar
+    </button>
+    <button type="submit" class="btn-primary" form="labFormModal">
+        <i class="fas fa-save"></i>
+        Guardar Laboratorio
+    </button>
+</div>
+
+<style>
+/* Estilos para el formulario */
+.form-group {
+    margin-bottom: 24px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 600;
+    color: #133E87;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.form-group label i {
+    margin-right: 6px;
+}
+
+.form-control, 
+#labFormModal input[type="text"],
+#labFormModal input[type="email"],
+#labFormModal input[type="number"],
+#labFormModal input[type="file"],
+#labFormModal select,
+#labFormModal textarea {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 15px;
+    transition: all 0.3s;
+    background: #f8fafc;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.form-control:focus,
+#labFormModal input:focus,
+#labFormModal select:focus,
+#labFormModal textarea:focus {
+    outline: none;
+    border-color: #133E87;
+    box-shadow: 0 0 0 4px rgba(19, 62, 135, 0.08);
+    background: white;
+}
+
+/* File input personalizado */
+.file-input-wrapper {
+    position: relative;
+}
+
+.file-input-wrapper input[type="file"] {
+    position: absolute;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    z-index: 2;
+}
+
+.file-input-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border: 2px dashed #cbd5e1;
+    border-radius: 10px;
+    background: #f8fafc;
+    color: #64748b;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.file-input-wrapper:hover .file-input-label {
+    border-color: #133E87;
+    background: #eff6ff;
+    color: #133E87;
+}
+
+.file-input-label i {
+    font-size: 20px;
+}
+
+/* Errores de formulario */
+.form-error {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    padding: 10px 12px;
+    background: #fee2e2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    color: #991b1b;
+    font-size: 13px;
+}
+
+.form-error i {
+    font-size: 14px;
+}
+
+/* Texto de ayuda */
+.form-help {
+    display: block;
+    margin-top: 6px;
+    color: #64748b;
+    font-size: 13px;
+    font-style: italic;
+}
+
+/* Botones del footer ya están en el CSS principal */
+.modal-footer {
+    padding: 24px 32px;
+    background: #f8fafc;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    border-top: 1px solid #e2e8f0;
+    margin: 0 -32px -32px -32px;
+}
+
+.btn-primary,
+.modal-footer .btn-primary {
+    background: linear-gradient(135deg, #133E87 0%, #0A2952 100%);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 24px;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 4px 12px rgba(19, 62, 135, 0.25);
+}
+
+.btn-primary:hover,
+.modal-footer .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(19, 62, 135, 0.35);
+}
+
+.btn-secondary,
+.modal-footer .btn-secondary {
+    background: #64748b;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 24px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 600;
+    font-size: 15px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-secondary:hover,
+.modal-footer .btn-secondary:hover {
+    background: #475569;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(100, 116, 139, 0.3);
+}
+
+/* Alert de error general */
+.alert {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.alert i {
+    font-size: 18px;
+}
+</style>
+
+<script>
+// Actualizar el texto del input file cuando se selecciona un archivo
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.querySelector('.file-input-wrapper input[type="file"]');
+    const fileLabel = document.querySelector('.file-input-label span');
+    
+    if (fileInput && fileLabel) {
+        fileInput.addEventListener('change', function() {
+            if (this.files && this.files.length > 0) {
+                fileLabel.textContent = this.files[0].name;
+            } else {
+                fileLabel.textContent = 'Seleccionar archivo...';
+            }
+        });
+    }
+});
+</script>
 
 <!-- El handler del formulario se adjunta desde la página padre usando attachLabFormHandler() -->

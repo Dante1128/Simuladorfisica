@@ -1,0 +1,234 @@
+{% extends 'profesor/base_profesor.html' %}
+{% load static %}
+
+{% block title %}Componentes{% endblock %}
+
+{% block extra_css %}
+<style>
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="tarjetas-container">
+    <!-- Barra superior -->
+    <div class="top-bar">
+        <div class="busqueda-container">
+            <div class="busqueda-bar">
+                <input type="text" id="busquedaInput" placeholder="Buscar por nombre, tema o laboratorio...">
+            </div>
+            <button class="btn-buscar" onclick="realizarBusqueda()">
+                🔍 Buscar
+            </button>
+        </div>
+        
+    </div>
+
+    <!-- Grid de tarjetas -->
+    <div class="tarjetas-grid" id="tarjetasGrid">
+        {% for c in componentes %}
+        <div class="componente-card" data-nombre="{{ c.nombre|lower }}" data-tema="{{ c.tema.nombre|default:''|lower }}" data-lab="{{ c.laboratorio.nombre|default:''|lower }}">
+            <!-- Thumbnail izquierda -->
+            <div class="card-thumbnail">
+                {% if c.imagen %}
+                    <img src="{{ c.imagen.url }}" alt="{{ c.nombre }}">
+                {% else %}
+                    <div style="color: #94a3b8;">Sin imagen</div>
+                {% endif %}
+            </div>
+
+            <!-- Contenido derecha -->
+            <div class="card-content">
+                <div class="card-header">
+                    <div class="card-title">{{ c.nombre }}</div>
+                    <div class="card-metadata">
+                        <div class="card-metadata-item">
+                            <span class="icon-pdf"></span>
+                            <span>Introduccion_Fisica.pdf</span>
+                        </div>
+                        <div class="card-metadata-item">
+                            <span class="icon-user"></span>
+                            <span>{{ c.tema.nombre|default:"Sin tema" }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-desc">
+                    {{ c.descripcion|truncatechars:180 }}
+                </div>
+
+                <div class="card-actions">
+                    
+                    
+                    <button class="btn-action btn-componente" onclick="verMasComponente('{{ c.id }}')">
+                        👁️ COMPONENTE
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; color: #94a3b8;">
+            <p style="font-size: 1.2rem; margin-bottom: 10px;">No hay componentes disponibles</p>
+            <p>Agrega tu primer componente usando el botón "Agregar Componente"</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Modal -->
+<div id="componenteModal" class="modal-overlay" onclick="cerrarModalClick(event)">
+    <div class="modal-card">
+        <button class="close-modal" onclick="cerrarModal()">&times;</button>
+        <div class="modal-3d" id="modal3d">
+            <!-- Modelo 3D con A-Frame -->
+        </div>
+        <div class="modal-details" id="modalDetails">
+            <!-- Detalles del componente -->
+        </div>
+    </div>
+</div>
+
+<script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+<script>
+// Datos de componentes
+const componentes = {{ componentes_json|safe }};
+
+// Ver detalles del componente en modal
+function verMasComponente(id) {
+    const comp = componentes.find(c => c.id == id);
+    if (!comp) return;
+
+    // Renderizar modelo 3D
+    let modeloHtml = '';
+    if (comp.modelo3D_url) {
+        modeloHtml = `
+            <a-scene embedded style='width:100%;height:100%;background:#fff;'>
+                <a-assets>
+                    <a-asset-item id='modelo3d' src='${comp.modelo3D_url}'></a-asset-item>
+                </a-assets>
+                <a-entity gltf-model="#modelo3d" position="0 1.2 -2" rotation="0 45 0" scale="1 1 1" animation-mixer></a-entity>
+                <a-sky color="#f8fafc"></a-sky>
+                <a-orbit-controls></a-orbit-controls>
+            </a-scene>
+        `;
+    } else {
+        modeloHtml = '<div style="text-align:center;color:#94a3b8;padding:40px;">No hay modelo 3D disponible</div>';
+    }
+    document.getElementById('modal3d').innerHTML = modeloHtml;
+
+    // Renderizar detalles
+    let detallesHtml = `
+        <h2>${comp.nombre}</h2>
+        <img src='${comp.imagen_url}' alt='${comp.nombre}'>
+        <p><strong>Descripción:</strong><br>${comp.descripcion || 'Sin descripción'}</p>
+        <p><strong>Especificaciones:</strong><br>${comp.especificaciones || 'Sin especificaciones'}</p>
+        <p><strong>Video Explicación:</strong><br>
+            ${comp.video_explicacion ? 
+                `<a href='${comp.video_explicacion}' target='_blank'>Ver video</a>` : 
+                '<span style="color:#94a3b8;">No disponible</span>'}
+        </p>
+        <p><strong>Tema:</strong><br>${comp.tema_nombre || 'Sin tema'}</p>
+        <p><strong>Laboratorio:</strong><br>${comp.laboratorio_nombre || 'Sin laboratorio'}</p>
+    `;
+
+    document.getElementById('modalDetails').innerHTML = detallesHtml;
+    document.getElementById('componenteModal').classList.add('active');
+}
+
+// Cerrar modal
+function cerrarModal() {
+    document.getElementById('componenteModal').classList.remove('active');
+    document.getElementById('modal3d').innerHTML = '';
+    document.getElementById('modalDetails').innerHTML = '';
+}
+
+// Cerrar modal al hacer clic fuera
+function cerrarModalClick(event) {
+    if (event.target.id === 'componenteModal') {
+        cerrarModal();
+    }
+}
+
+// Editar componente
+function editarComponente(id) {
+    window.location.href = `/profesor/componentes/${id}/editar/`;
+}
+
+// Confirmar eliminación
+function confirmarEliminar(id, nombre) {
+    if (confirm(`¿Está seguro de que desea eliminar el componente "${nombre}"?`)) {
+        eliminarComponente(id);
+    }
+}
+
+// Eliminar componente
+function eliminarComponente(id) {
+    window.location.href = `/profesor/componentes/${id}/eliminar/`;
+}
+
+// Agregar componente
+function agregarComponente() {
+    window.location.href = '/profesor/componentes/nuevo/';
+}
+
+// Búsqueda
+function realizarBusqueda() {
+    const term = document.getElementById('busquedaInput').value.toLowerCase();
+    filtrarComponentes(term);
+}
+
+// Filtrar componentes en tiempo real
+document.getElementById('busquedaInput').addEventListener('input', function() {
+    const term = this.value.toLowerCase();
+    filtrarComponentes(term);
+});
+
+function filtrarComponentes(term) {
+    const cards = document.querySelectorAll('.componente-card');
+    let visibleCount = 0;
+
+    cards.forEach(card => {
+        const nombre = card.dataset.nombre || '';
+        const tema = card.dataset.tema || '';
+        const lab = card.dataset.lab || '';
+        
+        const match = nombre.includes(term) || tema.includes(term) || lab.includes(term);
+        
+        if (match) {
+            card.style.display = '';
+            visibleCount++;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+
+    // Mostrar mensaje si no hay resultados
+    let noResultsMsg = document.getElementById('noResultsMessage');
+    if (visibleCount === 0 && term !== '') {
+        if (!noResultsMsg) {
+            noResultsMsg = document.createElement('div');
+            noResultsMsg.id = 'noResultsMessage';
+            noResultsMsg.style.cssText = 'grid-column: 1/-1; text-align: center; padding: 40px; color: #94a3b8;';
+            noResultsMsg.innerHTML = `<p style="font-size: 1.1rem;">No se encontraron resultados para "${term}"</p>`;
+            document.getElementById('tarjetasGrid').appendChild(noResultsMsg);
+        }
+    } else if (noResultsMsg) {
+        noResultsMsg.remove();
+    }
+}
+
+// Cerrar modal con tecla Escape
+window.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        cerrarModal();
+    }
+});
+
+// Búsqueda con Enter
+document.getElementById('busquedaInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        realizarBusqueda();
+    }
+});
+</script>
+{% endblock %}

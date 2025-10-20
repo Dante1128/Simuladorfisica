@@ -4,8 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel del Profesor - Navegación</title>
+    <title>{% block title %}Panel del Estudiante{% endblock %}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    {% block extra_css %}{% endblock %}
     <style>
         :root {
             --color-fondo: #F3F3E0;
@@ -258,9 +259,13 @@
                 <i class="fas fa-chart-bar"></i>
                 <span>Calificaciones</span>
             </div>
-            <div class="menu-item {% if request.path == '/contenido-teorico/' %}active{% endif %}" onclick="window.location.href='{% url 'contenido_teorico' %}'">
+            <div class="menu-item ">
                 <i class="fas fa-chart-bar" ></i>
                 <span>Contenido Teorico</span>
+            </div>
+            <div class="menu-item {% if request.path == '/estudiante/componentes/' %}active{% endif %}" onclick="window.location.href='{% url 'componentes_estudiante' %}'">
+                <i class="fas fa-microscope"></i>
+                <span>Componentes de laboratorio</span>
             </div>
         </div>
         
@@ -278,6 +283,15 @@
             </button>
         </div>
     </div>
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+        {% block content %}
+        {% endblock %}
+    </div>
+
+    {% block extra_js %}
+    {% endblock %}
 
     <script>
         // Activar elementos del menú al hacer clic

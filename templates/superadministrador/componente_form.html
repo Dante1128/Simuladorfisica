@@ -1,0 +1,560 @@
+{% extends 'superadministrador/base_superadmin.html' %}
+{% load static %}
+
+{% block title %}{% if form.instance.pk %}Editar Componente{% else %}Agregar Componente{% endif %}{% endblock %}
+
+{% block extra_css %}
+<style>
+body {
+    background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+    min-height: 100vh;
+}
+
+.form-container {
+    margin: 20px 30px 20px 310px;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(19, 62, 135, 0.12);
+    overflow: hidden;
+}
+
+/* Header */
+.form-header {
+    background: linear-gradient(135deg, #133E87 0%, #0A2952 100%);
+    padding: 32px 40px;
+    color: white;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.form-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 400px;
+    height: 400px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 50%;
+}
+
+.form-header-content {
+    position: relative;
+    z-index: 1;
+}
+
+.form-header h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.form-header p {
+    font-size: 0.95rem;
+    opacity: 0.9;
+}
+
+.btn-back {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 10px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    transition: all 0.3s;
+    position: relative;
+    z-index: 1;
+}
+
+.btn-back:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateX(-4px);
+}
+
+/* Form Body */
+.form-body {
+    padding: 40px;
+}
+
+.form-layout {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 32px;
+    align-items: start;
+}
+
+.form-main {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.form-group {
+    margin-bottom: 0;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 600;
+    color: #133E87;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.form-group label i {
+    margin-right: 6px;
+}
+
+input[type="text"],
+input[type="url"],
+input[type="email"],
+input[type="number"],
+select,
+textarea {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 15px;
+    transition: all 0.3s;
+    background: #f8fafc;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    outline: none;
+    border-color: #133E87;
+    box-shadow: 0 0 0 4px rgba(19, 62, 135, 0.08);
+    background: white;
+}
+
+textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+/* Sidebar */
+.form-sidebar {
+    position: sticky;
+    top: 20px;
+}
+
+.sidebar-card {
+    background: #f8fafc;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.sidebar-card-title {
+    font-weight: 600;
+    color: #133E87;
+    margin-bottom: 16px;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.file-input-wrapper {
+    position: relative;
+    margin-bottom: 16px;
+}
+
+.file-input-wrapper input[type="file"] {
+    position: absolute;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    z-index: 2;
+}
+
+.file-input-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border: 2px dashed #cbd5e1;
+    border-radius: 10px;
+    background: white;
+    color: #64748b;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.file-input-wrapper:hover .file-input-label {
+    border-color: #133E87;
+    background: #eff6ff;
+    color: #133E87;
+}
+
+.file-input-label i {
+    font-size: 20px;
+}
+
+.preview-box {
+    background: white;
+    padding: 16px;
+    border-radius: 10px;
+    border: 2px solid #e2e8f0;
+    text-align: center;
+}
+
+.preview-box-title {
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: #64748b;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.preview-image {
+    max-width: 100%;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.preview-placeholder {
+    height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #cbd5e1;
+    font-size: 14px;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.preview-placeholder i {
+    font-size: 48px;
+}
+
+/* Error messages */
+.errorlist {
+    list-style: none;
+    padding: 0;
+    margin: 8px 0 0 0;
+}
+
+.errorlist li {
+    background: #fee2e2;
+    color: #991b1b;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.errorlist li::before {
+    content: "⚠";
+    font-size: 16px;
+}
+
+.non-field-errors {
+    background: #fee2e2;
+    color: #991b1b;
+    padding: 12px 16px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    border-left: 4px solid #ef4444;
+}
+
+/* Form Actions */
+.form-actions {
+    display: flex;
+    gap: 12px;
+    padding: 24px 40px;
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #133E87 0%, #0A2952 100%);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 14px 28px;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 4px 12px rgba(19, 62, 135, 0.25);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(19, 62, 135, 0.35);
+}
+
+.btn-secondary {
+    background: #64748b;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 14px 24px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 600;
+    font-size: 15px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-secondary:hover {
+    background: #475569;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(100, 116, 139, 0.3);
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .form-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .form-sidebar {
+        position: static;
+    }
+}
+
+@media (max-width: 768px) {
+    .form-container {
+        margin: 20px 15px;
+    }
+
+    .form-header {
+        flex-direction: column;
+        gap: 16px;
+        align-items: flex-start;
+        padding: 24px 20px;
+    }
+
+    .form-body,
+    .form-actions {
+        padding: 24px 20px;
+    }
+
+    .form-layout {
+        gap: 24px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <!-- Header -->
+    <div class="form-header">
+        <div class="form-header-content">
+            <h2>
+                <i class="fas fa-puzzle-piece"></i>
+                {% if form.instance.pk %}Editar Componente{% else %}Agregar Componente{% endif %}
+            </h2>
+            <p>Complete los datos del componente de laboratorio virtual</p>
+        </div>
+        <a href="{% url 'superadmin_componentes_list' %}" class="btn-back">
+            <i class="fas fa-arrow-left"></i>
+            Volver
+        </a>
+    </div>
+
+    <!-- Form -->
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <div class="form-body">
+            {% if form.non_field_errors %}
+            <div class="non-field-errors">
+                {{ form.non_field_errors }}
+            </div>
+            {% endif %}
+
+            <div class="form-layout">
+                <!-- Main Form Fields -->
+                <div class="form-main">
+                    <div class="form-group">
+                        <label for="{{ form.nombre.id_for_label }}">
+                            <i class="fas fa-tag"></i> Nombre del Componente
+                        </label>
+                        {{ form.nombre }}
+                        {{ form.nombre.errors }}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.tema.id_for_label }}">
+                            <i class="fas fa-book"></i> Tema
+                        </label>
+                        {{ form.tema }}
+                        {{ form.tema.errors }}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.laboratorio.id_for_label }}">
+                            <i class="fas fa-flask"></i> Laboratorio
+                        </label>
+                        {{ form.laboratorio }}
+                        {{ form.laboratorio.errors }}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.descripcion.id_for_label }}">
+                            <i class="fas fa-align-left"></i> Descripción
+                        </label>
+                        {{ form.descripcion }}
+                        {{ form.descripcion.errors }}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.especificaciones.id_for_label }}">
+                            <i class="fas fa-list-ul"></i> Especificaciones
+                        </label>
+                        {{ form.especificaciones }}
+                        {{ form.especificaciones.errors }}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.video_explicacion.id_for_label }}">
+                            <i class="fas fa-video"></i> Video de Explicación (URL)
+                        </label>
+                        {{ form.video_explicacion }}
+                        {{ form.video_explicacion.errors }}
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="form-sidebar">
+                    <!-- Imagen -->
+                    <div class="sidebar-card">
+                        <div class="sidebar-card-title">
+                            <i class="fas fa-image"></i>
+                            Imagen del Componente
+                        </div>
+                        <div class="file-input-wrapper">
+                            {{ form.imagen }}
+                            <div class="file-input-label">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <span id="image-file-name">Seleccionar imagen...</span>
+                            </div>
+                        </div>
+                        {{ form.imagen.errors }}
+                        
+                        <div class="preview-box">
+                            <div class="preview-box-title">Vista Previa</div>
+                            {% if form.instance and form.instance.imagen %}
+                                <img src="{{ form.instance.imagen.url }}" class="preview-image" id="preview-img" />
+                            {% else %}
+                                <div class="preview-placeholder" id="preview-placeholder">
+                                    <i class="fas fa-image"></i>
+                                    <span>Sin imagen</span>
+                                </div>
+                                <img src="#" class="preview-image" id="preview-img" style="display: none;" />
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Modelo 3D -->
+                    <div class="sidebar-card">
+                        <div class="sidebar-card-title">
+                            <i class="fas fa-cube"></i>
+                            Archivo 3D
+                        </div>
+                        <div class="file-input-wrapper">
+                            {{ form.modelo3D }}
+                            <div class="file-input-label">
+                                <i class="fas fa-file-upload"></i>
+                                <span id="model-file-name">Seleccionar archivo 3D...</span>
+                            </div>
+                        </div>
+                        {{ form.modelo3D.errors }}
+                        {% if form.instance and form.instance.modelo3D %}
+                        <div style="margin-top: 12px; padding: 10px; background: #dbeafe; border-radius: 8px; color: #1e40af; font-size: 13px; display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Archivo 3D cargado</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="form-actions">
+            <button type="submit" class="btn-primary">
+                <i class="fas fa-save"></i>
+                {% if form.instance.pk %}Actualizar Componente{% else %}Guardar Componente{% endif %}
+            </button>
+            <a href="{% url 'superadmin_componentes_list' %}" class="btn-secondary">
+                <i class="fas fa-times"></i>
+                Cancelar
+            </a>
+        </div>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Preview de imagen
+    const imageInput = document.querySelector('input[name="imagen"]');
+    const imageFileName = document.getElementById('image-file-name');
+    const previewImg = document.getElementById('preview-img');
+    const previewPlaceholder = document.getElementById('preview-placeholder');
+    
+    if (imageInput) {
+        imageInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                imageFileName.textContent = this.files[0].name;
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImg.src = e.target.result;
+                    previewImg.style.display = 'block';
+                    if (previewPlaceholder) {
+                        previewPlaceholder.style.display = 'none';
+                    }
+                };
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+    }
+    
+    // Nombre del archivo 3D
+    const modelInput = document.querySelector('input[name="modelo3D"]');
+    const modelFileName = document.getElementById('model-file-name');
+    
+    if (modelInput) {
+        modelInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                modelFileName.textContent = this.files[0].name;
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

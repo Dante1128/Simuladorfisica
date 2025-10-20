@@ -28,10 +28,12 @@ class LaboratorioForm(forms.ModelForm):
 		if not f:
 			return f
 
-		# tamaño máximo 50 MB
-		max_size = 50 * 1024 * 1024
+		from django.conf import settings
+		# Usar el límite configurado en settings.py (500MB por defecto)
+		max_size = getattr(settings, 'MAX_UPLOAD_SIZE', 524288000)  # 500MB por defecto
 		if f.size > max_size:
-			raise forms.ValidationError('El archivo zip es demasiado grande (máx 50 MB).')
+			max_size_mb = max_size / (1024 * 1024)
+			raise forms.ValidationError(f'El archivo zip es demasiado grande (máx {int(max_size_mb)} MB).')
 
 		# extensión .zip
 		name = f.name.lower()

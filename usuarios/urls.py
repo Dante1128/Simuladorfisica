@@ -6,7 +6,14 @@ urlpatterns = [
     path('', views.index, name='index'),
     path('login/', views.login_view, name='login'),
     path('panel_superadmin/',views.panel_superadmin, name='panel_superadmin'),
-    #RUTAS DE GESTIÓN
+    
+    # Rutas para Componentes (Superadministrador)
+    path('superadmin/componentes/', views.superadmin_componentes_list, name='superadmin_componentes_list'),
+    path('superadmin/componentes/agregar/', views.superadmin_componente_create, name='superadmin_componente_create'),
+    path('superadmin/componentes/<int:pk>/editar/', views.superadmin_componente_update, name='superadmin_componente_update'),
+    path('superadmin/componentes/<int:pk>/eliminar/', views.superadmin_componente_delete_confirm, name='superadmin_componente_delete_confirm'),
+    # Partial/modal del formulario (opcional pk en la ruta)
+    path('superadmin/componentes/form/', views.superadmin_componente_form_partial, name='superadmin_componente_form_partial'),
     # Rutas para Componentes
     path('componentes/', views.componentes_list, name='componentes_list'),
     path('componentes/agregar/', views.componente_create, name='componente_create'),
@@ -64,6 +71,9 @@ urlpatterns = [
     path('gestion-documentos/', views.gestion_documentos, name='gestion_documentos'),
     path('contenido-teorico/', views.contenido_teorico, name='contenido_teorico'),
     path('documentos/<int:documento_id>/descargar/', views.descargar_documento, name='descargar_documento'),
-    path('documentos/<int:documento_id>/preview/', views.preview_documento, name='preview_documento')
+    path('documentos/<int:documento_id>/preview/', views.preview_documento, name='preview_documento'),
+    # Tarjetas de componentes para profesor y estudiante
+    path('profesor/componentes/', views.componentes_profesor_tarjetas, name='componentes_profesor_tarjetas'),
+    path('estudiante/componentes/', views.componentes_estudiante, name='componentes_estudiante'),  # Esta es la URL principal para componentes de estudiante
    
 ]
