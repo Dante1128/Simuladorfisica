@@ -47,7 +47,6 @@ urlpatterns = [
     path('dashboard/administrador/', views.dashboard_administrador, name='dashboard_administrador'),
     path('dashboard/profesor/', views.dashboard_profesor, name='dashboard_profesor'),
     path('dashboard/estudiante/', views.dashboard_estudiante, name='dashboard_estudiante'),
-    
     # APIs para datos en tiempo real
     path('api/estadisticas-tiempo-real/', views.api_estadisticas_tiempo_real, name='api_estadisticas_tiempo_real'),
     # Rutas para Componentes
@@ -56,17 +55,7 @@ urlpatterns = [
     path('componentes/<int:pk>/editar/', views.componente_update, name='componente_update'),
     path('componentes/<int:pk>/eliminar/', views.componente_delete_confirm, name='componente_delete_confirm'),
     # Reportes PDF
-    path('reportes/usuarios/', views.generar_reporte_pdf, {'tipo_reporte': 'usuarios'}, name='reporte_usuarios'),
-    path('reportes/colegios/', views.generar_reporte_pdf, {'tipo_reporte': 'colegios'}, name='reporte_colegios'),
-    path('reportes/suscripciones/', views.generar_reporte_pdf, {'tipo_reporte': 'suscripciones'}, name='reporte_suscripciones'),
-    path('reportes/pagos/', views.generar_reporte_pdf, {'tipo_reporte': 'pagos'}, name='reporte_pagos'),
-    path('reportes/estudiantes/', views.generar_reporte_pdf, {'tipo_reporte': 'estudiantes'}, name='reporte_estudiantes'),
-    path('reportes/profesores/', views.generar_reporte_pdf, {'tipo_reporte': 'profesores'}, name='reporte_profesores'),
-    path('reportes/cursos/', views.generar_reporte_pdf, {'tipo_reporte': 'cursos'}, name='reporte_cursos'),
-    path('reportes/temas/', views.generar_reporte_pdf, {'tipo_reporte': 'temas'}, name='reporte_temas'),
-    path('reportes/temas-disponibles/', views.generar_reporte_pdf, {'tipo_reporte': 'temas_disponibles'}, name='reporte_temas_disponibles'),
-    path('reportes/laboratorios/', views.generar_reporte_pdf, {'tipo_reporte': 'laboratorios'}, name='reporte_laboratorios'),
-    
+    path('reportes/pdf/<str:tipo_reporte>/', views.generar_reporte_pdf, name='generar_reporte_pdf'),
     # URLs para AJAX y búsquedas
     path('gestion-documentos/', views.gestion_documentos, name='gestion_documentos'),
     path('contenido-teorico/', views.contenido_teorico, name='contenido_teorico'),
