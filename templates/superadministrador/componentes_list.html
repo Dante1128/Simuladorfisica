@@ -1,0 +1,760 @@
+{% extends 'superadministrador/base_superadmin.html' %}
+{% load static %}
+
+{% block title %}Gestión de Componentes{% endblock %}
+
+{% block extra_css %}
+<style>
+body {
+    background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+    min-height: 100vh;
+}
+
+.componentes-container {
+    margin: 20px 30px 20px 310px;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(19, 62, 135, 0.12);
+    overflow: hidden;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+.custom-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 1rem 0;
+}
+
+.custom-table th,
+.custom-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.custom-table th {
+    background: #f8fafc;
+    font-weight: 600;
+    color: #1a202c;
+}
+
+.custom-table tr:hover {
+    background-color: #f8fafc;
+}
+
+/* Asegurar que el main-content no tenga estilos que interfieran */
+.main-content {
+    margin-left: 0 !important;
+    padding: 0 !important;
+}
+
+/* Header */
+.page-header {
+    background: linear-gradient(135deg, #133E87 0%, #0A2952 100%);
+    padding: 32px 40px;
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.page-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 400px;
+    height: 400px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 50%;
+}
+
+.page-header h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    position: relative;
+    z-index: 1;
+}
+
+.page-header p {
+    font-size: 0.95rem;
+    opacity: 0.9;
+    position: relative;
+    z-index: 1;
+}
+
+/* Toolbar */
+.toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 40px;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.search-form {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex: 1;
+    max-width: 600px;
+}
+
+.search-form input {
+    flex: 1;
+    padding: 14px 18px;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 15px;
+    transition: all 0.3s;
+    background: #f8fafc;
+}
+
+.search-form input:focus {
+    outline: none;
+    border-color: #133E87;
+    box-shadow: 0 0 0 4px rgba(19, 62, 135, 0.08);
+    background: white;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #133E87 0%, #0A2952 100%);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 14px 24px;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 4px 12px rgba(19, 62, 135, 0.25);
+    text-decoration: none;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(19, 62, 135, 0.35);
+}
+
+.btn-secondary {
+    background: #64748b;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 14px 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 600;
+    font-size: 15px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-secondary:hover {
+    background: #475569;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(100, 116, 139, 0.3);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 18px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 600;
+    font-size: 14px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+/* Messages/Alerts */
+.messages-container {
+    padding: 0 40px;
+    margin-top: 20px;
+}
+
+.alert {
+    padding: 16px 20px;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 15px;
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.alert-success {
+    background: #d1fae5;
+    color: #065f46;
+    border-left: 4px solid #10b981;
+}
+
+.alert-error {
+    background: #fee2e2;
+    color: #991b1b;
+    border-left: 4px solid #ef4444;
+}
+
+/* Modal styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    padding: 24px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    position: relative;
+}
+
+.modal-title {
+    margin: 0 0 16px 0;
+    color: #1e293b;
+}
+
+.modal-text {
+    margin: 0 0 20px 0;
+    color: #475569;
+}
+
+.modal-warning {
+    margin: 0 0 24px 0;
+    color: #dc2626;
+    font-size: 0.9em;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.modal-btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.modal-btn-secondary {
+    background: #e2e8f0;
+    color: #475569;
+}
+
+.modal-btn-secondary:hover {
+    background: #cbd5e1;
+}
+
+.modal-btn-danger {
+    background: #ef4444;
+    color: white;
+}
+
+.modal-btn-danger:hover {
+    background: #dc2626;
+}
+
+.alert-warning {
+    background: #fef3c7;
+    color: #92400e;
+    border-left: 4px solid #f59e0b;
+}
+
+.alert-info {
+    background: #dbeafe;
+    color: #1e40af;
+    border-left: 4px solid #3b82f6;
+}
+
+/* Components Grid */
+.components-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 24px;
+    padding: 24px 40px;
+}
+
+.component-card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    border: 2px solid #e2e8f0;
+    transition: all 0.3s;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.component-card:hover {
+    border-color: #133E87;
+    box-shadow: 0 8px 24px rgba(19, 62, 135, 0.12);
+    transform: translateY(-4px);
+}
+
+.component-header {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.component-image {
+    width: 96px;
+    height: 96px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(19, 62, 135, 0.1);
+}
+
+.component-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.component-image-placeholder {
+    font-size: 48px;
+    opacity: 0.6;
+}
+
+.component-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.component-info h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #133E87;
+    margin: 0 0 8px 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.component-meta {
+    font-size: 13px;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.component-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.component-description {
+    margin-top: 12px;
+    color: #475569;
+    font-size: 14px;
+    line-height: 1.6;
+    display: -webkit-box;
+    
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.component-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.component-tag {
+    margin-left: auto;
+    padding: 6px 12px;
+    background: #dbeafe;
+    color: #1e40af;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Pagination */
+.pagination-container {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 40px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.page-info {
+    padding: 10px 20px;
+    border-radius: 10px;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    font-weight: 600;
+    color: #133E87;
+    font-size: 14px;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 80px 40px;
+}
+
+.empty-state i {
+    font-size: 72px;
+    margin-bottom: 24px;
+    color: #cbd5e1;
+}
+
+.empty-state h3 {
+    margin-bottom: 12px;
+    color: #133E87;
+    font-size: 1.5rem;
+}
+
+.empty-state p {
+    color: #64748b;
+    font-size: 15px;
+    margin-bottom: 24px;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .components-grid {
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .componentes-container {
+        margin: 20px 15px;
+    }
+
+    .page-header,
+    .toolbar,
+    .components-grid,
+    .pagination-container,
+    .messages-container {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+    .toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .search-form {
+        max-width: 100%;
+    }
+
+    .components-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .component-header {
+        flex-direction: column;
+    }
+
+    .component-image {
+        width: 100%;
+        height: 180px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="componentes-container">
+    <!-- Header -->
+    <div class="page-header">
+        <h2><i class="fas fa-puzzle-piece"></i> Gestión de Componentes</h2>
+        <p>Administre los componentes de laboratorios virtuales del sistema</p>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <form method="get" class="search-form">
+            <input 
+                type="text" 
+                name="q" 
+                placeholder="Buscar por nombre, tema o laboratorio..." 
+                value="{{ q|default:'' }}"
+            />
+            <button type="submit" class="btn-secondary">
+                <i class="fas fa-search"></i>
+                Buscar
+            </button>
+        </form>
+        <a href="{% url 'superadmin_componente_form_partial' %}" class="btn-primary">
+            <i class="fas fa-plus"></i>
+            Agregar Componente
+        </a>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="messages-container">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Modal de Confirmación -->
+    <div class="modal-overlay" id="modalConfirmacion" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000;justify-content:center;align-items:center;">
+        <div class="modal-content" style="background:white;padding:24px;border-radius:12px;width:90%;max-width:400px;box-shadow:0 4px 20px rgba(0,0,0,0.15);">
+            <h3 style="margin:0 0 16px 0;color:#1e293b">Confirmar eliminación</h3>
+            <p style="margin:0 0 20px 0;color:#475569">¿Está seguro que desea eliminar el componente <strong id="componenteNombre"></strong>?</p>
+            <p style="margin:0 0 24px 0;color:#dc2626;font-size:0.9em">Esta acción no se puede deshacer.</p>
+            <div style="display:flex;gap:12px;justify-content:flex-end">
+                <button onclick="cerrarModal()" class="btn btn-secondary">Cancelar</button>
+                <form id="formEliminar" method="post" style="margin:0">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Components Table -->
+    {% if componentes %}
+    <div class="table-responsive">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Imagen</th>
+                    <th>Nombre</th>
+                    <th>Tema</th>
+                    <th>Laboratorio</th>
+                    <th>Descripción</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in componentes %}
+                <tr>
+                    <td style="width: 80px">
+                        {% if c.imagen %}
+                            <img src="{{ c.imagen.url }}" alt="{{ c.nombre }}" style="width:60px;height:60px;object-fit:cover;border-radius:8px" />
+                        {% else %}
+                            <span style="font-size:24px">🧩</span>
+                        {% endif %}
+                    </td>
+                    <td><strong>{{ c.nombre }}</strong></td>
+                    <td>{{ c.tema.nombre_archivo }}</td>
+                    <td>{% if c.laboratorio %}{{ c.laboratorio.nombre }}{% else %}-{% endif %}</td>
+                    <td>{% if c.descripcion %}{{ c.descripcion|truncatechars:100 }}{% else %}-{% endif %}</td>
+                    <td>
+                        <div class="btn-group">
+            </div>
+                            <a href="#" data-pk="{{ c.id }}" data-partial-url="{% url 'superadmin_componente_form_partial' %}" class="btn btn-secondary componente-edit-btn">
+                                <i class="fas fa-edit"></i>
+                                Editar
+                            </a>
+                            <button onclick="confirmarEliminacion('{{ c.id }}', '{{ c.nombre|escapejs }}')" class="btn btn-danger">
+                                <i class="fas fa-trash-alt"></i>
+                                Eliminar
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if paginator.num_pages > 1 %}
+    <div class="pagination-container">
+        {% if page_obj.has_previous %}
+            <a href="?q={{ q }}&page={{ page_obj.previous_page_number }}" class="btn-secondary">
+                <i class="fas fa-chevron-left"></i>
+                Anterior
+            </a>
+        {% endif %}
+        
+        <div class="page-info">
+            Página {{ page_obj.number }} de {{ paginator.num_pages }}
+        </div>
+        
+        {% if page_obj.has_next %}
+            <a href="?q={{ q }}&page={{ page_obj.next_page_number }}" class="btn-secondary">
+                Siguiente
+                <i class="fas fa-chevron-right"></i>
+            </a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-puzzle-piece"></i>
+        <h3>No hay componentes registrados</h3>
+        <p>Comienza agregando componentes para los laboratorios virtuales</p>
+        
+    </div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-hide alerts after 5 seconds
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+        setTimeout(() => {
+            alert.style.opacity = '0';
+            alert.style.transform = 'translateY(-10px)';
+            setTimeout(() => alert.remove(), 300);
+        }, 5000);
+    });
+});
+
+function confirmarEliminacion(id, nombre) {
+    // Configurar el modal
+    document.getElementById('componenteNombre').textContent = nombre;
+    document.getElementById('formEliminar').action = `/superadmin/componentes/${id}/eliminar/`;
+    
+    // Mostrar el modal con animación
+    const modal = document.getElementById('modalConfirmacion');
+    modal.style.display = 'flex';
+    modal.style.opacity = '0';
+    setTimeout(() => {
+        modal.style.opacity = '1';
+        modal.style.transition = 'opacity 0.2s ease-in-out';
+    }, 10);
+}
+
+function cerrarModal() {
+    // Ocultar el modal con animación
+    const modal = document.getElementById('modalConfirmacion');
+    modal.style.opacity = '0';
+    setTimeout(() => {
+        modal.style.display = 'none';
+    }, 200);
+}
+
+// Cerrar el modal al hacer clic fuera de él
+document.getElementById('modalConfirmacion').addEventListener('click', function(e) {
+    if (e.target === this) {
+        cerrarModal();
+    }
+});
+
+// Cerrar el modal con la tecla Escape
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        cerrarModal();
+    }
+});
+</script>
+<script>
+// Cargar formulario en modal por fetch
+async function loadComponenteModal(url){
+    try{
+        const res = await fetch(url, {headers: {'X-Requested-With': 'XMLHttpRequest'}});
+        if(!res.ok) throw new Error('Error al cargar formulario');
+        const html = await res.text();
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = html;
+        document.body.appendChild(wrapper);
+
+        // Los scripts dentro del partial no se ejecutan cuando se inserta con innerHTML.
+        // Conectar aquí los botones del modal (Cerrar / Cancelar) para remover el overlay.
+        const overlay = wrapper.querySelector('#componente-modal-overlay');
+        if (overlay) {
+            const removeModal = () => { overlay.remove(); };
+            const closeBtn = overlay.querySelector('#componente-modal-close');
+            const cancelBtn = overlay.querySelector('#componente-modal-cancel');
+            closeBtn && closeBtn.addEventListener('click', removeModal);
+            cancelBtn && cancelBtn.addEventListener('click', removeModal);
+            overlay.addEventListener('click', function(e){ if(e.target === overlay) removeModal(); });
+            // También permitir ESC para cerrar
+            const escHandler = (e) => { if (e.key === 'Escape') { removeModal(); document.removeEventListener('keydown', escHandler); } };
+            document.addEventListener('keydown', escHandler);
+        }
+    }catch(err){
+        console.error(err);
+        alert('No se pudo cargar el formulario. Intente recargar la página.');
+    }
+}
+
+document.addEventListener('click', function(e){
+    // Agregar Componente (el enlace ya apunta al partial)
+    const addBtn = e.target.closest('a[href]');
+    if(addBtn && addBtn.getAttribute('href') === '{% url "superadmin_componente_form_partial" %}'){
+        e.preventDefault();
+        loadComponenteModal(addBtn.getAttribute('href'));
+        return;
+    }
+
+    // Editar Componente (usar data attributes)
+    const editBtn = e.target.closest('.componente-edit-btn');
+    if(editBtn){
+        e.preventDefault();
+        const pk = editBtn.getAttribute('data-pk');
+        const partialUrl = editBtn.getAttribute('data-partial-url');
+        const url = partialUrl + (pk ? ('?pk=' + pk) : '');
+        loadComponenteModal(url);
+        return;
+    }
+});
+</script>
+{% endblock %}

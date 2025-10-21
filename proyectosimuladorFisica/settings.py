@@ -80,7 +80,7 @@ WSGI_APPLICATION = 'proyectosimuladorFisica.wsgi.app'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'simuladordefisica',  
+        'NAME': 'SimulardeFisica',  
         'USER': 'postgres',         
         'PASSWORD': '2811',
         'HOST': 'localhost',        
@@ -88,6 +88,11 @@ DATABASES = {
     }
 }
 
+
+# Configuración para archivos grandes
+DATA_UPLOAD_MAX_MEMORY_SIZE = 524288000  # 500MB en bytes
+FILE_UPLOAD_MAX_MEMORY_SIZE = 524288000  # 500MB en bytes
+MAX_UPLOAD_SIZE = 524288000  # 500MB en bytes
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
