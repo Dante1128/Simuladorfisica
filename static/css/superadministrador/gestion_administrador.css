@@ -732,6 +732,7 @@ input:checked + .slider:before {
         flex-direction: column;
         align-items: stretch;
         padding: 20px;
+        margin-left: 150px;
     }
 
     .search-container {

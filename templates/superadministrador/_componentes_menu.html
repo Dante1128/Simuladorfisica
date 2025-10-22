@@ -1,0 +1,10 @@
+{% comment %} Parcial del menú para Componentes. Recibe 'show' y 'count' desde el tag {% componentes_menu %} {% endcomment %}
+{% if show %}
+<a href="{% url 'superadmin_componentes_list' %}" class="menu-item {% if request.resolver_match.url_name == 'superadmin_componentes_list' or request.resolver_match.url_name == 'superadmin_componente_create' or request.resolver_match.url_name == 'superadmin_componente_update' or request.resolver_match.url_name == 'superadmin_componente_delete_confirm' %}active{% endif %}">
+    <i class="icon-green">🧩</i>
+    <span class="menu-item-text">Componentes</span>
+    {% if count and count > 0 %}
+        <span class="menu-badge">{{ count }}</span>
+    {% endif %}
+</a>
+{% endif %}

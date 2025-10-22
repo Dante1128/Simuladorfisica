@@ -269,17 +269,17 @@
                     <span class="nav-label">Alumnos</span>
                 </a>
                 
-                <span class="nav-item disabled">
-                    <i class="fas fa-flask nav-icon"></i>
-                    <span class="nav-label">Laboratorios</span>
-                </span>
-                <span class="nav-item disabled">
-                    <i class="fas fa-puzzle-piece nav-icon"></i>
-                    <span class="nav-label">Componentes</span>
-                </span>
-               <a href="{% url 'dashboard_superadmin' %}" class="nav-item">
-                    <i class="fas fa-chart-bar nav-icon"></i>
-                    <span class="nav-label">Reportes</span>
+                <a href="{% url 'laboratorios_list' %}" class="nav-item" style="text-decoration: none;">
+                    <i class="fas fa-flask"></i>
+                    <span>Laboratorios</span>
+                </a>
+                <a href="{% url 'superadmin_componentes_list' %}" class="nav-item" style="text-decoration: none;">
+                    <i class="fas fa-puzzle-piece"></i>
+                    <span>Componentes</span>
+                </a>
+               <a href="{% url 'dashboard_superadmin' %}" class="nav-item" style="text-decoration: none;">
+                    <i class="fas fa-book"></i>
+                    <span>Reportes</span>
                 </a>
             </nav>
             

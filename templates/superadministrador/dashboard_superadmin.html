@@ -1,6 +1,6 @@
-{% extends 'superadministrador/base_superadmin.html' %}
+{% extends 'administrador/base_admin.html' %}
 {% load static %}
-{% block title %}Dashboard Superadministrador{% endblock %}
+{% block title %}Dashboard - Informes y Reportes{% endblock %}
 
 {% block content %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -126,6 +126,7 @@
                     <div class="stat-footer">
                         <span class="stat-badge active">Activos</span>
                     </div>
+                    <h3 class="stat-title">TOTAL ESTUDIANTES</h3>
                 </div>
 
                 <div class="stat-card">
@@ -156,6 +157,14 @@
                     <div class="stat-footer">
                         <span class="stat-badge accumulated">Acumulados</span>
                     </div>
+                    <h3 class="stat-title">TOTAL PROFESORES</h3>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number">{{ estadisticas.total_profesores|default:"0" }}</div>
+                    <a href="{% url 'reporte_profesores' %}" class="download-btn">
+                        <i class="fas fa-download"></i>
+                        Descargar PDF
+                    </a>
                 </div>
             </div>
         </div>
@@ -170,6 +179,14 @@
                     <div class="chart-content">
                         <div id="chartTortaRoles" class="chart"></div>
                     </div>
+                    <h3 class="stat-title">TOTAL CURSOS</h3>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number">{{ estadisticas.total_cursos|default:"0" }}</div>
+                    <a href="{% url 'reporte_cursos' %}" class="download-btn">
+                        <i class="fas fa-download"></i>
+                        Descargar PDF
+                    </a>
                 </div>
 
                 <div class="chart-container">
@@ -179,6 +196,7 @@
                     <div class="chart-content">
                         <div id="chartBarrasColegios" class="chart"></div>
                     </div>
+                    <h3 class="stat-title">MEMBRESÍA ACTUAL</h3>
                 </div>
 
                 <div class="chart-container">
@@ -360,19 +378,20 @@
     let datosBarrasMembresias = { membresias: [], suscripciones: [] };
 
     try {
-        const tortaRolesRaw = '{{ datos_torta_roles|escapejs }}';
-        if (tortaRolesRaw && tortaRolesRaw !== 'None' && tortaRolesRaw !== '[]') {
-            datosTortaRoles = JSON.parse(tortaRolesRaw.replace(/&quot;/g, '"'));
+        // Parsear datos de torta
+        const tortaRaw = '{{ datos_torta_cursos|escapejs }}';
+        console.log("Datos torta crudos:", tortaRaw);
+        
+        if (tortaRaw && tortaRaw !== 'None' && tortaRaw !== '[]') {
+            datosTorta = JSON.parse(tortaRaw.replace(/&quot;/g, '"'));
         }
         
-        const barrasColegiosRaw = '{{ datos_barras_colegios|escapejs }}';
-        if (barrasColegiosRaw && barrasColegiosRaw !== 'None' && barrasColegiosRaw !== '{"colegios": [], "estudiantes": []}') {
-            datosBarrasColegios = JSON.parse(barrasColegiosRaw.replace(/&quot;/g, '"'));
-        }
+        // Parsear datos de barras
+        const barrasRaw = '{{ datos_barras_cursos|escapejs }}';
+        console.log("Datos barras crudos:", barrasRaw);
         
-        const barrasMembresiasRaw = '{{ datos_barras_membresias|escapejs }}';
-        if (barrasMembresiasRaw && barrasMembresiasRaw !== 'None' && barrasMembresiasRaw !== '{"membresias": [], "suscripciones": []}') {
-            datosBarrasMembresias = JSON.parse(barrasMembresiasRaw.replace(/&quot;/g, '"'));
+        if (barrasRaw && barrasRaw !== 'None' && barrasRaw !== '{"cursos": [], "estudiantes": []}') {
+            datosBarras = JSON.parse(barrasRaw.replace(/&quot;/g, '"'));
         }
     } catch (error) {
         console.error('Error parsing chart data:', error);
@@ -383,13 +402,9 @@
             { name: 'Administradores', y: 10, color: '#e74c3c' },
             { name: 'Superadministradores', y: 1, color: '#f39c12' }
         ];
-        datosBarrasColegios = {
-            colegios: ['Colegio A', 'Colegio B', 'Colegio C', 'Colegio D'],
-            estudiantes: [45, 32, 28, 22]
-        };
-        datosBarrasMembresias = {
-            membresias: ['Básica', 'Premium', 'Enterprise'],
-            suscripciones: [15, 8, 2]
+        datosBarras = {
+            cursos: ['Curso A', 'Curso B', 'Curso C'],
+            estudiantes: [10, 5, 3]
         };
     }
 
@@ -502,6 +517,7 @@
 </script>
 
 <style>
+    /* Variables de diseño */
     :root {
         --primary-blue: #133E87;
         --secondary-blue: #608BC1;
@@ -692,6 +708,7 @@
         gap: 0.9rem;
     }
 
+    /* Botones */
     .btn {
         padding: 0.7rem 1.3rem;
         border: none;
@@ -971,8 +988,10 @@
         white-space: nowrap;
     }
 
-    .data-table tr:hover {
-        background: rgba(203, 220, 235, 0.3);
+    .charts-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
     }
 
     .table-item {
@@ -1010,14 +1029,17 @@
         color: var(--success-green);
     }
 
-    .status-inactive {
-        background: #fde8e6;
-        color: #e74c3c;
+    .chart-area {
+        flex: 1;
+        min-height: 300px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
-    .status-available {
-        background: #e8f4fd;
-        color: var(--secondary-blue);
+    .chart {
+        width: 100%;
+        height: 100%;
     }
 
     .no-data {
@@ -1198,7 +1220,7 @@
         .filter-grid {
             grid-template-columns: 1fr;
         }
-        
+
         .filter-actions {
             justify-content: center;
         }

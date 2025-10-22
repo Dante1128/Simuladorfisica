@@ -1,0 +1,611 @@
+{% extends 'estudiante/base_estudiante.html' %}
+{% load static %}
+
+{% block title %}Componentes de Laboratorio{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/profesor/base_profesor.css' %}">
+<style>
+    .tarjetas-container {
+        padding: 30px;
+    }
+            /* Contenedor de tarjetas */
+.tarjetas-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 40px 20px;
+}
+
+/* Barra superior con búsqueda y botón agregar */
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 40px;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.busqueda-container {
+    display: flex;
+    gap: 12px;
+    flex: 1;
+    max-width: 600px;
+    min-width: 300px;
+}
+
+.busqueda-bar {
+    flex: 1;
+}
+
+.busqueda-bar input {
+    width: 100%;
+    padding: 12px 20px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    font-size: 15px;
+    color: #64748b;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.busqueda-bar input:focus {
+    border-color: #4a5c7a;
+}
+
+.busqueda-bar input::placeholder {
+    color: #94a3b8;
+}
+
+.btn-buscar {
+    background: #4a5c7a;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 24px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+    transition: background 0.2s;
+}
+
+.btn-buscar:hover {
+    background: #3d4d63;
+}
+
+.btn-agregar {
+    background: #1e3a8a;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 24px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+    transition: background 0.2s;
+}
+
+.btn-agregar:hover {
+    background: #1e40af;
+}
+
+/* Grid de tarjetas - Layout horizontal */
+.tarjetas-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(480px, 1fr));
+    gap: 24px;
+}
+
+/* Tarjeta de componente - diseño horizontal */
+.componente-card {
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    padding: 20px;
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.componente-card:hover {
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    transform: translateY(-2px);
+}
+
+/* Thumbnail izquierda */
+.card-thumbnail {
+    width: 140px;
+    height: 140px;
+    border-radius: 12px;
+    background: #e0f2fe;
+    flex-shrink: 0;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.card-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Contenido derecha */
+.card-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.card-header {
+    margin-bottom: 12px;
+}
+
+.card-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 8px;
+    line-height: 1.3;
+}
+
+/* Metadata con iconos */
+.card-metadata {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 0.875rem;
+    color: #64748b;
+    margin-bottom: 12px;
+}
+
+.card-metadata-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.icon-pdf::before {
+    content: "📄";
+    font-size: 0.9rem;
+}
+
+.icon-user::before {
+    content: "👤";
+    font-size: 0.9rem;
+}
+
+/* Descripción */
+.card-desc {
+    font-size: 0.95rem;
+    color: #475569;
+    line-height: 1.6;
+    margin-bottom: 16px;
+    flex: 1;
+}
+
+/* Botones de acción */
+.card-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.btn-action {
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+}
+
+.btn-editar {
+    background: #64748b;
+    color: #fff;
+}
+
+.btn-editar:hover {
+    background: #475569;
+}
+
+.btn-eliminar {
+    background: #ef4444;
+    color: #fff;
+}
+
+.btn-eliminar:hover {
+    background: #dc2626;
+}
+
+.btn-componente {
+    background: #e0f2fe;
+    color: #0369a1;
+    font-weight: 700;
+}
+
+.btn-componente:hover {
+    background: #bae6fd;
+}
+
+/* Modal */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.modal-overlay.active {
+    display: flex !important;
+}
+
+.modal-card {
+    background: #fff;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 900px;
+    max-height: 90vh;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    display: flex;
+    flex-direction: row;
+    position: relative;
+}
+
+.modal-3d {
+    flex: 1;
+    min-width: 350px;
+    background: #f8fafc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+}
+
+.modal-details {
+    flex: 1;
+    padding: 32px;
+    overflow-y: auto;
+}
+
+.modal-details h2 {
+    color: #1e293b;
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.modal-details img {
+    width: 100%;
+    max-width: 300px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+.modal-details p {
+    margin-bottom: 16px;
+    line-height: 1.6;
+}
+
+.modal-details strong {
+    color: #1e293b;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.modal-details a {
+    color: #0369a1;
+    text-decoration: none;
+}
+
+.modal-details a:hover {
+    text-decoration: underline;
+}
+
+.close-modal {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: #fff;
+    border: none;
+    font-size: 28px;
+    color: #64748b;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    z-index: 10;
+}
+
+.close-modal:hover {
+    background: #f1f5f9;
+    color: #1e293b;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .tarjetas-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .top-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .busqueda-container {
+        max-width: 100%;
+    }
+
+    .componente-card {
+        flex-direction: column;
+    }
+
+    .card-thumbnail {
+        width: 100%;
+        height: 200px;
+    }
+
+    .modal-card {
+        flex-direction: column;
+    }
+
+    .modal-3d {
+        min-width: auto;
+        min-height: 300px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="tarjetas-container">
+    <!-- Barra superior -->
+    <div class="top-bar">
+        <div class="busqueda-container">
+            <div class="busqueda-bar">
+                <input type="text" id="busquedaInput" placeholder="Buscar por nombre, tema o laboratorio...">
+            </div>
+            <button class="btn-buscar" onclick="realizarBusqueda()">
+                🔍 Buscar
+            </button>
+        </div>
+        
+    </div>
+
+    <!-- Grid de tarjetas -->
+    <div class="tarjetas-grid" id="tarjetasGrid">
+        {% for c in componentes %}
+        <div class="componente-card" data-nombre="{{ c.nombre|lower }}" data-tema="{{ c.tema.nombre|default:''|lower }}" data-lab="{{ c.laboratorio.nombre|default:''|lower }}">
+            <!-- Thumbnail izquierda -->
+            <div class="card-thumbnail">
+                {% if c.imagen %}
+                    <img src="{{ c.imagen.url }}" alt="{{ c.nombre }}">
+                {% else %}
+                    <div style="color: #94a3b8;">Sin imagen</div>
+                {% endif %}
+            </div>
+
+            <!-- Contenido derecha -->
+            <div class="card-content">
+                <div class="card-header">
+                    <div class="card-title">{{ c.nombre }}</div>
+                    <div class="card-metadata">
+                        <div class="card-metadata-item">
+                            <span class="icon-pdf"></span>
+                            <span>Introduccion_Fisica.pdf</span>
+                        </div>
+                        <div class="card-metadata-item">
+                            <span class="icon-user"></span>
+                            <span>{{ c.tema.nombre_archivo|default:"Sin tema" }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-desc">
+                    {{ c.descripcion|truncatechars:180 }}
+                </div>
+
+                <div class="card-actions">
+                    
+                    
+                    <button class="btn-action btn-componente" onclick="verMasComponente('{{ c.id }}')">
+                        👁️ COMPONENTE
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; color: #94a3b8;">
+            <p style="font-size: 1.2rem; margin-bottom: 10px;">No hay componentes disponibles</p>
+            <p>Agrega tu primer componente usando el botón "Agregar Componente"</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Modal -->
+<div id="componenteModal" class="modal-overlay" onclick="cerrarModalClick(event)">
+    <div class="modal-card">
+        <button class="close-modal" onclick="cerrarModal()">&times;</button>
+        <div class="modal-3d" id="modal3d">
+            <!-- Modelo 3D con A-Frame -->
+        </div>
+        <div class="modal-details" id="modalDetails">
+            <!-- Detalles del componente -->
+        </div>
+    </div>
+</div>
+
+<script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+<script>
+// Datos de componentes
+const componentes = {{ componentes_json|safe }};
+
+// Ver detalles del componente en modal
+function verMasComponente(id) {
+    const comp = componentes.find(c => c.id == id);
+    if (!comp) return;
+
+    // Renderizar modelo 3D
+    let modeloHtml = '';
+    if (comp.modelo3D_url) {
+        modeloHtml = `
+            <a-scene embedded style='width:100%;height:100%;background:#fff;'>
+                <a-assets>
+                    <a-asset-item id='modelo3d' src='${comp.modelo3D_url}'></a-asset-item>
+                </a-assets>
+                <a-entity gltf-model="#modelo3d" position="0 1.2 -2" rotation="0 45 0" scale="1 1 1" animation-mixer></a-entity>
+                <a-sky color="#f8fafc"></a-sky>
+                <a-orbit-controls></a-orbit-controls>
+            </a-scene>
+        `;
+    } else {
+        modeloHtml = '<div style="text-align:center;color:#94a3b8;padding:40px;">No hay modelo 3D disponible</div>';
+    }
+    document.getElementById('modal3d').innerHTML = modeloHtml;
+
+    // Renderizar detalles
+    let detallesHtml = `
+        <h2>${comp.nombre}</h2>
+        <img src='${comp.imagen_url}' alt='${comp.nombre}'>
+        <p><strong>Descripción:</strong><br>${comp.descripcion || 'Sin descripción'}</p>
+        <p><strong>Especificaciones:</strong><br>${comp.especificaciones || 'Sin especificaciones'}</p>
+        <p><strong>Video Explicación:</strong><br>
+            ${comp.video_explicacion ? 
+                `<a href='${comp.video_explicacion}' target='_blank'>Ver video</a>` : 
+                '<span style="color:#94a3b8;">No disponible</span>'}
+        </p>
+        <p><strong>Tema:</strong><br>${comp.tema_nombre || 'Sin tema'}</p>
+        <p><strong>Laboratorio:</strong><br>${comp.laboratorio_nombre || 'Sin laboratorio'}</p>
+    `;
+
+    document.getElementById('modalDetails').innerHTML = detallesHtml;
+    document.getElementById('componenteModal').classList.add('active');
+}
+
+// Cerrar modal
+function cerrarModal() {
+    document.getElementById('componenteModal').classList.remove('active');
+    document.getElementById('modal3d').innerHTML = '';
+    document.getElementById('modalDetails').innerHTML = '';
+}
+
+// Cerrar modal al hacer clic fuera
+function cerrarModalClick(event) {
+    if (event.target.id === 'componenteModal') {
+        cerrarModal();
+    }
+}
+
+// Editar componente
+function editarComponente(id) {
+    window.location.href = `/profesor/componentes/${id}/editar/`;
+}
+
+// Confirmar eliminación
+function confirmarEliminar(id, nombre) {
+    if (confirm(`¿Está seguro de que desea eliminar el componente "${nombre}"?`)) {
+        eliminarComponente(id);
+    }
+}
+
+// Eliminar componente
+function eliminarComponente(id) {
+    window.location.href = `/profesor/componentes/${id}/eliminar/`;
+}
+
+// Agregar componente
+function agregarComponente() {
+    window.location.href = '/profesor/componentes/nuevo/';
+}
+
+// Búsqueda
+function realizarBusqueda() {
+    const term = document.getElementById('busquedaInput').value.toLowerCase();
+    filtrarComponentes(term);
+}
+
+// Filtrar componentes en tiempo real
+document.getElementById('busquedaInput').addEventListener('input', function() {
+    const term = this.value.toLowerCase();
+    filtrarComponentes(term);
+});
+
+function filtrarComponentes(term) {
+    const cards = document.querySelectorAll('.componente-card');
+    let visibleCount = 0;
+
+    cards.forEach(card => {
+        const nombre = card.dataset.nombre || '';
+        const tema = card.dataset.tema || '';
+        const lab = card.dataset.lab || '';
+        
+        const match = nombre.includes(term) || tema.includes(term) || lab.includes(term);
+        
+        if (match) {
+            card.style.display = '';
+            visibleCount++;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+
+    // Mostrar mensaje si no hay resultados
+    let noResultsMsg = document.getElementById('noResultsMessage');
+    if (visibleCount === 0 && term !== '') {
+        if (!noResultsMsg) {
+            noResultsMsg = document.createElement('div');
+            noResultsMsg.id = 'noResultsMessage';
+            noResultsMsg.style.cssText = 'grid-column: 1/-1; text-align: center; padding: 40px; color: #94a3b8;';
+            noResultsMsg.innerHTML = `<p style="font-size: 1.1rem;">No se encontraron resultados para "${term}"</p>`;
+            document.getElementById('tarjetasGrid').appendChild(noResultsMsg);
+        }
+    } else if (noResultsMsg) {
+        noResultsMsg.remove();
+    }
+}
+
+// Cerrar modal con tecla Escape
+window.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        cerrarModal();
+    }
+});
+
+// Búsqueda con Enter
+document.getElementById('busquedaInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        realizarBusqueda();
+    }
+});
+</script>
+{% endblock %}

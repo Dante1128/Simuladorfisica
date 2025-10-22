@@ -1,0 +1,365 @@
+/* Estilos generales */
+.container {
+    padding: 20px;
+}
+
+.admin-card {
+    background: #fff;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    min-height: calc(100vh - 80px);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header y título */
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.section-header h2 {
+    font-size: 24px;
+    color: #002A52;
+    margin: 0;
+    font-weight: 600;
+}
+
+/* Botones */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-primary {
+    background: #0046A3;
+    color: white !important;
+    border: none;
+}
+
+.btn-primary:hover {
+    background: #003982;
+}
+
+.btn-primary i {
+    font-size: 14px;
+    color: white !important;
+}
+
+.btn i {
+    font-size: 14px;
+    margin-right: 4px;
+}
+
+.btn-edit:hover {
+    color: #0046A3;
+    background: #EBF5FF;
+}
+
+.btn-delete:hover {
+    color: #DC2626;
+    background: #FEE2E2;
+}
+
+/* Tabla de datos */
+.table-container {
+    margin-top: 20px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 0;
+}
+
+.data-table th {
+    background: #002A52;
+    color: white !important;
+    text-align: left;
+    padding: 12px 16px;
+    font-weight: 500;
+    border: none;
+}
+
+.data-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #e5e7eb;
+    color: #374151;
+    background: transparent;
+}
+
+.data-table tr:hover {
+    background: #f9fafb;
+}
+
+.table-container {
+    margin: 0;
+    padding: 0 20px;
+    overflow-x: auto;
+}
+
+/* Status badge */
+.status-badge {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    background: #e2e8f0;
+    color: #4a5568;
+}
+
+/* Columna de acciones */
+.actions-column {
+    width: 120px;
+    text-align: right !important;
+}
+
+.actions-cell {
+    text-align: right;
+    white-space: nowrap;
+}
+
+/* Botones de acción */
+.btn-icon {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: #64748b;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.btn-icon:hover {
+    background: #f1f5f9;
+    color: #334155;
+}
+
+.btn-edit:hover {
+    color: #3b82f6;
+}
+
+.btn-delete:hover {
+    color: #ef4444;
+}
+
+/* Modal */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.modal-overlay.active {
+    display: flex !important;
+    opacity: 1;
+}
+
+.modal-dialog {
+    background: white;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 400px;
+    transform: translateY(20px);
+    opacity: 0;
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.modal-overlay.active .modal-dialog {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.modal-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.close-button {
+    background: transparent;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.close-button:hover {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.modal-body {
+    padding: 24px;
+}
+
+/* Loading Spinner */
+.loading-spinner {
+    text-align: center;
+    padding: 24px;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    margin: 0 auto 16px;
+    border: 3px solid #f3f4f6;
+    border-top-color: #4361ee;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Error Message */
+.error-message {
+    text-align: center;
+    padding: 24px;
+    color: #dc2626;
+}
+
+.error-message i {
+    font-size: 2rem;
+    margin-bottom: 12px;
+}
+
+/* Delete Confirmation */
+.delete-confirmation {
+    text-align: center;
+    padding: 24px;
+}
+
+.delete-confirmation i {
+    font-size: 3rem;
+    color: #ef4444;
+    margin-bottom: 16px;
+}
+
+.delete-confirmation .warning-text {
+    color: #6b7280;
+    font-size: 0.875rem;
+    margin-top: 8px;
+}
+
+.form-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 24px;
+}
+
+/* Formulario */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #374151;
+}
+
+.form-control {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: border-color 0.2s ease;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #4361ee;
+    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+}
+
+/* Mensaje cuando no hay datos */
+.no-data-message {
+    text-align: center;
+    padding: 48px 24px;
+    color: #64748b;
+}
+
+.no-data-message i {
+    font-size: 3rem;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.no-data-message p {
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+    .section-header {
+        flex-direction: column;
+        gap: 16px;
+        align-items: stretch;
+    }
+
+    .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .actions-column {
+        width: auto;
+    }
+
+    .data-table th:not(:first-child):not(.actions-column),
+    .data-table td:not(:first-child):not(.actions-cell) {
+        display: none;
+    }
+
+    .modal-dialog {
+        margin: 16px;
+        width: auto;
+    }
+}
