@@ -1,32 +1,32 @@
-{% extends 'superadministrador/base_superadmin.html' %}
+{% extends 'administrador/base_admin.html' %}
 {% load static %}
-{% block title %}Gestión de Estudiantes - Sistema de Laboratorios{% endblock %}
+{% block title %}Gestion de profesor para  administrador{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="stylesheet" href="{% static 'css/superadministrador/gestion_estudiante.css' %}">
+<link rel="stylesheet" href="{% static 'css/administrador/gestion_adminprofesor.css' %}">
 {% endblock %}
 
 {% block content %}
-<div class="estudiantes-container">
+<div class="profesores-container">
     <!-- Header profesional -->
     <div class="page-header">
-        <h2><i class="fas fa-user-graduate"></i> Gestión de Estudiantes</h2>
-        <p>Administre y organice los estudiantes del sistema</p>
+        <h2><i class="fas fa-chalkboard-teacher"></i> Gestión de Profesores</h2>
+        <p>Administre y organice los profesores del sistema</p>
     </div>
 
     <!-- Toolbar -->
     <div class="toolbar">
         <div class="search-container">
             <i class="fas fa-search search-icon"></i>
-            <input type="text" id="searchInput" placeholder="Buscar estudiante...">
+            <input type="text" id="searchInput" placeholder="Buscar profesor...">
             <button class="clear-search" id="clearSearch">
                 <i class="fas fa-times"></i>
             </button>
         </div>
         <div class="actions-container">
-            <button class="btn-primary" id="newStudentBtn">
-                <i class="fas fa-plus"></i> Nuevo Estudiante
+            <button class="btn-primary" id="newProfessorBtn">
+                <i class="fas fa-plus"></i> Nuevo Profesor
             </button>
         </div>
     </div>
@@ -34,10 +34,10 @@
     <!-- Tabla profesional -->
     <div class="table-wrapper">
         <div class="table-container">
-            <table class="estudiantes-table">
+            <table class="profesores-table">
                 <thead>
                     <tr>
-                        <th>Estudiante</th>
+                        <th>Profesor</th>
                         <th>Curso</th>
                         <th>Colegio</th>
                         <th>Correo</th>
@@ -46,16 +46,16 @@
                     </tr>
                 </thead>
                 <tbody id="tableBody">
-                    {% for estudiante in estudiantes %}
+                    {% for profesor in profesores %}
                     <tr>
                         <td>
-                            <div class="student-info">
-                                <div class="student-icon">
-                                    <i class="fas fa-user-graduate"></i>
+                            <div class="profesor-info">
+                                <div class="profesor-icon">
+                                    <i class="fas fa-chalkboard-teacher"></i>
                                 </div>
-                                <div class="student-details">
-                                    <div class="student-name">
-                                        {% with persona=estudiante.persona %}
+                                <div class="profesor-details">
+                                    <div class="profesor-name">
+                                        {% with persona=profesor.usuario.personas.first %}
                                             {% if persona %}
                                                 {{ persona.nombre }} {{ persona.apellidoPaterno }} {{ persona.apellidoMaterno }}
                                             {% else %}
@@ -63,47 +63,47 @@
                                             {% endif %}
                                         {% endwith %}
                                     </div>
-                                    <div class="student-id">ID: {{ estudiante.id }}</div>
+                                    <div class="profesor-id">ID: {{ profesor.id }}</div>
                                 </div>
                             </div>
                         </td>
-                        <td>{{ estudiante.curso }}</td>
+                        <td>{{ profesor.curso }}</td>
                         <td>
                             <div class="school-cell">
                                 <i class="fas fa-school"></i>
-                                {{ estudiante.colegio.nombre }}
+                                {{ profesor.colegio.nombre }}
                             </div>
                         </td>
                         <td>
                             <div class="email-cell">
                                 <i class="fas fa-envelope"></i>
-                                {{ estudiante.persona.usuario.correo }}
+                                {{ profesor.usuario.correo }}
                             </div>
                         </td>
-                      <td>
-    <form method="POST" class="estado-form" id="form-estado-{{ estudiante.id }}">
-        {% csrf_token %}
-        <input type="hidden" name="cambiar_estado" value="1">
-        <input type="hidden" name="estudiante_id" value="{{ estudiante.id }}">
-        <label class="switch">
-            <input type="checkbox" class="toggle-estado" 
-                   name="nuevo_estado"
-                   value="{% if estudiante.estado == 'Activo' %}Inactivo{% else %}Activo{% endif %}"
-                   {% if estudiante.estado == 'Activo' %}checked{% endif %}>
-            <span class="slider round"></span>
-        </label>
-    </form>
-</td>
+                        <td>
+                            <form method="POST" class="estado-form" id="form-estado-{{ profesor.id }}">
+                                {% csrf_token %}
+                                <input type="hidden" name="cambiar_estado" value="1">
+                                <input type="hidden" name="profesor_id" value="{{ profesor.id }}">
+                                <label class="switch">
+                                    <input type="checkbox" class="toggle-estado" 
+                                           name="nuevo_estado"
+                                           value="{% if profesor.estado == 'Activo' %}Inactivo{% else %}Activo{% endif %}"
+                                           {% if profesor.estado == 'Activo' %}checked{% endif %}>
+                                    <span class="slider round"></span>
+                                </label>
+                            </form>
+                        </td>
                         <td>
                             <div class="acciones">
                                 <button class="btn-icon btn-edit" title="Editar" onclick="openEditModal(
-                                    '{{ estudiante.id }}', 
-                                    '{{ estudiante.persona.usuario.correo|escapejs }}', 
-                                    '{{ estudiante.colegio.id }}', 
-                                    '{{ estudiante.curso|escapejs }}',
-                                    '{{ estudiante.persona.nombre|escapejs }}',
-                                    '{{ estudiante.persona.apellidoPaterno|escapejs }}',
-                                    '{{ estudiante.persona.apellidoMaterno|escapejs }}'
+                                    '{{ profesor.id }}', 
+                                    '{{ profesor.usuario.correo|escapejs }}', 
+                                    '{{ profesor.colegio.id }}', 
+                                    '{{ profesor.curso|escapejs }}',
+                                    '{% with persona=profesor.usuario.personas.first %}{% if persona %}{{ persona.nombre|escapejs }}{% endif %}{% endwith %}',
+                                    '{% with persona=profesor.usuario.personas.first %}{% if persona %}{{ persona.apellidoPaterno|escapejs }}{% endif %}{% endwith %}',
+                                    '{% with persona=profesor.usuario.personas.first %}{% if persona %}{{ persona.apellidoMaterno|escapejs }}{% endif %}{% endwith %}'
                                 )">
                                     <i class="fas fa-edit"></i>
                                 </button>
@@ -114,9 +114,9 @@
                     <tr>
                         <td colspan="6">
                             <div class="empty-state">
-                                <i class="fas fa-user-graduate"></i>
-                                <h3>No hay estudiantes registrados</h3>
-                                <p>Haga clic en "Nuevo Estudiante" para agregar uno</p>
+                                <i class="fas fa-users"></i>
+                                <h3>No hay profesores registrados</h3>
+                                <p>Haga clic en "Nuevo Profesor" para agregar uno</p>
                             </div>
                         </td>
                     </tr>
@@ -127,14 +127,14 @@
     </div>
 </div>
 
-<!-- Modal Crear Estudiante - CON 2 COLUMNAS -->
-<div class="modal-overlay" id="studentModal" style="display: none;">
+<!-- Modal Crear Profesor - CON 2 COLUMNAS -->
+<div class="modal-overlay" id="professorModal" style="display: none;">
     <div class="modal-content">
         <div class="modal-header">
-            <h3><i class="fas fa-user-plus"></i> Nuevo Estudiante</h3>
+            <h3><i class="fas fa-user-plus"></i> Nuevo Profesor</h3>
             <button class="close-modal" id="closeModal" type="button">&times;</button>
         </div>
-        <form id="studentForm" method="post" action="">
+        <form id="professorForm" method="post" action="">
             {% csrf_token %}
             <input type="hidden" name="crear" value="1">
             <div class="modal-body">
@@ -208,21 +208,21 @@
             <div class="modal-footer">
                 <button type="button" class="btn-secondary" id="cancelBtn">Cancelar</button>
                 <button type="submit" class="btn-primary" id="saveBtn">
-                    <i class="fas fa-save"></i> Crear Estudiante
+                    <i class="fas fa-save"></i> Crear Profesor
                 </button>
             </div>
         </form>
     </div>
 </div>
 
-<!-- Modal Editar Estudiante - COMPLETO CON NOMBRE Y APELLIDOS -->
+<!-- Modal Editar Profesor - COMPLETO CON NOMBRE Y APELLIDOS -->
 <div class="modal-overlay" id="editModal" style="display: none;">
     <div class="modal-content">
         <div class="modal-header">
-            <h3><i class="fas fa-edit"></i> Editar Estudiante</h3>
+            <h3><i class="fas fa-edit"></i> Editar Profesor</h3>
             <button class="close-modal" id="closeEditModal" type="button">&times;</button>
         </div>
-        <form id="editStudentForm" method="post" action="">
+        <form id="editProfessorForm" method="post" action="">
             {% csrf_token %}
             <input type="hidden" name="editar" value="1">
             <input type="hidden" id="edit_id" name="editar_id">
@@ -323,15 +323,15 @@
         const urlParams = new URLSearchParams(window.location.search);
         
         if (urlParams.get('creado') === 'true') {
-            showAlert('Estudiante creado exitosamente', 'success');
+            showAlert('Profesor creado exitosamente', 'success');
         }
         
         if (urlParams.get('editado') === 'true') {
-            showAlert('Estudiante actualizado exitosamente', 'success');
+            showAlert('Profesor actualizado exitosamente', 'success');
         }
         
         if (urlParams.get('eliminado') === 'true') {
-            showAlert('Estudiante eliminado exitosamente', 'success');
+            showAlert('Profesor eliminado exitosamente', 'success');
         }
         
         if (urlParams.get('error') === 'true') {
@@ -340,9 +340,9 @@
     });
 
     // Modales
-    const modal = document.getElementById('studentModal');
+    const modal = document.getElementById('professorModal');
     const editModal = document.getElementById('editModal');
-    const newStudentBtn = document.getElementById('newStudentBtn');
+    const newProfessorBtn = document.getElementById('newProfessorBtn');
     const closeModalBtn = document.getElementById('closeModal');
     const closeEditModalBtn = document.getElementById('closeEditModal');
     const cancelBtn = document.getElementById('cancelBtn');
@@ -353,19 +353,19 @@
     const customAlert = document.getElementById('customAlert');
     const alertClose = document.getElementById('alertClose');
 
-    // Función para abrir modal de crear estudiante
+    // Función para abrir modal de crear profesor
     function openModal() {
         modal.style.display = 'flex';
         document.getElementById('create_correo').focus();
     }
 
-    // Función para cerrar modal de crear estudiante
+    // Función para cerrar modal de crear profesor
     function closeModal() {
         modal.style.display = 'none';
-        document.getElementById('studentForm').reset();
+        document.getElementById('professorForm').reset();
     }
 
-    // Función para abrir modal de editar estudiante
+    // Función para abrir modal de editar profesor
     function openEditModal(id, correo, colegioId, curso, nombre, apellidoPaterno, apellidoMaterno) {
         document.getElementById('edit_id').value = id;
         document.getElementById('edit_correo').value = correo;
@@ -381,10 +381,10 @@
         editModal.style.display = 'flex';
     }
 
-    // Función para cerrar modal de editar estudiante
+    // Función para cerrar modal de editar profesor
     function closeEditModal() {
         editModal.style.display = 'none';
-        document.getElementById('editStudentForm').reset();
+        document.getElementById('editProfessorForm').reset();
     }
 
     // Función para mostrar alertas
@@ -439,7 +439,7 @@
     });
 
     // Event listeners para modales
-    newStudentBtn.addEventListener('click', openModal);
+    newProfessorBtn.addEventListener('click', openModal);
     closeModalBtn.addEventListener('click', closeModal);
     closeEditModalBtn.addEventListener('click', closeEditModal);
     cancelBtn.addEventListener('click', closeModal);
@@ -515,7 +515,7 @@
     document.querySelectorAll('.toggle-estado').forEach(sw => {
         sw.addEventListener('change', function(){
             const form = this.closest('.estado-form');
-            const estudianteId = form.querySelector('input[name="estudiante_id"]').value;
+            const profesorId = form.querySelector('input[name="profesor_id"]').value;
             
             // Crear FormData para enviar el formulario
             const formData = new FormData(form);
@@ -529,7 +529,7 @@
             })
             .then(response => {
                 if (response.ok) {
-                    showAlert('Estado del estudiante actualizado correctamente', 'success');
+                    showAlert('Estado del profesor actualizado correctamente', 'success');
                 } else {
                     showAlert('Error al cambiar el estado', 'error');
                     // Revertir el cambio visual si falla

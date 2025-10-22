@@ -19,6 +19,7 @@ body {
     background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
     min-height: 100vh;
     padding: 0px;
+    background: #F3F3E0;
 }
 
 .estudiantes-container {
