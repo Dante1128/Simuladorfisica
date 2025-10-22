@@ -46,22 +46,26 @@
 ## Copiar lo siguente 
 ```
 from usuarios.models import Rol, Usuario
-from django.contrib.auth.hashers import make_password
 
-# Verificar si el rol ya existe para no duplicarlo
+# Crear rol SuperAdmin si no existe
 rol_admin, created = Rol.objects.get_or_create(tipo="SuperAdmin")
 
-# Crear el usuario solo si no existe
-if not Usuario.objects.filter(correo="d@gmail.com").exists():
-    usuario = Usuario.objects.create(
-        rol=rol_admin,
-        correo="d@gmail.com",
-        contrasenia=make_password("1234"),
-        estado="Activo"
-    )
+# Crear usuario SuperAdmin solo si no existe
+usuario, created_user = Usuario.objects.get_or_create(
+    correo="d@gmail.com",
+    defaults={
+        'rol': rol_admin,
+        'estado': "Activo",
+    }
+)
+
+if created_user:
+    usuario.set_password("1234")  # encripta correctamente la contraseña
+    usuario.save()
     print("✅ Usuario SuperAdmin creado correctamente.")
 else:
     print("⚠️ El usuario ya existe.")
+
 
    
 ```
@@ -78,5 +82,6 @@ proyectosimuladorFisica/
 ├── requirements.txt
 └── README.md
 ```
+
 
 
