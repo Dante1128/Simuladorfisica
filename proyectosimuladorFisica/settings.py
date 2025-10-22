@@ -82,7 +82,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'Simuladordefisica',  
         'USER': 'postgres',         
-        'PASSWORD': 'miclave123',
+        'PASSWORD': 'contra',
         'HOST': 'localhost',        
         'PORT': '5432',              
     }

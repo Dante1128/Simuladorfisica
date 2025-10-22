@@ -180,7 +180,7 @@ body {
 
 /* ====== ENCABEZADO ====== */
 .header {
-  background: linear-gradient(135deg, #1a5276 0%, #2e86c1 100%);
+  background: linear-gradient(135deg, #133E87 0%, #0A2952 100%);
   color: white;
   padding: 25px;
   border-radius: 12px;
@@ -223,7 +223,7 @@ body {
 }
 
 .search-button {
-  background: linear-gradient(135deg, #2e86c1 0%, #1a5276 100%);
+  background: linear-gradient(135deg, #133E87 0%, #0A2952 100%);
   color: white;
   border: none;
   padding: 15px 25px;
