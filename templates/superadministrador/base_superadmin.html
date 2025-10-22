@@ -8,13 +8,235 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/superadministrador/base_superadmin.css' %}">
     {% block extra_css %}{% endblock %}
+    <style>
+        /* MODAL DE CONFIRMACIÓN DE LOGOUT */
+        .logout-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 3000;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .logout-modal-content {
+            background: #fff;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 450px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            animation: slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .logout-modal-header {
+            background: linear-gradient(135deg, #133E87 0%, #0A2952 100%);
+            color: white;
+            padding: 28px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logout-modal-header h3 {
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .logout-close-modal {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            font-size: 22px;
+            cursor: pointer;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .logout-close-modal:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: rotate(90deg);
+        }
+
+        .logout-modal-body {
+            padding: 32px;
+            text-align: center;
+        }
+
+        .logout-warning-icon {
+            font-size: 64px;
+            color: #ffc107;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+
+        .logout-modal-body h4 {
+            color: #133E87;
+            font-size: 1.3rem;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .logout-modal-body p {
+            color: #64748b;
+            font-size: 15px;
+            line-height: 1.5;
+            margin-bottom: 8px;
+        }
+
+        .logout-modal-footer {
+            padding: 24px 32px;
+            background: #f8fafc;
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .logout-btn-cancel {
+            background: #64748b;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 14px 28px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+            font-size: 15px;
+            min-width: 120px;
+        }
+
+        .logout-btn-cancel:hover {
+            background: #475569;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(100, 116, 139, 0.3);
+        }
+
+        .logout-btn-confirm {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 14px 28px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+            font-size: 15px;
+            min-width: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .logout-btn-confirm:hover {
+            background: linear-gradient(135deg, #c82333 0%, #a71e2a 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { 
+                opacity: 0;
+                transform: translateY(40px) scale(0.95);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+        }
+
+        /* Sistema de notificaciones */
+        .custom-alert {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            min-width: 320px;
+            max-width: 450px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            z-index: 1100;
+            transform: translateX(150%);
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            overflow: hidden;
+        }
+
+        .custom-alert.show {
+            transform: translateX(0);
+        }
+
+        .alert-header {
+            display: flex;
+            align-items: center;
+            padding: 18px 24px;
+            color: white;
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        .alert-body {
+            padding: 18px 24px;
+            background: white;
+            color: #334155;
+            font-size: 14px;
+        }
+
+        .alert-icon {
+            margin-right: 12px;
+            font-size: 1.3rem;
+        }
+
+        .alert-close {
+            margin-left: auto;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            cursor: pointer;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .alert-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+    </style>
 </head>
 <body>
     <!-- Sidebar/Navbar -->
     <div class="sidebar">
         <div class="sidebar-header">
-            <div class="user-avatar">SU</div>
-            <div>
+            <div class="user-avatar"></div>
+            <div class="user-info">
                 <h2>SuperUsuario <span class="superuser-badge">Admin</span></h2>
                 <p>Panel de Control</p>
             </div>
@@ -22,25 +244,29 @@
         
         <div class="nav-container">
             <nav>
-                <a href="{% url 'panel_superadmin' %}" class="nav-item" style="text-decoration: none;">
-                    <i class="fas fa-home"></i>
-                    <span>Inicio</span>
+                <a href="{% url 'panel_superadmin' %}" class="nav-item">
+                    <i class="fas fa-home nav-icon"></i>
+                    <span class="nav-label">Inicio</span>
                 </a>
-                <a href="{% url 'gestion_colegios' %}" class="nav-item" style="text-decoration: none;">
-                    <i class="fas fa-school"></i>
-                    <span>Colegios</span>
+                <a href="{% url 'perfil_superadmin' %}" class="nav-item">
+                    <i class="fas fa-user-circle nav-icon"></i>
+                    <span class="nav-label">Perfil</span>
                 </a>
-                <a href="{% url 'gestion_administradores' %}" class="nav-item" style="text-decoration: none;">
-                    <i class="fas fa-book"></i>
-                    <span>Administrador Acadamico</span>
+                <a href="{% url 'gestion_colegios' %}" class="nav-item">
+                    <i class="fas fa-school nav-icon"></i>
+                    <span class="nav-label">Colegios</span>
                 </a>
-                <a href="{% url 'gestion_profesor' %}" class="nav-item" style="text-decoration: none;">
-                    <i class="fas fa-book"></i>
-                    <span>Profesores</span>
+                <a href="{% url 'gestion_administradores' %}" class="nav-item">
+                    <i class="fas fa-user-tie nav-icon"></i>
+                    <span class="nav-label">Administrador Académico</span>
+                </a>
+                <a href="{% url 'gestion_profesor' %}" class="nav-item">
+                    <i class="fas fa-chalkboard-teacher nav-icon"></i>
+                    <span class="nav-label">Profesores</span>
                 </a>
                 <a href="{% url 'gestion_estudiante' %}" class="nav-item">
-                    <i class="fas fa-book"></i>
-                    <span>Alumnos</span>
+                    <i class="fas fa-user-graduate nav-icon"></i>
+                    <span class="nav-label">Alumnos</span>
                 </a>
                 
                 <a href="{% url 'laboratorios_list' %}" class="nav-item" style="text-decoration: none;">
@@ -57,7 +283,7 @@
                 </a>
             </nav>
             
-            <button class="btn btn-logout" onclick="logout()">
+            <button class="btn-logout" onclick="openLogoutModal()">
                 <i class="fas fa-sign-out-alt"></i>
                 <span>Cerrar Sesión</span>
             </button>
@@ -69,8 +295,177 @@
         {% block content %} 
         {% endblock %}
     </main>
-    
-    <script src="{% static 'js/superadministrador/superadmin.js' %}"></script>
 
+    <!-- Modal de Confirmación de Logout -->
+    <div class="logout-modal-overlay" id="logoutModal">
+        <div class="logout-modal-content">
+            <div class="logout-modal-header">
+                <h3><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</h3>
+                <button class="logout-close-modal" id="closeLogoutModal">&times;</button>
+            </div>
+            <div class="logout-modal-body">
+                <div class="logout-warning-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <h4>¿Estás seguro de que deseas cerrar sesión?</h4>
+                <p>Serás redirigido a la página de inicio de sesión.</p>
+                <p>Tus cambios no guardados se perderán.</p>
+            </div>
+            <div class="logout-modal-footer">
+                <button class="logout-btn-cancel" id="cancelLogout">Cancelar</button>
+                <button class="logout-btn-confirm" id="confirmLogout">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Sí, Cerrar Sesión
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notificación -->
+    <div class="custom-alert" id="customAlert">
+        <div class="alert-header">
+            <i class="fas fa-check-circle alert-icon" id="alertIcon"></i>
+            <span id="alertTitle">Éxito</span>
+            <button class="alert-close" id="alertClose">&times;</button>
+        </div>
+        <div class="alert-body">
+            <p id="alertMessage">Operación realizada correctamente.</p>
+        </div>
+    </div>
+    
+    <script>
+        // Modal de Logout
+        const logoutModal = document.getElementById('logoutModal');
+        const closeLogoutModalBtn = document.getElementById('closeLogoutModal');
+        const cancelLogout = document.getElementById('cancelLogout');
+        const confirmLogout = document.getElementById('confirmLogout');
+        const customAlert = document.getElementById('customAlert');
+        const alertClose = document.getElementById('alertClose');
+
+        // Función para abrir modal de logout
+        function openLogoutModal() {
+            console.log('Abriendo modal de logout'); // Para debug
+            logoutModal.style.display = 'flex';
+        }
+
+        // Función para cerrar modal de logout
+        function closeLogoutModal() {
+            logoutModal.style.display = 'none';
+        }
+
+        // Función para confirmar logout
+        function confirmLogoutFunc() {
+            // Mostrar notificación de éxito
+            showAlert('Sesión cerrada correctamente', 'success');
+            
+            // Redirigir después de un breve delay
+            setTimeout(() => {
+                window.location.href = "{% url 'login' %}";
+            }, 1500);
+        }
+
+        // Función para mostrar alertas
+        function showAlert(message, type = 'success') {
+            const config = {
+                success: {
+                    title: 'Éxito',
+                    icon: 'fa-check-circle',
+                    className: 'alert-success'
+                },
+                error: {
+                    title: 'Error',
+                    icon: 'fa-exclamation-circle',
+                    className: 'alert-error'
+                },
+                warning: {
+                    title: 'Advertencia',
+                    icon: 'fa-exclamation-triangle',
+                    className: 'alert-warning'
+                }
+            };
+            
+            const { title, icon, className } = config[type];
+            
+            document.getElementById('alertTitle').textContent = title;
+            document.getElementById('alertIcon').className = `fas ${icon} alert-icon`;
+            document.getElementById('alertMessage').textContent = message;
+            customAlert.className = `custom-alert ${className}`;
+            customAlert.classList.add('show');
+            
+            setTimeout(() => {
+                customAlert.classList.remove('show');
+            }, 5000);
+        }
+
+        // Event listeners para el modal de logout
+        if (closeLogoutModalBtn) {
+            closeLogoutModalBtn.addEventListener('click', closeLogoutModal);
+        }
+        if (cancelLogout) {
+            cancelLogout.addEventListener('click', closeLogoutModal);
+        }
+        if (confirmLogout) {
+            confirmLogout.addEventListener('click', confirmLogoutFunc);
+        }
+        if (alertClose) {
+            alertClose.addEventListener('click', () => customAlert.classList.remove('show'));
+        }
+
+        // Cerrar modal al hacer clic fuera
+        window.addEventListener('click', (e) => {
+            if (e.target === logoutModal) {
+                closeLogoutModal();
+            }
+        });
+
+        // Cerrar modal con tecla Escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && logoutModal.style.display === 'flex') {
+                closeLogoutModal();
+            }
+        });
+
+        // Detectar la página actual y marcar como activa
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentUrl = window.location.href;
+            const navItems = document.querySelectorAll('.nav-item');
+            
+            navItems.forEach(item => {
+                if (item.href === currentUrl) {
+                    item.classList.add('active');
+                }
+            });
+
+            // Inicializar event listeners después de que el DOM esté cargado
+            initializeEventListeners();
+        });
+
+        // Función para inicializar event listeners
+        function initializeEventListeners() {
+            console.log('Inicializando event listeners'); // Para debug
+            
+            // Re-asignar event listeners después de que el DOM esté cargado
+            const closeLogoutModalBtn = document.getElementById('closeLogoutModal');
+            const cancelLogout = document.getElementById('cancelLogout');
+            const confirmLogout = document.getElementById('confirmLogout');
+            const alertClose = document.getElementById('alertClose');
+
+            if (closeLogoutModalBtn) {
+                closeLogoutModalBtn.addEventListener('click', closeLogoutModal);
+            }
+            if (cancelLogout) {
+                cancelLogout.addEventListener('click', closeLogoutModal);
+            }
+            if (confirmLogout) {
+                confirmLogout.addEventListener('click', confirmLogoutFunc);
+            }
+            if (alertClose) {
+                alertClose.addEventListener('click', () => {
+                    customAlert.classList.remove('show');
+                });
+            }
+        }
+    </script>
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

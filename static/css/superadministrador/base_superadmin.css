@@ -298,8 +298,8 @@ body {
 /* MAIN CONTENT AREA */
 .main-content {
     flex: 1;
-    margin-left: 115px;
-    padding: 40px;
+    margin-left: 280px;
+    padding: 30px;
     min-height: 100vh;
     background: #F3F3E0;
     position: relative;

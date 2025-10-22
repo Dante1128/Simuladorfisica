@@ -3,123 +3,1070 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <link rel="stylesheet" href="{% static 'css/admin.css' %}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Administrador Académico{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/administrador/base_admin.css' %}">
+    {% block extra_css %}{% endblock %}
     <style>
-        body{
-                color: rgb(0, 0, 0);
-                border: none;
-                padding: 12px 16px;
-                border-radius: 8px;
-                cursor: pointer;
-                font-size: 1.2rem;
-                box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            }
-        
-        .mobile-menu-btn {
+        /* MODAL DE CONFIRMACIÓN DE LOGOUT */
+        .logout-modal-overlay {
             display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 3000;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .logout-modal-content {
+            background: #fff;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 450px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            animation: slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .logout-modal-header {
+            background: linear-gradient(135deg, #133E87 0%, #0A2952 100%);
+            color: white;
+            padding: 28px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logout-modal-header h3 {
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .logout-close-modal {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            font-size: 22px;
+            cursor: pointer;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .logout-close-modal:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: rotate(90deg);
+        }
+
+        .logout-modal-body {
+            padding: 32px;
+            text-align: center;
+        }
+
+        .logout-warning-icon {
+            font-size: 64px;
+            color: #ffc107;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+
+        .logout-modal-body h4 {
+            color: #133E87;
+            font-size: 1.3rem;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .logout-modal-body p {
+            color: #64748b;
+            font-size: 15px;
+            line-height: 1.5;
+            margin-bottom: 8px;
+        }
+
+        .logout-modal-footer {
+            padding: 24px 32px;
+            background: #f8fafc;
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .logout-btn-cancel {
+            background: #64748b;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 14px 28px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+            font-size: 15px;
+            min-width: 120px;
+        }
+
+        .logout-btn-cancel:hover {
+            background: #475569;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(100, 116, 139, 0.3);
+        }
+
+        .logout-btn-confirm {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 14px 28px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+            font-size: 15px;
+            min-width: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .logout-btn-confirm:hover {
+            background: linear-gradient(135deg, #c82333 0%, #a71e2a 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { 
+                opacity: 0;
+                transform: translateY(40px) scale(0.95);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+        }
+
+        /* Sistema de notificaciones */
+        .custom-alert {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            min-width: 320px;
+            max-width: 450px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            z-index: 1100;
+            transform: translateX(150%);
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            overflow: hidden;
+        }
+
+        .custom-alert.show {
+            transform: translateX(0);
+        }
+
+        .alert-header {
+            display: flex;
+            align-items: center;
+            padding: 18px 24px;
+            color: white;
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        .alert-body {
+            padding: 18px 24px;
+            background: white;
+            color: #334155;
+            font-size: 14px;
+        }
+
+        .alert-icon {
+            margin-right: 12px;
+            font-size: 1.3rem;
+        }
+
+        .alert-close {
+            margin-left: auto;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            cursor: pointer;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .alert-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Estilos para los tipos de alerta */
+        .alert-success .alert-header {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .alert-error .alert-header {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .alert-warning .alert-header {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        /* Estilos para información adicional en el modal */
+        .logout-info-box {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 16px;
+            margin: 16px 0;
+            border-left: 4px solid #133E87;
+            text-align: left;
+        }
+
+        .logout-info-item {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+            color: #495057;
+            font-size: 14px;
+        }
+
+        .logout-info-icon {
+            width: 20px;
+            margin-right: 10px;
+            color: #133E87;
+        }
+
+        /* Indicador de carga */
+        .loading-indicator {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #133E87 0%, #608BC1 50%, #133E87 100%);
+            z-index: 9999;
+            animation: loading 1.5s infinite;
+        }
+
+        @keyframes loading {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* Estilos para el header del dashboard */
+        .main-header {
+            background: white;
+            border-radius: 16px;
+            padding: 25px 35px;
+            margin-bottom: 30px;
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.06);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #CBDCEB;
+        }
+
+        .header-title h1 {
+            color: #133E87;
+            font-size: 2rem;
+            margin-bottom: 8px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #133E87 0%, #608BC1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-title p {
+            color: #64748b;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-title p i {
+            color: #10b981;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .search-box {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-box input {
+            padding: 12px 45px 12px 20px;
+            border: 2px solid #CBDCEB;
+            border-radius: 12px;
+            width: 300px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            background: #F3F3E0;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #133E87;
+            box-shadow: 0 0 0 4px rgba(19, 62, 135, 0.1);
+        }
+
+        .search-box i {
+            position: absolute;
+            right: 18px;
+            color: #94a3b8;
+        }
+
+        .notification-bell {
+            position: relative;
+            background: linear-gradient(135deg, #F3F3E0 0%, #CBDCEB 100%);
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #64748b;
+            border: 2px solid transparent;
+        }
+
+        .notification-bell:hover {
+            background: linear-gradient(135deg, #CBDCEB 0%, #608BC1 100%);
+            border-color: #133E87;
+            color: #133E87;
+            transform: translateY(-2px);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: bold;
+            border: 3px solid white;
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+            animation: pulse-badge 2s infinite;
+        }
+
+        @keyframes pulse-badge {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 18px;
+            background: linear-gradient(135deg, #F3F3E0 0%, #CBDCEB 100%);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid #CBDCEB;
+        }
+
+        .user-menu:hover {
+            border-color: #133E87;
+            transform: translateY(-2px);
+        }
+
+        .user-menu-avatar {
+            width: 38px;
+            height: 38px;
+            background: linear-gradient(135deg, #133E87 0%, #608BC1 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(19, 62, 135, 0.3);
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: #133E87;
+            font-size: 0.9rem;
+        }
+
+        /* ESTADÍSTICAS MEJORADAS */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.06);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid #CBDCEB;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #133E87 0%, #608BC1 100%);
+            transform: scaleX(0);
+            transition: transform 0.4s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 40px rgba(19, 62, 135, 0.15);
+        }
+
+        .stat-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            color: white;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            position: relative;
+        }
+
+        .stat-icon::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: inherit;
+            border-radius: inherit;
+            filter: blur(15px);
+            opacity: 0.6;
+            z-index: -1;
+        }
+
+        .stat-icon.blue {
+            background: linear-gradient(135deg, #133E87 0%, #608BC1 100%);
+        }
+
+        .stat-icon.green {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .stat-icon.orange {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        .stat-icon.purple {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        }
+
+        .stat-trend {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .stat-trend.up {
+            background: rgba(16, 185, 129, 0.1);
+            color: #059669;
+        }
+
+        .stat-trend.down {
+            background: rgba(239, 68, 68, 0.1);
+            color: #dc2626;
+        }
+
+        .stat-content {
+            margin-top: 15px;
+        }
+
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #133E87;
+            margin-bottom: 8px;
+            line-height: 1;
+        }
+
+        .stat-label {
+            color: #64748b;
+            font-size: 0.95rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .stat-footer {
+            margin-top: 18px;
+            padding-top: 18px;
+            border-top: 1px solid #CBDCEB;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stat-progress {
+            flex: 1;
+            margin-right: 15px;
+        }
+
+        .stat-progress-bar {
+            height: 6px;
+            background: #CBDCEB;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .stat-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #133E87 0%, #608BC1 100%);
+            border-radius: 10px;
+            transition: width 1s ease;
+        }
+
+        .stat-percentage {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #64748b;
+        }
+
+        /* SECCIONES DE CONTENIDO */
+        .content-section {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.06);
+            border: 1px solid #CBDCEB;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #CBDCEB;
+        }
+
+        .section-title {
+            font-size: 1.4rem;
+            color: #133E87;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-title i {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #133E87 0%, #608BC1 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #133E87 0%, #608BC1 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95rem;
+            box-shadow: 0 4px 15px rgba(19, 62, 135, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(19, 62, 135, 0.4);
+        }
+
+        /* TABLA MEJORADA */
+        .data-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 20px;
+        }
+
+        .data-table thead {
+            background: linear-gradient(135deg, #F3F3E0 0%, #CBDCEB 100%);
+        }
+
+        .data-table th {
+            padding: 16px 20px;
+            text-align: left;
+            font-weight: 700;
+            color: #133E87;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #CBDCEB;
+        }
+
+        .data-table th:first-child {
+            border-top-left-radius: 12px;
+        }
+
+        .data-table th:last-child {
+            border-top-right-radius: 12px;
+        }
+
+        .data-table td {
+            padding: 18px 20px;
+            border-bottom: 1px solid #CBDCEB;
+            color: #334155;
+            font-size: 0.9rem;
+        }
+
+        .data-table tbody tr {
+            transition: all 0.3s ease;
+        }
+
+        .data-table tbody tr:hover {
+            background: #F3F3E0;
+            transform: scale(1.01);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .status-completed {
+            padding: 6px 14px;
+            background: rgba(16, 185, 129, 0.1);
+            color: #059669;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-completed::before {
+            content: '✓';
+            width: 18px;
+            height: 18px;
+            background: #10b981;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+        }
+
+        .status-pending {
+            padding: 6px 14px;
+            background: rgba(245, 158, 11, 0.1);
+            color: #d97706;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-pending::before {
+            content: '⏱';
+            width: 18px;
+            height: 18px;
+            background: #f59e0b;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
         }
     </style>
 </head>
 <body>
-    <!-- Mobile Menu Button -->
-    <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
-
+    <!-- Indicador de carga -->
+    <div class="loading-indicator" id="loadingIndicator"></div>
+    
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
-        <div class="logo">
-        <img src="{% static 'usuarios/img/logo.png' %}" alt="Logo Laboratorios RV" style="height: 60px;">
-        <h1>Laboratorios <span>RV</span></h1>
-        <div class="logo-subtitle">Virtual Reality Labs</div>
-    </div>
+        <div class="sidebar-header">
+            <div class="user-avatar">
+                <i class="fas fa-user-shield"></i>
+            </div>
+            <div class="user-info">
+                <h2>Administrador <span class="admin-badge">Académico</span></h2>
+                <p>Panel de Gestión</p>
+            </div>
+        </div>
+        
+        <div class="nav-container">
+            <div class="nav-section-title">MENÚ PRINCIPAL</div>
+            <nav>
+                <a href="{% url 'panel_admin' %}" class="nav-item active">
+                    <i class="fas fa-home nav-icon"></i>
+                    <span class="nav-label">Inicio</span>
+                </a>
+                <a href="{% url 'perfil_admin' %}" class="nav-item">
+                    <i class="fas fa-user-circle nav-icon"></i>
+                    <span class="nav-label">Mi Perfil</span>
+                </a>
+            </nav>
 
-        <ul class="menu">
-            <div class="menu-section">
-                <div class="menu-section-title">Principal</div>
-                <a href="#" class="menu-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
-                    <i>📊</i>
-                    <span class="menu-item-text">Resumen General</span>
+            <div class="nav-section-title">GESTIÓN ACADÉMICA</div>
+            <nav>
+                <a href="{% url 'gestion_adminprofesor' %}" class="nav-item">
+                    <i class="fas fa-chalkboard-teacher nav-icon"></i>
+                    <span class="nav-label">Profesor</span>
                 </a>
-               
-                <a href="#" class="menu-item {% if request.resolver_match.url_name == 'laboratorios' %}active{% endif %}">
-                    <i>🔬</i>
-                    <span class="menu-item-text">Laboratorios RV</span>
-                    <span class="menu-badge">15</span>
+                <a href="{% url 'gestion_adminestudiante' %}" class="nav-item">
+                    <i class="fas fa-user-graduate nav-icon"></i>
+                    <span class="nav-label">Estudiantes</span>
                 </a>
-                <a href="#" class="menu-item {% if request.resolver_match.url_name == 'contenido' %}active{% endif %}">
-                    <i>📚</i>
-                    <span class="menu-item-text">Contenido Teórico</span>
-                </a>
-            </div>
             
-            <div class="menu-section">
-                <div class="menu-section-title">Administración</div>
-                <a href="#" class="menu-item {% if request.resolver_match.url_name == 'usuarios' %}active{% endif %}">
-                    <i>👥</i>
-                    <span class="menu-item-text">Gestión de Usuarios</span>
-                    <span class="menu-badge">3</span>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-flask nav-icon"></i>
+                    <span class="nav-label">Laboratorios</span>
                 </a>
-                <a href="{% url 'panel_admin' %}" class="menu-item {% if request.resolver_match.url_name == 'membresias' %}active{% endif %}">
-                    <i>💳</i>
-                    <span class="menu-item-text">Membresías</span>
+            </nav>
+
+            <div class="nav-section-title">RECURSOS</div>
+            <nav>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-puzzle-piece nav-icon"></i>
+                    <span class="nav-label">Contenido</span>
                 </a>
-                <a href="#" class="menu-item {% if request.resolver_match.url_name == 'reportes' %}active{% endif %}">
-                    <i>📈</i>
-                    <span class="menu-item-text">Reportes</span>
+                <a href="{% url 'dashboard_administrador' %}" class="nav-item">
+                    <i class="fas fa-chart-bar nav-icon"></i>
+                    <span class="nav-label">Informes y Reportes</span>
                 </a>
-                {% load menu_tags %}
-                {% componentes_menu %}
-            </div>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-cog nav-icon"></i>
+                    <span class="nav-label">Configuración</span>
+                </a>
+            </nav>
             
-            <div class="menu-section">
-                <div class="menu-section-title">Cuenta</div>
-                <a href="#" class="menu-item {% if request.resolver_match.url_name == 'perfil' %}active{% endif %}">
-                    <i>👤</i>
-                    <span class="menu-item-text">Mi Perfil</span>
-                </a>
-                <a href="#" class="menu-item {% if request.resolver_match.url_name == 'configuracion' %}active{% endif %}">
-                    <i>⚙️</i>
-                    <span class="menu-item-text">Configuración</span>
-                </a>
-            </div>
-        </ul>
+            <button class="btn-logout" onclick="openLogoutModal()">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Cerrar Sesión</span>
+            </button>
+        </div>
     </div>
     
-    <div class="sidebar-footer">
-        <a href="#" class="user-profile-mini">
-            <div class="user-avatar-mini">{{ user.initials|default:"AD" }}</div>
-            <div class="user-info-mini">
-                <div class="user-name-mini">{{ user.first_name|default:"Admin" }}</div>
-                <div class="user-role-mini">En línea</div>
-            </div>
-        </a>
-    </div>
-
     <!-- CONTENIDO -->
     <main class="main-content">
-        {% block content %}  
+        {% block content %}
         {% endblock %}
     </main>
 
+    <!-- Modal de Confirmación de Logout -->
+    <div class="logout-modal-overlay" id="logoutModal">
+        <div class="logout-modal-content">
+            <div class="logout-modal-header">
+                <h3><i class="fas fa-sign-out-alt"></i> Confirmar Salida</h3>
+                <button class="logout-close-modal" id="closeLogoutModal">&times;</button>
+            </div>
+            <div class="logout-modal-body">
+                <div class="logout-warning-icon">
+                    <i class="fas fa-question-circle"></i>
+                </div>
+                <h4>¿Estás seguro de que deseas salir?</h4>
+                <p>Estás a punto de cerrar tu sesión como Administrador Académico.</p>
+                
+                <div class="logout-info-box">
+                    <div class="logout-info-item">
+                        <i class="fas fa-user-shield logout-info-icon"></i>
+                        <span><strong>Rol actual:</strong> Administrador Académico</span>
+                    </div>
+                    <div class="logout-info-item">
+                        <i class="fas fa-exclamation-triangle logout-info-icon"></i>
+                        <span><strong>Acción:</strong> Cerrar sesión del sistema</span>
+                    </div>
+                    <div class="logout-info-item">
+                        <i class="fas fa-info-circle logout-info-icon"></i>
+                        <span>Serás redirigido a la página de inicio de sesión</span>
+                    </div>
+                </div>
+                
+                <p><strong>¿Confirmas que deseas continuar?</strong></p>
+            </div>
+            <div class="logout-modal-footer">
+                <button class="logout-btn-cancel" id="cancelLogout">Cancelar</button>
+                <button class="logout-btn-confirm" id="confirmLogout">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Sí, Salir del Sistema
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notificación -->
+    <div class="custom-alert" id="customAlert">
+        <div class="alert-header">
+            <i class="fas fa-check-circle alert-icon" id="alertIcon"></i>
+            <span id="alertTitle">Éxito</span>
+            <button class="alert-close" id="alertClose">&times;</button>
+        </div>
+        <div class="alert-body">
+            <p id="alertMessage">Operación realizada correctamente.</p>
+        </div>
+    </div>
+    
     <script>
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const footer = document.querySelector('.sidebar-footer');
-            sidebar.classList.toggle('active');
-            footer.classList.toggle('active');
+        // Modal de Logout
+        const logoutModal = document.getElementById('logoutModal');
+        const closeLogoutModalBtn = document.getElementById('closeLogoutModal');
+        const cancelLogout = document.getElementById('cancelLogout');
+        const confirmLogout = document.getElementById('confirmLogout');
+        const customAlert = document.getElementById('customAlert');
+        const alertClose = document.getElementById('alertClose');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+
+        // Funciones de carga
+        function showLoading() {
+            loadingIndicator.style.display = 'block';
         }
 
-        // Cerrar sidebar al hacer clic fuera en móvil
-        document.addEventListener('click', function(event) {
-            const sidebar = document.getElementById('sidebar');
-            const menuBtn = document.querySelector('.mobile-menu-btn');
+        function hideLoading() {
+            loadingIndicator.style.display = 'none';
+        }
+
+        // Función para abrir modal de logout
+        function openLogoutModal() {
+            console.log('Abriendo modal de confirmación de salida');
+            logoutModal.style.display = 'flex';
+        }
+
+        // Función para cerrar modal de logout
+        function closeLogoutModal() {
+            logoutModal.style.display = 'none';
+        }
+
+        // Función para confirmar logout
+        function confirmLogoutFunc() {
+            showLoading();
+            closeLogoutModal();
             
-            if (window.innerWidth <= 992) {
-                if (!sidebar.contains(event.target) && !menuBtn.contains(event.target)) {
-                    sidebar.classList.remove('active');
-                    document.querySelector('.sidebar-footer').classList.remove('active');
+            // Mostrar notificación de éxito
+            showAlert('Sesión cerrada correctamente. ¡Hasta pronto!', 'success');
+            
+            // Redirigir después de un breve delay
+            setTimeout(() => {
+                hideLoading();
+                // Aquí redirigiría a la página de login
+                console.log('Redirigiendo a login...');
+                // window.location.href = "{% url 'login' %}";
+            }, 1500);
+        }
+
+        // Función para mostrar alertas
+        function showAlert(message, type = 'success') {
+            const config = {
+                success: {
+                    title: 'Éxito',
+                    icon: 'fa-check-circle',
+                    className: 'alert-success'
+                },
+                error: {
+                    title: 'Error',
+                    icon: 'fa-exclamation-circle',
+                    className: 'alert-error'
+                },
+                warning: {
+                    title: 'Advertencia',
+                    icon: 'fa-exclamation-triangle',
+                    className: 'alert-warning'
                 }
+            };
+            
+            const { title, icon, className } = config[type];
+            
+            document.getElementById('alertTitle').textContent = title;
+            document.getElementById('alertIcon').className = `fas ${icon} alert-icon`;
+            document.getElementById('alertMessage').textContent = message;
+            customAlert.className = `custom-alert ${className}`;
+            customAlert.classList.add('show');
+            
+            setTimeout(() => {
+                customAlert.classList.remove('show');
+            }, 5000);
+        }
+
+        // Función para notificaciones
+        function toggleNotifications() {
+            showAlert('Tienes 3 notificaciones nuevas sin leer', 'warning');
+        }
+
+        // Event listeners para el modal de logout
+        if (closeLogoutModalBtn) {
+            closeLogoutModalBtn.addEventListener('click', closeLogoutModal);
+        }
+        if (cancelLogout) {
+            cancelLogout.addEventListener('click', closeLogoutModal);
+        }
+        if (confirmLogout) {
+            confirmLogout.addEventListener('click', confirmLogoutFunc);
+        }
+        if (alertClose) {
+            alertClose.addEventListener('click', () => customAlert.classList.remove('show'));
+        }
+
+        // Cerrar modal al hacer clic fuera
+        window.addEventListener('click', (e) => {
+            if (e.target === logoutModal) {
+                closeLogoutModal();
             }
         });
+
+        // Cerrar modal con tecla Escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && logoutModal.style.display === 'flex') {
+                closeLogoutModal();
+            }
+        });
+
+        // Detectar la página actual y marcar como activa
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentUrl = window.location.href;
+            const navItems = document.querySelectorAll('.nav-item');
+            
+            navItems.forEach(item => {
+                if (item.href === currentUrl) {
+                    item.classList.add('active');
+                }
+            });
+
+            // Animación de las barras de progreso
+            setTimeout(() => {
+                document.querySelectorAll('.stat-progress-fill').forEach(bar => {
+                    const width = bar.style.width;
+                    bar.style.width = '0';
+                    setTimeout(() => {
+                        bar.style.width = width;
+                    }, 100);
+                });
+            }, 300);
+
+            // Ocultar indicador de carga
+            setTimeout(() => {
+                hideLoading();
+            }, 1000);
+
+            console.log('Dashboard de Administrador cargado correctamente');
+            
+            // Inicializar event listeners después de que el DOM esté cargado
+            initializeEventListeners();
+        });
+
+        // Función para inicializar event listeners
+        function initializeEventListeners() {
+            console.log('Inicializando event listeners');
+            
+            // Re-asignar event listeners después de que el DOM esté cargado
+            const closeLogoutModalBtn = document.getElementById('closeLogoutModal');
+            const cancelLogout = document.getElementById('cancelLogout');
+            const confirmLogout = document.getElementById('confirmLogout');
+            const alertClose = document.getElementById('alertClose');
+
+            if (closeLogoutModalBtn) {
+                closeLogoutModalBtn.addEventListener('click', closeLogoutModal);
+            }
+            if (cancelLogout) {
+                cancelLogout.addEventListener('click', closeLogoutModal);
+            }
+            if (confirmLogout) {
+                confirmLogout.addEventListener('click', confirmLogoutFunc);
+            }
+            if (alertClose) {
+                alertClose.addEventListener('click', () => {
+                    customAlert.classList.remove('show');
+                });
+            }
+        }
+
+        // Animación de hover en las tarjetas
+        document.querySelectorAll('.stat-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+            });
+        });
     </script>
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

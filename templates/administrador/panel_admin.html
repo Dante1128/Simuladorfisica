@@ -1,354 +1,631 @@
 {% extends 'administrador/base_admin.html' %}
 {% load static %}
-{% block title %}Bienvenido al Sistema de Laboratorios{% endblock %}
+{% block title %}Dashboard Administrador - Sistema de Laboratorios{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="{% static 'css/administrador/panel_admin.css' %}">
+<style>
+    /* Mejoras adicionales para mejor posicionamiento */
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: 1fr 350px;
+        gap: 25px;
+        margin-bottom: 30px;
+        align-items: start;
+    }
+    
+    .main-column {
+        display: flex;
+        flex-direction: column;
+        gap: 25px;
+    }
+    
+    .side-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 25px;
+        position: sticky;
+        top: 30px;
+    }
+    
+    .stats-cards {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+    
+    .management-panel {
+        margin-bottom: 0;
+    }
+    
+    .labs-panel {
+        margin-bottom: 0;
+    }
+    
+    .bottom-panel {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 25px;
+    }
+    
+    .actions-panel {
+        height: fit-content;
+    }
+    
+    /* Mejoras visuales adicionales */
+    .stat-card {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stat-card::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--primary), var(--secondary));
+        transform: scaleX(0);
+        transition: transform 0.3s ease;
+    }
+    
+    .stat-card:hover::after {
+        transform: scaleX(1);
+    }
+    
+    .management-card {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .management-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(96, 139, 193, 0.1), transparent);
+        transition: left 0.5s ease;
+    }
+    
+    .management-card:hover::before {
+        left: 100%;
+    }
+    
+    .lab-item {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .lab-item::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, rgba(19, 62, 135, 0.05) 0%, transparent 100%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .lab-item:hover::before {
+        opacity: 1;
+    }
+    
+    .action-btn {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .action-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(96, 139, 193, 0.1), transparent);
+        transition: left 0.5s ease;
+    }
+    
+    .action-btn:hover::before {
+        left: 100%;
+    }
+    
+    .report-item {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .report-item::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: var(--secondary);
+        transform: scaleY(0);
+        transition: transform 0.3s ease;
+    }
+    
+    .report-item:hover::before {
+        transform: scaleY(1);
+    }
+    
+    /* Animaciones mejoradas */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .stat-card {
+        animation: fadeInUp 0.6s ease-out;
+    }
+    
+    .stat-card:nth-child(1) { animation-delay: 0.1s; }
+    .stat-card:nth-child(2) { animation-delay: 0.2s; }
+    .stat-card:nth-child(3) { animation-delay: 0.3s; }
+    .stat-card:nth-child(4) { animation-delay: 0.4s; }
+    
+    .management-card {
+        animation: fadeInUp 0.6s ease-out;
+    }
+    
+    .management-card:nth-child(1) { animation-delay: 0.2s; }
+    .management-card:nth-child(2) { animation-delay: 0.3s; }
+    .management-card:nth-child(3) { animation-delay: 0.4s; }
+    .management-card:nth-child(4) { animation-delay: 0.5s; }
+    
+    /* Mejoras de espaciado */
+    .dashboard-header {
+        margin-bottom: 30px;
+        animation: fadeInUp 0.8s ease-out;
+    }
+    
+    .panel-header {
+        margin-bottom: 20px;
+    }
+    
+    /* Efectos de profundidad mejorados */
+    .stat-card:hover {
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 12px 35px rgba(19, 62, 135, 0.25);
+    }
+    
+    .management-card:hover {
+        transform: translateY(-5px) scale(1.02);
+        box-shadow: 0 8px 25px rgba(19, 62, 135, 0.2);
+    }
+    
+    .lab-item:hover {
+        transform: translateY(-5px) scale(1.05);
+        box-shadow: 0 8px 25px rgba(19, 62, 135, 0.15);
+    }
+    
+    .action-btn:hover {
+        transform: translateX(8px) scale(1.02);
+    }
+    
+    .report-item:hover {
+        transform: translateX(5px) scale(1.02);
+        box-shadow: 0 6px 20px rgba(19, 62, 135, 0.15);
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-    <style>
-        :root {
-            --primary: #133E87;
-            --secondary: #608BC1;
-            --accent: #608BC1;
-            --light: #F3F3E0;
-            --success: #2ecc71;
-            --warning: #f39c12;
-            --danger: #e74c3c;
-            --dark: #133E87;
-            --gray: #95a5a6;
-            --pale-blue: #CBDCEB;
-        }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        body {
-            background-color: var(--light);
-            color: #333;
-            line-height: 1.6;
-        }
-        
-        .container {
-            display: grid;
-            grid-template-columns: 1fr;
-            min-height: 100vh;
-        }
-        
-        /* Main Content */
-        .main-content {
-            padding: 15px;
-            overflow-y: auto;
-            margin-left: 150px;
-        }
-        
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-        }
-        
-        .header h1 {
-            color: var(--primary);
-            font-weight: 600;
-        }
-        
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background-color: var(--secondary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-        }
-        
-        /* Stats Grid */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .stat-card {
-            background-color: white;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            transition: transform 0.3s ease;
-        }
-        
-        .stat-card:hover {
-            transform: translateY(-5px);
-        }
-        
-        .stat-card h3 {
-            color: var(--gray);
-            font-size: 0.9rem;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
-        .stat-value {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--primary);
-            margin-bottom: 15px;
-        }
-        
-        .stat-action {
-            display: inline-block;
-            color: var(--secondary);
-            text-decoration: none;
-            font-weight: 500;
-            font-size: 0.9rem;
-        }
-        
-        .stat-action:hover {
-            text-decoration: underline;
-        }
-        
-        .highlight-card {
-            background: linear-gradient(135deg, var(--secondary), var(--primary));
-            color: white;
-        }
-        
-        .highlight-card h3, .highlight-card .stat-value {
-            color: white;
-        }
-        
-        .highlight-card .stat-action {
-            color: rgba(255,255,255,0.8);
-        }
-        
-        /* Activity Section */
-        .activity-section {
-            background-color: white;
-            border-radius: 10px;
-            padding: 25px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        }
-        
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        
-        .section-header h2 {
-            color: var(--primary);
-            font-weight: 600;
-        }
-        
-        .view-all {
-            color: var(--secondary);
-            text-decoration: none;
-            font-weight: 500;
-        }
-        
-        .activity-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        
-        .activity-table th {
-            text-align: left;
-            padding: 12px 15px;
-            border-bottom: 2px solid var(--pale-blue);
-            color: var(--gray);
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 0.8rem;
-            letter-spacing: 1px;
-        }
-        
-        .activity-table td {
-            padding: 15px;
-            border-bottom: 1px solid var(--pale-blue);
-        }
-        
-        .activity-table tr:last-child td {
-            border-bottom: none;
-        }
-        
-        .user-cell {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .user-avatar-small {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            background-color: var(--secondary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 0.8rem;
-            font-weight: bold;
-        }
-        
-        .activity-badge {
-            display: inline-block;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 500;
-        }
-        
-        .badge-completed {
-            background-color: rgba(46, 204, 113, 0.2);
-            color: var(--success);
-        }
-        
-        .badge-download {
-            background-color: rgba(96, 139, 193, 0.2);
-            color: var(--secondary);
-        }
-        
-        .badge-new {
-            background-color: rgba(203, 220, 235, 0.5);
-            color: var(--primary);
-        }
-        
-        .simulation-tag {
-            background-color: var(--pale-blue);
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 0.8rem;
-            color: var(--dark);
-        }
-        
-        /* Responsive */
-        @media (max-width: 768px) {
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .activity-table {
-                display: block;
-                overflow-x: auto;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <!-- Main Content -->
-        <div class="main-content">
-            <div class="header">
-                <h1>Resumen General</h1>
-                <div class="user-info">
-                    <div class="user-avatar">AD</div>
-                    <span>Administrador</span>
-                </div>
+<div class="admin-dashboard">
+    <!-- Header Mejorado -->
+    <div class="dashboard-header">
+        <div class="welcome-section">
+            <h1>Panel de Control Administrativo</h1>
+            <p>Gestión integral del sistema de laboratorios educativos</p>
+        </div>
+        <div class="header-controls">
+            <div class="notification-btn">
+                <i class="fas fa-bell"></i>
+                <div class="notification-dot"></div>
             </div>
-            
-            <!-- Stats Grid -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <h3>Usuarios Registrados</h3>
-                    <div class="stat-value">142</div>
-                    <a href="#" class="stat-action">Ver todos</a>
-                </div>
-                
-                <div class="stat-card">
-                    <h3>Simulaciones RV Activas</h3>
-                    <div class="stat-value">15</div>
-                    <a href="#" class="stat-action">Gestionar</a>
-                </div>
-                
-                <div class="stat-card">
-                    <h3>Membresías Activas</h3>
-                    <div class="stat-value">18</div>
-                    <a href="#" class="stat-action">Ver detalles</a>
-                </div>
-                
-                <div class="stat-card highlight-card">
-                    <h3>Ingresos Mensuales</h3>
-                    <div class="stat-value">Bs. 6500</div>
-                    <a href="#" class="stat-action">Ver reporte</a>
-                </div>
-            </div>
-            
-            <!-- Activity Section -->
-            <div class="activity-section">
-                <div class="section-header">
-                    <h2>Actividad Reciente</h2>
-                    <a href="#" class="view-all">Ver todo</a>
-                </div>
-                
-                <table class="activity-table">
-                    <thead>
-                        <tr>
-                            <th>Usuario</th>
-                            <th>Actividad</th>
-                            <th>Simulación</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>
-                                <div class="user-cell">
-                                    <div class="user-avatar-small">M</div>
-                                    <span>maria@universidad.edu</span>
-                                </div>
-                            </td>
-                            <td>
-                                <span class="activity-badge badge-completed">Completó simulación</span>
-                            </td>
-                            <td>
-                                <span class="simulation-tag">M.R.U.V.</span>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <div class="user-cell">
-                                    <div class="user-avatar-small">C</div>
-                                    <span>carlos@universidad.edu</span>
-                                </div>
-                            </td>
-                            <td>
-                                <span class="activity-badge badge-download">Descargó documento</span>
-                            </td>
-                            <td>
-                                <span class="simulation-tag">M. Circular</span>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <div class="user-cell">
-                                    <div class="user-avatar-small">A</div>
-                                    <span>ana@universidad.edu</span>
-                                </div>
-                            </td>
-                            <td>
-                                <span class="activity-badge badge-new">Nueva membresía</span>
-                            </td>
-                            <td>
-                                <span class="simulation-tag">M. Parabólico</span>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+            <div class="user-badge">
+                <div class="user-avatar">AD</div>
+                <span>Administrador Principal</span>
             </div>
         </div>
     </div>
-</body>
-</html>
+    
+    <!-- Grid Principal Mejorado -->
+    <div class="dashboard-grid">
+        <!-- Columna Principal -->
+        <div class="main-column">
+            <!-- Estadísticas Rápidas -->
+            <div class="stats-cards">
+                <div class="stat-card">
+                    <div class="stat-main">
+                        <div class="stat-value">1,248</div>
+                        <div class="stat-icon">
+                            <i class="fas fa-user-graduate"></i>
+                        </div>
+                    </div>
+                    <div class="stat-label">Estudiantes Activos</div>
+                    <div class="stat-trend">
+                        <i class="fas fa-arrow-up"></i> 12% este mes
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-main">
+                        <div class="stat-value">64</div>
+                        <div class="stat-icon">
+                            <i class="fas fa-chalkboard-teacher"></i>
+                        </div>
+                    </div>
+                    <div class="stat-label">Profesores Registrados</div>
+                    <div class="stat-trend">
+                        <i class="fas fa-arrow-up"></i> 8% este mes
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-main">
+                        <div class="stat-value">42</div>
+                        <div class="stat-icon">
+                            <i class="fas fa-book"></i>
+                        </div>
+                    </div>
+                    <div class="stat-label">Cursos Activos</div>
+                    <div class="stat-trend">
+                        <i class="fas fa-arrow-up"></i> 15% este mes
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-main">
+                        <div class="stat-value">24</div>
+                        <div class="stat-icon">
+                            <i class="fas fa-flask"></i>
+                        </div>
+                    </div>
+                    <div class="stat-label">Laboratorios Activos</div>
+                    <div class="stat-trend">
+                        <i class="fas fa-arrow-up"></i> 18% este mes
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Gestión Rápida Específica -->
+            <div class="management-panel">
+                <div class="panel-header">
+                    <h2><i class="fas fa-cogs"></i> Gestión Rápida</h2>
+                </div>
+                <div class="quick-management">
+                    <a href="#" class="management-card">
+                        <div class="management-icon">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                        <div class="management-content">
+                            <div class="management-title">Crear Nuevo Estudiante</div>
+                            <div class="management-desc">Registrar nuevo estudiante en el sistema</div>
+                        </div>
+                    </a>
+                    
+                    <a href="#" class="management-card">
+                        <div class="management-icon">
+                            <i class="fas fa-chalkboard-teacher"></i>
+                        </div>
+                        <div class="management-content">
+                            <div class="management-title">Crear Nuevo Profesor</div>
+                            <div class="management-desc">Agregar nuevo profesor al sistema</div>
+                        </div>
+                    </a>
+                    
+                    <a href="#" class="management-card">
+                        <div class="management-icon">
+                            <i class="fas fa-book-medical"></i>
+                        </div>
+                        <div class="management-content">
+                            <div class="management-title">Crear Nuevo Curso</div>
+                            <div class="management-desc">Configurar nuevo curso académico</div>
+                        </div>
+                    </a>
+                    
+                    <a href="#" class="management-card">
+                        <div class="management-icon">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        <div class="management-content">
+                            <div class="management-title">Ver Reportes</div>
+                            <div class="management-desc">Generar y visualizar reportes del sistema</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Laboratorios de Física -->
+            <div class="labs-panel">
+                <div class="panel-header">
+                    <h2><i class="fas fa-atom"></i> Laboratorios de Física</h2>
+                </div>
+                <div class="labs-grid">
+                    <div class="lab-item">
+                        <div class="lab-icon">
+                            <i class="fas fa-running"></i>
+                        </div>
+                        <div class="lab-name">Movimiento Rectilíneo</div>
+                        <div class="lab-count">15 sesiones</div>
+                    </div>
+                    
+                    <div class="lab-item">
+                        <div class="lab-icon">
+                            <i class="fas fa-project-diagram"></i>
+                        </div>
+                        <div class="lab-name">Movimiento Parabólico</div>
+                        <div class="lab-count">12 sesiones</div>
+                    </div>
+                    
+                    <div class="lab-item">
+                        <div class="lab-icon">
+                            <i class="fas fa-sync"></i>
+                        </div>
+                        <div class="lab-name">Movimiento Circular</div>
+                        <div class="lab-count">10 sesiones</div>
+                    </div>
+                    
+                    <div class="lab-item">
+                        <div class="lab-icon">
+                            <i class="fas fa-weight-hanging"></i>
+                        </div>
+                        <div class="lab-name">Péndulo Simple</div>
+                        <div class="lab-count">8 sesiones</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Panel Lateral Mejorado -->
+        <div class="side-panel">
+            <!-- Acciones Inmediatas -->
+            <div class="actions-panel">
+                <div class="panel-header">
+                    <h2><i class="fas fa-bolt"></i> Acciones Inmediatas</h2>
+                </div>
+                <div class="action-buttons">
+                    <button class="action-btn">
+                        <i class="fas fa-user-cog"></i>
+                        Configurar Sistema
+                    </button>
+                    
+                    <button class="action-btn">
+                        <i class="fas fa-users"></i>
+                        Gestionar Usuarios
+                    </button>
+                    
+                    <button class="action-btn">
+                        <i class="fas fa-calendar-alt"></i>
+                        Programar Laboratorios
+                    </button>
+                    
+                    <button class="action-btn">
+                        <i class="fas fa-file-export"></i>
+                        Exportar Datos
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Panel Inferior Mejorado -->
+    <div class="bottom-panel">
+        <!-- Reportes Rápidos -->
+        <div class="reports-panel">
+            <div class="panel-header">
+                <h2><i class="fas fa-chart-line"></i> Reportes Disponibles</h2>
+            </div>
+            <div class="reports-list">
+                <div class="report-item">
+                    <div class="report-icon">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                    <div class="report-content">
+                        <div class="report-title">Rendimiento Estudiantil</div>
+                        <div class="report-desc">Análisis de calificaciones y progreso</div>
+                    </div>
+                </div>
+                
+                <div class="report-item">
+                    <div class="report-icon">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                    </div>
+                    <div class="report-content">
+                        <div class="report-title">Actividad de Profesores</div>
+                        <div class="report-desc">Uso del sistema por profesores</div>
+                    </div>
+                </div>
+                
+                <div class="report-item">
+                    <div class="report-icon">
+                        <i class="fas fa-flask"></i>
+                    </div>
+                    <div class="report-content">
+                        <div class="report-title">Uso de Laboratorios</div>
+                        <div class="report-desc">Estadísticas de uso por laboratorio</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Panel de Configuración Rápida -->
+        <div class="reports-panel">
+            <div class="panel-header">
+                <h2><i class="fas fa-tools"></i> Herramientas Rápidas</h2>
+            </div>
+            <div class="reports-list">
+                <div class="report-item">
+                    <div class="report-icon">
+                        <i class="fas fa-sync-alt"></i>
+                    </div>
+                    <div class="report-content">
+                        <div class="report-title">Actualizar Sistema</div>
+                        <div class="report-desc">Última actualización: Hoy</div>
+                    </div>
+                </div>
+                
+                <div class="report-item">
+                    <div class="report-icon">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <div class="report-content">
+                        <div class="report-title">Backup Automático</div>
+                        <div class="report-desc">Próximo backup: 24 hrs</div>
+                    </div>
+                </div>
+                
+                <div class="report-item">
+                    <div class="report-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="report-content">
+                        <div class="report-title">Estado Seguridad</div>
+                        <div class="report-desc">Sistema protegido</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Interactividad Mejorada
+    document.addEventListener('DOMContentLoaded', function() {
+        // Notificaciones con mejor feedback
+        const notificationBtn = document.querySelector('.notification-btn');
+        if (notificationBtn) {
+            notificationBtn.addEventListener('click', function() {
+                this.style.transform = 'scale(0.9) rotate(-10deg)';
+                setTimeout(() => {
+                    this.style.transform = 'scale(1.1) rotate(10deg)';
+                    setTimeout(() => {
+                        this.style.transform = 'scale(1) rotate(0deg)';
+                        alert('Tienes 5 notificaciones sin leer');
+                    }, 150);
+                }, 100);
+            });
+        }
+        
+        // Efectos hover mejorados en tarjetas
+        const statCards = document.querySelectorAll('.stat-card');
+        statCards.forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-8px) scale(1.02)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) scale(1)';
+            });
+        });
+        
+        // Gestión de tarjetas de gestión rápida con mejor feedback
+        const managementCards = document.querySelectorAll('.management-card');
+        managementCards.forEach(card => {
+            card.addEventListener('click', function(e) {
+                e.preventDefault();
+                const action = this.querySelector('.management-title').textContent;
+                
+                // Efecto visual mejorado
+                this.style.background = 'var(--secondary)';
+                this.style.color = 'white';
+                this.style.transform = 'translateY(-5px) scale(1.05)';
+                
+                setTimeout(() => {
+                    this.style.background = '';
+                    this.style.color = '';
+                    this.style.transform = '';
+                    console.log(`Ejecutando: ${action}`);
+                }, 300);
+            });
+        });
+        
+        // Acciones de botones con mejor feedback
+        const actionButtons = document.querySelectorAll('.action-btn');
+        actionButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const actionText = this.textContent.trim();
+                
+                // Efecto visual mejorado
+                this.style.background = 'var(--secondary)';
+                this.style.color = 'white';
+                this.style.transform = 'translateX(8px) scale(1.02)';
+                
+                setTimeout(() => {
+                    this.style.background = '';
+                    this.style.color = '';
+                    this.style.transform = '';
+                    console.log(`Ejecutando acción: ${actionText}`);
+                }, 300);
+            });
+        });
+        
+        // Laboratorios clickeables con mejor feedback
+        const labItems = document.querySelectorAll('.lab-item');
+        labItems.forEach(item => {
+            item.addEventListener('click', function() {
+                const labName = this.querySelector('.lab-name').textContent;
+                
+                // Efecto visual
+                this.style.background = 'var(--pale-blue)';
+                this.style.transform = 'translateY(-5px) scale(1.05)';
+                
+                setTimeout(() => {
+                    this.style.background = '';
+                    this.style.transform = '';
+                    console.log(`Accediendo a: ${labName}`);
+                }, 300);
+            });
+        });
+        
+        // Reportes clickeables con mejor feedback
+        const reportItems = document.querySelectorAll('.report-item');
+        reportItems.forEach(item => {
+            item.addEventListener('click', function() {
+                const reportTitle = this.querySelector('.report-title').textContent;
+                
+                // Efecto visual
+                this.style.background = 'var(--pale-blue)';
+                this.style.transform = 'translateX(5px) scale(1.02)';
+                
+                setTimeout(() => {
+                    this.style.background = '';
+                    this.style.transform = '';
+                    console.log(`Generando reporte: ${reportTitle}`);
+                }, 300);
+            });
+        });
+        
+        // Simular actualización en tiempo real con mejor feedback
+        setInterval(() => {
+            const statValues = document.querySelectorAll('.stat-value');
+            statValues.forEach((value, index) => {
+                if (Math.random() > 0.8) {
+                    value.style.opacity = '0.7';
+                    value.style.transform = 'scale(0.95)';
+                    
+                    setTimeout(() => {
+                        value.style.opacity = '1';
+                        value.style.transform = 'scale(1)';
+                    }, 300);
+                }
+            });
+        }, 4000);
+    });
+</script>
 {% endblock %}

@@ -1,167 +1,486 @@
 {% extends 'superadministrador/base_superadmin.html' %}
 {% load static %}
-{% block title %}Gestión de Administradores{% endblock %}
+{% block title %}Gestión de Administradores - Sistema de Laboratorios{% endblock %}
 
-{% block content %}
+{% block extra_css %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="{% static 'css/superadministrador/gestion_administrador.css' %}">
+{% endblock %}
 
+{% block content %}
 <div class="administradores-container">
-    <h2>Gestión de Administradores</h2>
-
-    <!-- Botón para abrir modal crear -->
-    <button id="newAdminBtn">Nuevo Administrador</button>
-
-    <!-- Tabla de administradores -->
-    <table>
-        <thead>
-            <tr>
-                <th>Correo</th>
-                <th>Nombre Completo</th>
-                <th>Colegio</th>
-                <th>Estado</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for admin in administradores %}
-            <tr>
-                <td>{{ admin.usuario.correo }}</td>
-                <td>{{ admin.persona.nombre }} {{ admin.persona.apellidoPaterno }} {{ admin.persona.apellidoMaterno }}</td>
-                <td>{% if admin.colegio %}{{ admin.colegio.nombre }}{% else %}-{% endif %}</td>
-                <td>{{ admin.estado }}</td>
-                <td>
-                    <button class="viewBtn" data-id="{{ admin.id }}">Ver</button>
-                    <button class="editBtn" data-id="{{ admin.id }}">Editar</button>
-                    <form method="POST" style="display:inline;">
-                        {% csrf_token %}
-                        <input type="hidden" name="cambiar_estado" value="1">
-                        <input type="hidden" name="admin_id" value="{{ admin.id }}">
-                        <button type="submit">{% if admin.estado == 'Activo' %}Desactivar{% else %}Activar{% endif %}</button>
-                    </form>
-                </td>
-            </tr>
-            {% empty %}
-            <tr><td colspan="5" style="text-align: center; padding: 40px 20px; color: #666;">No hay administradores registrados.</td></tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-
-<!-- Modal Crear Administrador -->
-<div id="adminModal" class="modal">
-    <div class="modal-content">
-        <h3>Crear Nuevo Administrador<span class="close">&times;</span></h3>
-        <form method="POST">
-            {% csrf_token %}
-            <input type="hidden" name="crear" value="1">
-            <label>Correo:</label>
-            <input type="email" name="correo" required>
-            <label>Contraseña:</label>
-            <input type="password" name="contrasenia" required>
-            <label>Nombre:</label>
-            <input type="text" name="nombre" required>
-            <label>Apellido Paterno:</label>
-            <input type="text" name="apellidoPaterno" required>
-            <label>Apellido Materno:</label>
-            <input type="text" name="apellidoMaterno" required>
-            <label>Colegio:</label>
-            <select name="colegio">
-                <option value="">-- Ninguno --</option>
-                {% for colegio in colegios %}
-                <option value="{{ colegio.id }}">{{ colegio.nombre }}</option>
-                {% endfor %}
-            </select>
-            <button type="submit">Guardar</button>
-        </form>
+    <!-- Header profesional -->
+    <div class="page-header">
+        <h2><i class="fas fa-user-shield"></i> Gestión de Administradores</h2>
+        <p>Administre y organice los administradores del sistema</p>
     </div>
-</div>
 
-<!-- Modal Editar Administrador -->
-<div id="editModal" class="modal">
-    <div class="modal-content">
-        <h3>Editar Administrador<span class="close-edit">&times;</span></h3>
-        <form method="POST">
-            {% csrf_token %}
-            <input type="hidden" name="editar" value="1">
-            <input type="hidden" name="admin_id" id="editAdminId">
-            <label>Correo:</label>
-            <input type="email" name="correo" id="editCorreo" required>
-            <label>Nombre:</label>
-            <input type="text" name="nombre" id="editNombre" required>
-            <label>Apellido Paterno:</label>
-            <input type="text" name="apellidoPaterno" id="editApellidoPaterno" required>
-            <label>Apellido Materno:</label>
-            <input type="text" name="apellidoMaterno" id="editApellidoMaterno" required>
-            <label>Colegio:</label>
-            <select name="colegio" id="editColegio">
-                <option value="">-- Ninguno --</option>
-                {% for colegio in colegios %}
-                <option value="{{ colegio.id }}">{{ colegio.nombre }}</option>
-                {% endfor %}
-            </select>
-            <button type="submit">Actualizar</button>
-        </form>
-    </div>
-</div>
-
-<!-- Modal Ver Administrador -->
-<div id="viewModal" class="modal">
-    <div class="modal-content">
-        <h3>Datos del Administrador<span class="close-view">&times;</span></h3>
-        <div>
-            <p><strong>Correo:</strong> <span id="viewCorreo"></span></p>
-            <p><strong>Nombre Completo:</strong> <span id="viewNombre"></span></p>
-            <p><strong>Colegio:</strong> <span id="viewColegio"></span></p>
-            <p><strong>Estado:</strong> <span id="viewEstado"></span></p>
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <div class="search-container">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" id="searchInput" placeholder="Buscar por correo o nombre...">
+            <button class="clear-search" id="clearSearch">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="actions-container">
+            <button class="btn-primary" id="newAdminBtn">
+                <i class="fas fa-plus"></i> Nuevo Administrador
+            </button>
         </div>
     </div>
+
+    <!-- Tabla profesional -->
+<div class="table-wrapper">
+    <div class="table-container">
+        <table class="administradores-table">
+            <thead>
+                <tr>
+                    <th>Administrador</th>
+                    <th>Colegio</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                {% for admin in administradores %}
+                <tr id="admin-{{ admin.id }}">
+                    <td>
+                        <div class="admin-info">
+                            <div class="admin-icon">
+                                <i class="fas fa-user-tie"></i>
+                            </div>
+                            <div class="admin-details">
+                                <div class="admin-name">{{ admin.persona.nombre }} {{ admin.persona.apellidoPaterno }} {{ admin.persona.apellidoMaterno }}</div>
+                                <div class="admin-email">{{ admin.usuario.correo }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="school-cell">
+                            <i class="fas fa-school"></i>
+                            {% if admin.colegio %}{{ admin.colegio.nombre }}{% else %}Sin colegio asignado{% endif %}
+                        </div>
+                    </td>
+                    <td>
+                        <form method="POST" class="estado-form" id="form-estado-{{ admin.id }}">
+                            {% csrf_token %}
+                            <input type="hidden" name="cambiar_estado" value="1">
+                            <input type="hidden" name="admin_id" value="{{ admin.id }}">
+                            <label class="switch">
+                                <input type="checkbox" class="toggle-estado" 
+                                       name="nuevo_estado"
+                                       value="{% if admin.estado == 'Activo' %}Inactivo{% else %}Activo{% endif %}"
+                                       {% if admin.estado == 'Activo' %}checked{% endif %}>
+                                <span class="slider round"></span>
+                            </label>
+                        </form>
+                    </td>
+                    <td>
+                        <div class="acciones">
+                            <button class="btn-icon btn-edit" title="Editar" onclick="openEditModal('{{ admin.id }}', '{{ admin.usuario.correo|escapejs }}', '{{ admin.persona.nombre|escapejs }}', '{{ admin.persona.apellidoPaterno|escapejs }}', '{{ admin.persona.apellidoMaterno|escapejs }}', '{% if admin.colegio %}{{ admin.colegio.id }}{% else %}{% endif %}')">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" style="text-align:center;">
+                        <div class="empty-state">
+                            <i class="fas fa-user-slash"></i>
+                            <h3>No hay administradores registrados</h3>
+                            <p>Haga clic en "Nuevo Administrador" para agregar uno</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 
-<!-- Script para modales -->
+<!-- Modal Crear Administrador - CON 2 COLUMNAS -->
+<div class="modal-overlay" id="adminModal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-user-plus"></i> Nuevo Administrador</h3>
+            <button class="close-modal" id="closeModal" type="button">&times;</button>
+        </div>
+        <form id="adminForm" method="post" action="">
+            {% csrf_token %}
+            <input type="hidden" name="crear" value="1">
+            <div class="modal-body">
+                <div class="form-columns">
+                    <!-- Columna Izquierda -->
+                    <div>
+                        <div class="form-group">
+                            <label for="correo">
+                                <i class="fas fa-envelope"></i> Correo Electrónico
+                            </label>
+                            <input type="email" id="correo" name="correo" class="form-control" 
+                                   placeholder="ejemplo@dominio.com" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="contrasenia">
+                                <i class="fas fa-lock"></i> Contraseña
+                            </label>
+                            <div class="password-container">
+                                <input type="password" id="contrasenia" name="contrasenia" class="form-control" 
+                                       placeholder="Ingrese una contraseña segura" required>
+                                <button type="button" class="toggle-password" data-target="contrasenia">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="nombre">
+                                <i class="fas fa-user"></i> Nombre
+                            </label>
+                            <input type="text" id="nombre" name="nombre" class="form-control" 
+                                   placeholder="Ingrese el nombre" required>
+                        </div>
+                    </div>
+
+                    <!-- Columna Derecha -->
+                    <div>
+                        <div class="form-group">
+                            <label for="apellidoPaterno">
+                                <i class="fas fa-user"></i> Apellido Paterno
+                            </label>
+                            <input type="text" id="apellidoPaterno" name="apellidoPaterno" class="form-control" 
+                                   placeholder="Ingrese el apellido paterno" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="apellidoMaterno">
+                                <i class="fas fa-user"></i> Apellido Materno
+                            </label>
+                            <input type="text" id="apellidoMaterno" name="apellidoMaterno" class="form-control" 
+                                   placeholder="Ingrese el apellido materno" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="colegio">
+                                <i class="fas fa-school"></i> Colegio
+                            </label>
+                            <select id="colegio" name="colegio" class="form-control">
+                                <option value="">-- Sin colegio asignado --</option>
+                                {% for colegio in colegios %}
+                                <option value="{{ colegio.id }}">{{ colegio.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" id="cancelBtn">Cancelar</button>
+                <button type="submit" class="btn-primary" id="saveBtn">
+                    <i class="fas fa-save"></i> Crear Administrador
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Editar Administrador - CONTRASEÑA MEJORADA -->
+<div class="modal-overlay" id="editModal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-edit"></i> Editar Administrador</h3>
+            <button class="close-modal" id="closeEditModal" type="button">&times;</button>
+        </div>
+        <form id="editAdminForm" method="post" action="">
+            {% csrf_token %}
+            <input type="hidden" name="editar" value="1">
+            <input type="hidden" id="editAdminId" name="admin_id">
+            <div class="modal-body">
+                <div class="form-columns">
+                    <!-- Columna Izquierda -->
+                    <div>
+                        <div class="form-group">
+                            <label for="editCorreo">
+                                <i class="fas fa-envelope"></i> Correo Electrónico
+                            </label>
+                            <input type="email" id="editCorreo" name="correo" class="form-control" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="editContrasenia">
+                                <i class="fas fa-lock"></i> Contraseña
+                            </label>
+                            <div class="password-container">
+                                <input type="password" id="editContrasenia" name="contrasenia" class="form-control" 
+                                       placeholder="Dejar en blanco para no cambiar">
+                                <button type="button" class="toggle-password" data-target="editContrasenia">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="editNombre">
+                                <i class="fas fa-user"></i> Nombre
+                            </label>
+                            <input type="text" id="editNombre" name="nombre" class="form-control" required>
+                        </div>
+                    </div>
+
+                    <!-- Columna Derecha -->
+                    <div>
+                        <div class="form-group">
+                            <label for="editApellidoPaterno">
+                                <i class="fas fa-user"></i> Apellido Paterno
+                            </label>
+                            <input type="text" id="editApellidoPaterno" name="apellidoPaterno" class="form-control" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="editApellidoMaterno">
+                                <i class="fas fa-user"></i> Apellido Materno
+                            </label>
+                            <input type="text" id="editApellidoMaterno" name="apellidoMaterno" class="form-control" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="editColegio">
+                                <i class="fas fa-school"></i> Colegio
+                            </label>
+                            <select id="editColegio" name="colegio" class="form-control">
+                                <option value="">-- Sin colegio asignado --</option>
+                                {% for colegio in colegios %}
+                                <option value="{{ colegio.id }}">{{ colegio.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" id="cancelEditBtn">Cancelar</button>
+                <button type="submit" class="btn-primary" id="updateBtn">
+                    <i class="fas fa-save"></i> Actualizar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Notificación -->
+<div class="custom-alert" id="customAlert">
+    <div class="alert-header">
+        <i class="fas fa-check-circle alert-icon" id="alertIcon"></i>
+        <span id="alertTitle">Éxito</span>
+        <button class="alert-close" id="alertClose">&times;</button>
+    </div>
+    <div class="alert-body">
+        <p id="alertMessage">Operación realizada correctamente.</p>
+    </div>
+</div>
+
 <script>
-// Crear
-document.getElementById('newAdminBtn').onclick = function() {
-    document.getElementById('adminModal').style.display = 'block';
-}
-document.querySelector('.close').onclick = function() { document.getElementById('adminModal').style.display = 'none'; }
+    // Modales
+    const modal = document.getElementById('adminModal');
+    const editModal = document.getElementById('editModal');
+    const newAdminBtn = document.getElementById('newAdminBtn');
+    const closeModalBtn = document.getElementById('closeModal');
+    const closeEditModalBtn = document.getElementById('closeEditModal');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const cancelEditBtn = document.getElementById('cancelEditBtn');
+    const searchInput = document.getElementById('searchInput');
+    const clearSearch = document.getElementById('clearSearch');
+    const tableBody = document.getElementById('tableBody');
+    const customAlert = document.getElementById('customAlert');
+    const alertClose = document.getElementById('alertClose');
 
-// Editar
-document.querySelectorAll('.editBtn').forEach(btn=>{
-    btn.onclick = function() {
-        const row = btn.closest('tr');
-        document.getElementById('editAdminId').value = btn.dataset.id;
-        document.getElementById('editCorreo').value = row.cells[0].innerText;
-        const nombres = row.cells[1].innerText.split(' ');
-        document.getElementById('editNombre').value = nombres[0];
-        document.getElementById('editApellidoPaterno').value = nombres[1]||'';
-        document.getElementById('editApellidoMaterno').value = nombres[2]||'';
-        const colegio = row.cells[2].innerText;
-        const select = document.getElementById('editColegio');
-        select.value = Array.from(select.options).find(opt=>opt.text===colegio)?.value || '';
-        document.getElementById('editModal').style.display='block';
+    // Función para abrir modal de crear administrador
+    function openModal() {
+        modal.style.display = 'flex';
     }
-});
-document.querySelector('.close-edit').onclick = function(){ document.getElementById('editModal').style.display='none'; }
 
-// Ver
-document.querySelectorAll('.viewBtn').forEach(btn=>{
-    btn.onclick=function(){
-        const row = btn.closest('tr');
-        document.getElementById('viewCorreo').innerText = row.cells[0].innerText;
-        document.getElementById('viewNombre').innerText = row.cells[1].innerText;
-        document.getElementById('viewColegio').innerText = row.cells[2].innerText;
-        document.getElementById('viewEstado').innerText = row.cells[3].innerText;
-        document.getElementById('viewModal').style.display='block';
+    // Función para cerrar modal de crear administrador
+    function closeModal() {
+        modal.style.display = 'none';
+        document.getElementById('adminForm').reset();
     }
-});
-document.querySelector('.close-view').onclick=function(){ document.getElementById('viewModal').style.display='none'; }
 
-// Cerrar al dar clic fuera
-window.onclick = function(event){
-    if(event.target==document.getElementById('adminModal')) document.getElementById('adminModal').style.display='none';
-    if(event.target==document.getElementById('editModal')) document.getElementById('editModal').style.display='none';
-    if(event.target==document.getElementById('viewModal')) document.getElementById('viewModal').style.display='none';
-}
+    // Función para abrir modal de editar administrador
+    function openEditModal(id, correo, nombre, apellidoPaterno, apellidoMaterno, colegioId) {
+        document.getElementById('editAdminId').value = id;
+        document.getElementById('editCorreo').value = correo;
+        document.getElementById('editNombre').value = nombre;
+        document.getElementById('editApellidoPaterno').value = apellidoPaterno;
+        document.getElementById('editApellidoMaterno').value = apellidoMaterno;
+        document.getElementById('editColegio').value = colegioId;
+        
+        // Limpiar campo de contraseña al abrir el modal
+        document.getElementById('editContrasenia').value = '';
+        
+        editModal.style.display = 'flex';
+    }
+
+    // Función para cerrar modal de editar administrador
+    function closeEditModal() {
+        editModal.style.display = 'none';
+        document.getElementById('editAdminForm').reset();
+    }
+
+    // Función para mostrar alertas
+    function showAlert(message, type = 'success') {
+        const config = {
+            success: {
+                title: 'Éxito',
+                icon: 'fa-check-circle',
+                className: 'alert-success'
+            },
+            error: {
+                title: 'Error',
+                icon: 'fa-exclamation-circle',
+                className: 'alert-error'
+            }
+        };
+        
+        const { title, icon, className } = config[type];
+        
+        document.getElementById('alertTitle').textContent = title;
+        document.getElementById('alertIcon').className = `fas ${icon} alert-icon`;
+        document.getElementById('alertMessage').textContent = message;
+        customAlert.className = `custom-alert ${className}`;
+        customAlert.classList.add('show');
+        
+        setTimeout(() => {
+            customAlert.classList.remove('show');
+        }, 5000);
+    }
+
+    // Funcionalidad para mostrar/ocultar contraseña
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.toggle-password')) {
+            const button = e.target.closest('.toggle-password');
+            const targetId = button.getAttribute('data-target');
+            const passwordInput = document.getElementById(targetId);
+            const icon = button.querySelector('i');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.className = 'fas fa-eye-slash';
+            } else {
+                passwordInput.type = 'password';
+                icon.className = 'fas fa-eye';
+            }
+        }
+    });
+
+    // Event listeners para modales - CORREGIDOS
+    newAdminBtn.addEventListener('click', openModal);
+    closeModalBtn.addEventListener('click', closeModal);
+    closeEditModalBtn.addEventListener('click', closeEditModal);
+    cancelBtn.addEventListener('click', closeModal);
+    cancelEditBtn.addEventListener('click', closeEditModal);
+    alertClose.addEventListener('click', () => customAlert.classList.remove('show'));
+
+    // Funcionalidad de búsqueda
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const rows = tableBody.getElementsByTagName('tr');
+        let visibleCount = 0;
+        
+        clearSearch.style.display = searchTerm ? 'block' : 'none';
+        
+        for (let row of rows) {
+            const text = row.textContent.toLowerCase();
+            if (text.includes(searchTerm)) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        }
+        
+        if (visibleCount === 0 && searchTerm) {
+            if (!document.getElementById('noResults')) {
+                const noResults = document.createElement('tr');
+                noResults.id = 'noResults';
+                noResults.innerHTML = `
+                    <td colspan="4">
+                        <div class="empty-state">
+                            <i class="fas fa-search"></i>
+                            <h3>No se encontraron resultados</h3>
+                            <p>Intente con otros términos de búsqueda</p>
+                        </div>
+                    </td>
+                `;
+                tableBody.appendChild(noResults);
+            }
+        } else {
+            const noResults = document.getElementById('noResults');
+            if (noResults) noResults.remove();
+        }
+    });
+
+    // Limpiar búsqueda
+    clearSearch.addEventListener('click', () => {
+        searchInput.value = '';
+        clearSearch.style.display = 'none';
+        const rows = tableBody.getElementsByTagName('tr');
+        for (let row of rows) {
+            row.style.display = '';
+        }
+        const noResults = document.getElementById('noResults');
+        if (noResults) noResults.remove();
+    });
+
+    // Cerrar modales al hacer clic fuera
+    window.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+        if (e.target === editModal) closeEditModal();
+    });
+
+    // Cerrar modales con tecla Escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            if (modal.style.display === 'flex') closeModal();
+            if (editModal.style.display === 'flex') closeEditModal();
+        }
+    });
+
+    // Toggle estado con bolita redonda - CORREGIDO
+document.querySelectorAll('.toggle-estado').forEach(sw => {
+    sw.addEventListener('change', function(){
+        const form = this.closest('.estado-form');
+        const adminId = form.querySelector('input[name="admin_id"]').value;
+        
+        // Crear FormData para enviar el formulario
+        const formData = new FormData(form);
+        
+        fetch('', {  // URL vacía para enviar a la misma vista
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                showAlert('Estado del administrador actualizado correctamente', 'success');
+                // Opcional: recargar después de un tiempo si es necesario
+                // setTimeout(() => location.reload(), 1000);
+            } else {
+                showAlert('Error al cambiar el estado', 'error');
+                // Revertir el cambio visual si falla
+                this.checked = !this.checked;
+            }
+        })
+        .catch(err => {
+            console.error('Error:', err);
+            showAlert('Error al cambiar el estado', 'error');
+            this.checked = !this.checked;
+        });
+    });
+});
 </script>
 {% endblock %}
