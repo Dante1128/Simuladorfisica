@@ -90,8 +90,10 @@ urlpatterns = [
     path('componentes/<int:pk>/eliminar/', views.componente_delete_confirm, name='componente_delete_confirm'),
     # Reportes PDF
     path('reportes/pdf/<str:tipo_reporte>/', views.generar_reporte_pdf, name='generar_reporte_pdf'),
-    # URLs para AJAX y búsquedas
-    path('gestion-documentos/', views.gestion_documentos, name='gestion_documentos'),
+   #MODULO GESTION CONTENIDO-TEORICO
+    path('gestion-documentos-profesor/', views.gestion_documentos_profesor, name='gestion_documentos_profesor'),
+    path('gestion-documentos-administrador/', views.gestion_documentos_administrador, name='gestion_documentos_administrador'),
+    path('gestion-documentos-superadministrador/', views.gestion_documentos_superadministrador, name='gestion_documentos_superadministrador'),
     path('contenido-teorico/', views.contenido_teorico, name='contenido_teorico'),
     path('documentos/<int:documento_id>/descargar/', views.descargar_documento, name='descargar_documento'),
     path('documentos/<int:documento_id>/preview/', views.preview_documento, name='preview_documento'),

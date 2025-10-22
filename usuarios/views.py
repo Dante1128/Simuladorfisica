@@ -2320,9 +2320,9 @@ def informes_principal(request):
 
 ##VISTA PARA CONTENIDO TEORICO##
 
-def gestion_documentos(request):
+def gestion_documentos_profesor(request):
     """
-    Vista exclusiva para administradores para gestionar documentos
+    Vista exclusiva para profesores para gestionar documentos
     """
     documentos = Documento.objects.all().order_by('-fecha_creacion')
     
@@ -2334,26 +2334,71 @@ def gestion_documentos(request):
     return render(request, 'profesor/gestion_documentos.html', {
         'documentos': documentos
     })
+
+def gestion_documentos_administrador(request):
+    """
+    Vista exclusiva para administradores para gestionar documentos
+    """
+    documentos = Documento.objects.all().order_by('-fecha_creacion')
     
-def crear_documento_ajax(request):
-    """Crear documento via AJAX con archivo PDF"""
+    if request.method == 'POST':
+        # Manejar AJAX requests para crear/editar/eliminar
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return manejar_ajax_documentos(request)
+    
+    return render(request, 'administrador/gestion_documentos.html', {
+        'documentos': documentos
+    })
+
+def gestion_documentos_superadministrador(request):
+    """
+    Vista exclusiva para superadministradores para gestionar documentos
+    """
+    documentos = Documento.objects.all().order_by('-fecha_creacion')
+    
+    if request.method == 'POST':
+        # Manejar AJAX requests para crear/editar/eliminar
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return manejar_ajax_documentos(request)
+    
+    return render(request, 'superadministrador/gestion_documentos.html', {
+        'documentos': documentos
+    })
+    
+def crear_documento_ajax(request_or_data):
+    """Crear documento via AJAX que funcione tanto con request como con data"""
     try:
-        nombre = request.POST.get('nombre', '').strip()
+        # Determinar si es request (con archivos) o data (sin archivos)
+        if hasattr(request_or_data, 'POST'):
+            # Es un request con posible archivo
+            request = request_or_data
+            nombre = request.POST.get('nombre', '').strip()
+            descripcion = request.POST.get('descripcion', '')
+            estado = request.POST.get('estado', 'Activo')
+            categoria = request.POST.get('categoria', 'fisica_general')
+        else:
+            # Es data sin archivos
+            data = request_or_data
+            nombre = data.get('nombre', '').strip()
+            descripcion = data.get('descripcion', '')
+            estado = data.get('estado', 'Activo')
+            categoria = data.get('categoria', 'fisica_general')
+        
         if not nombre:
             return JsonResponse({'error': 'El nombre es requerido'}, status=400)
         
         # Crear documento
         documento = Documento(
             nombre=nombre,
-            descripcion=request.POST.get('descripcion', ''),
-            estado=request.POST.get('estado', 'Activo'),
-            categoria='fisica_general'
+            descripcion=descripcion,
+            estado=estado,
+            categoria=categoria
         )
         
-        # Manejar archivo PDF si se subió
-        if 'archivo_pdf' in request.FILES:
-            archivo = request.FILES['archivo_pdf']
-            documento.archivo_pdf = archivo.read()  # Guardar binario
+        # Manejar archivo PDF solo si es request con archivos
+        if hasattr(request_or_data, 'FILES') and 'archivo_pdf' in request_or_data.FILES:
+            archivo = request_or_data.FILES['archivo_pdf']
+            documento.archivo_pdf = archivo.read()
             documento.nombre_archivo = archivo.name
             documento.tamaño = archivo.size
         
@@ -2361,12 +2406,12 @@ def crear_documento_ajax(request):
         
         return JsonResponse({
             'success': True,
-            'message': 'Documento creado correctamente' + (' con PDF' if 'archivo_pdf' in request.FILES else '')
+            'message': 'Documento creado correctamente' + (' con PDF' if hasattr(request_or_data, 'FILES') and 'archivo_pdf' in request_or_data.FILES else '')
         })
         
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
-
+    
 def manejar_ajax_documentos(request):
     """Manejar operaciones AJAX para documentos"""
     if request.method == 'POST':
@@ -2377,18 +2422,24 @@ def manejar_ajax_documentos(request):
                 
                 if action == 'crear':
                     return crear_documento_ajax(request)
-                # ... otras acciones
+                elif action == 'editar':
+                    return editar_documento_ajax_con_archivos(request)  # Nueva función
+                else:
+                    return JsonResponse({'error': 'Acción no válida para FormData'}, status=400)
+                    
             else:
-                # Manejo normal JSON
+                # Manejo normal JSON (sin archivos)
                 data = json.loads(request.body)
                 action = data.get('action')
                 
                 if action == 'crear':
-                    return crear_documento_ajax(data)
+                    return crear_documento_sin_archivos(data)  # O ajustar crear_documento_ajax
                 elif action == 'editar':
                     return editar_documento_ajax(data)
                 elif action == 'eliminar':
                     return eliminar_documento_ajax(data)
+                else:
+                    return JsonResponse({'error': 'Acción no válida'}, status=400)
                 
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
@@ -2413,6 +2464,47 @@ def editar_documento_ajax(data):
         return JsonResponse({
             'success': True,
             'message': 'Documento actualizado correctamente'
+        })
+        
+    except Documento.DoesNotExist:
+        return JsonResponse({'error': 'Documento no encontrado'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+    
+def editar_documento_ajax_con_archivos(request):
+    """Editar documento via AJAX con soporte para archivos PDF"""
+    try:
+        documento_id = request.POST.get('id')
+        if not documento_id:
+            return JsonResponse({'error': 'ID de documento requerido'}, status=400)
+        
+        documento = Documento.objects.get(id=documento_id)
+        documento.nombre = request.POST.get('nombre', documento.nombre).strip()
+        documento.descripcion = request.POST.get('descripcion', documento.descripcion)
+        documento.estado = request.POST.get('estado', documento.estado)
+        documento.categoria = request.POST.get('categoria', documento.categoria)
+        
+        # Manejar archivo PDF si se subió uno nuevo
+        if 'archivo_pdf' in request.FILES:
+            archivo = request.FILES['archivo_pdf']
+            if archivo:
+                # Validar que sea PDF
+                if not archivo.name.lower().endswith('.pdf'):
+                    return JsonResponse({'error': 'Solo se permiten archivos PDF'}, status=400)
+                # Validar tamaño (10MB)
+                if archivo.size > 10 * 1024 * 1024:
+                    return JsonResponse({'error': 'El archivo es demasiado grande (máx. 10MB)'}, status=400)
+                
+                # Guardar el archivo (depende de tu modelo)
+                documento.archivo_pdf = archivo.read()  # Si guardas como binario
+                documento.nombre_archivo = archivo.name
+                documento.tamaño = archivo.size
+        
+        documento.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Documento actualizado correctamente' + (' con nuevo PDF' if 'archivo_pdf' in request.FILES else '')
         })
         
     except Documento.DoesNotExist:
