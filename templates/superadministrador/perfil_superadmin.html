@@ -1,0 +1,571 @@
+{% extends 'superadministrador/base_superadmin.html' %}
+{% load static %}
+{% block title %}Perfil de Superadministrador{% endblock %}
+
+{% block content %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/superadministrador/perfil_superadmin.css' %}">
+    
+    <div class="container">
+        <header class="header">
+            <div class="header-left">
+                <div class="logo-icon"><i class="fas fa-shield-alt"></i></div>
+                <div class="logo">Admin System</div>
+            </div>
+            <div class="header-right">
+                <div class="user-info">
+                    <i class="fas fa-user-circle" style="font-size: 20px;"></i>
+                    <span>{{ user.get_full_name|default:user.username }}</span>
+                </div>
+                <a href="#" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
+            </div>
+        </header>
+
+        <div class="main-wrapper">
+            <!-- Profile Card -->
+            <div class="profile-card">
+                <div class="profile-picture-container">
+                    {% if user.profile_picture %}
+                        <img id="profile-picture" src="{{ user.profile_picture.url }}" alt="Foto de perfil" class="profile-picture">
+                    {% else %}
+                        <div class="profile-picture-default">
+                            {{ user.first_name.0|upper }}{{ user.last_name.0|upper }}
+                        </div>
+                    {% endif %}
+                    <button class="change-photo-btn" id="change-photo-btn">
+                        <i class="fas fa-camera"></i>
+                    </button>
+                </div>
+                <h2 class="profile-name" id="profile-name">{{ user.get_full_name|default:user.username }}</h2>
+                <p class="profile-role">Superadministrador</p>
+
+                <div class="stats-container">
+                    <div class="stat-box">
+                        <div class="stat-icon"><i class="fas fa-users-cog"></i></div>
+                        <div class="stat-number">{{ total_administradores|default:"0" }}</div>
+                        <div class="stat-label">Administradores</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-icon"><i class="fas fa-users"></i></div>
+                        <div class="stat-number">{{ total_usuarios|default:"0" }}</div>
+                        <div class="stat-label">Usuarios</div>
+                    </div>
+                </div>
+
+                <div class="profile-details">
+                    <div class="detail-item">
+                        <div class="detail-label">
+                            <i class="fas fa-calendar"></i>
+                            <span>Miembro desde:</span>
+                        </div>
+                        <div class="detail-value" id="member-since">
+                            {% if user.date_joined %}
+                                {{ user.date_joined|date:"d/m/Y" }}
+                            {% else %}
+                                No disponible
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">
+                            <i class="fas fa-clock"></i>
+                            <span>Último acceso:</span>
+                        </div>
+                        <div class="detail-value" id="last-access">
+                            {% if user.last_login %}
+                                {{ user.last_login|date:"d/m/Y H:i" }}
+                            {% else %}
+                                Nunca
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">
+                            <i class="fas fa-shield-alt"></i>
+                            <span>Nivel:</span>
+                        </div>
+                        <div class="detail-value">Máximo</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">
+                            <i class="fas fa-user-tag"></i>
+                            <span>Usuario:</span>
+                        </div>
+                        <div class="detail-value">{{ user.username }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Section -->
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <i class="fas fa-user-edit"></i>
+                    </div>
+                    <h2 class="section-title">Mi Perfil</h2>
+                </div>
+
+                <form id="profile-form" method="POST" action="#">
+                    {% csrf_token %}
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="first-name"><i class="fas fa-user"></i> Nombre</label>
+                            <div class="view-mode field-value" id="first-name-view">{{ user.first_name|default:"No especificado" }}</div>
+                            <input type="text" id="first-name" name="first_name" class="edit-mode" value="{{ user.first_name }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="last-name"><i class="fas fa-user"></i> Apellido</label>
+                            <div class="view-mode field-value" id="last-name-view">{{ user.last_name|default:"No especificado" }}</div>
+                            <input type="text" id="last-name" name="last_name" class="edit-mode" value="{{ user.last_name }}">
+                        </div>
+                        <div class="form-group full">
+                            <label for="email"><i class="fas fa-envelope"></i> Correo Electrónico</label>
+                            <div class="view-mode field-value" id="email-view">{{ user.email|default:"No especificado" }}</div>
+                            <input type="email" id="email" name="email" class="edit-mode" value="{{ user.email }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="phone"><i class="fas fa-phone"></i> Teléfono</label>
+                            <div class="view-mode field-value" id="phone-view">{{ user.telefono|default:"No especificado" }}</div>
+                            <input type="tel" id="phone" name="telefono" class="edit-mode" value="{{ user.telefono }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="department"><i class="fas fa-building"></i> Departamento</label>
+                            <div class="view-mode field-value" id="department-view">{{ user.departamento|default:"Tecnología" }}</div>
+                            <select id="department" name="departamento" class="edit-mode">
+                                <option value="Tecnología" {% if user.departamento == "Tecnología" %}selected{% endif %}>Tecnología</option>
+                                <option value="Recursos Humanos" {% if user.departamento == "Recursos Humanos" %}selected{% endif %}>Recursos Humanos</option>
+                                <option value="Finanzas" {% if user.departamento == "Finanzas" %}selected{% endif %}>Finanzas</option>
+                                <option value="Operaciones" {% if user.departamento == "Operaciones" %}selected{% endif %}>Operaciones</option>
+                                <option value="Administración" {% if user.departamento == "Administración" %}selected{% endif %}>Administración</option>
+                            </select>
+                        </div>
+                        <div class="form-group full">
+                            <label for="bio"><i class="fas fa-file-alt"></i> Biografía</label>
+                            <div class="view-mode field-value" id="bio-view">{{ user.biografia|default:"Sin biografía" }}</div>
+                            <textarea id="bio" name="biografia" class="edit-mode" rows="4">{{ user.biografia }}</textarea>
+                        </div>
+                    </div>
+
+                    <!-- Mensajes de éxito/error -->
+                    {% if messages %}
+                    <div class="messages-container">
+                        {% for message in messages %}
+                        <div class="message {{ message.tags }}">
+                            <i class="fas fa-{% if message.tags == 'success' %}check-circle{% else %}exclamation-triangle{% endif %}"></i>
+                            {{ message }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <div class="action-buttons">
+                        <button type="button" id="edit-btn" class="btn btn-secondary"><i class="fas fa-edit"></i> Editar Perfil</button>
+                        <button type="submit" id="save-btn" class="btn btn-primary edit-mode"><i class="fas fa-save"></i> Guardar Cambios</button>
+                        <button type="button" id="cancel-btn" class="btn btn-secondary edit-mode"><i class="fas fa-times"></i> Cancelar</button>
+                    </div>
+                </form>
+
+                <!-- Sección de seguridad -->
+                <div class="security-section">
+                    <div class="section-header">
+                        <div class="section-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h2 class="section-title">Seguridad</h2>
+                    </div>
+                    
+                    <div class="security-actions">
+                        <a href="#" class="security-btn">
+                            <i class="fas fa-key"></i>
+                            <span>Cambiar Contraseña</span>
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                        
+                        <div class="security-info">
+                            <div class="security-item">
+                                <i class="fas fa-check-circle text-success"></i>
+                                <span>Autenticación de dos factores: <strong>{% if user.two_factor_enabled %}Activada{% else %}Desactivada{% endif %}</strong></span>
+                            </div>
+                            <div class="security-item">
+                                <i class="fas fa-clock"></i>
+                                <span>Último cambio de contraseña: 
+                                    <strong>{% if user.last_password_change %}
+                                        {{ user.last_password_change|date:"d/m/Y" }}
+                                    {% else %}
+                                        Nunca
+                                    {% endif %}</strong>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para cambiar foto de perfil -->
+    <div class="modal" id="photo-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Cambiar foto de perfil</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <form id="photo-form" method="POST" action="#" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="photo-preview">
+                    {% if user.profile_picture %}
+                        <img id="photo-preview-img" src="{{ user.profile_picture.url }}" alt="Vista previa">
+                    {% else %}
+                        <div class="photo-preview-default" id="photo-preview-default">
+                            {{ user.first_name.0|upper }}{{ user.last_name.0|upper }}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="form-group full">
+                    <label for="photo-input"><i class="fas fa-image"></i> Seleccionar imagen</label>
+                    <input type="file" id="photo-input" name="profile_picture" accept="image/*">
+                    <small class="form-text">Formatos permitidos: JPG, PNG, GIF. Tamaño máximo: 5MB</small>
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" class="btn btn-secondary" id="cancel-photo">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Foto</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <style>
+        /* Estilos adicionales para mejorar la interfaz */
+        .profile-picture-default {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 3rem;
+            font-weight: bold;
+            margin: 0 auto;
+        }
+
+        .photo-preview-default {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 4rem;
+            font-weight: bold;
+            margin: 0 auto;
+        }
+
+        .messages-container {
+            margin: 20px 0;
+        }
+
+        .message {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .message.success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .message.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .message.warning {
+            background: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .security-section {
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .security-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .security-btn {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 20px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            text-decoration: none;
+            color: #374151;
+            transition: all 0.3s ease;
+        }
+
+        .security-btn:hover {
+            background: #f8fafc;
+            border-color: #133E87;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .security-info {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .security-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .security-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .text-success {
+            color: #10b981;
+        }
+
+        .form-text {
+            font-size: 0.8rem;
+            color: #6b7280;
+            margin-top: 5px;
+        }
+    </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elementos del DOM
+            const editBtn = document.getElementById('edit-btn');
+            const saveBtn = document.getElementById('save-btn');
+            const cancelBtn = document.getElementById('cancel-btn');
+            const contentSection = document.querySelector('.content-section');
+            const profileForm = document.getElementById('profile-form');
+            const changePhotoBtn = document.getElementById('change-photo-btn');
+            const photoModal = document.getElementById('photo-modal');
+            const closeModal = document.querySelector('.close-modal');
+            const cancelPhoto = document.getElementById('cancel-photo');
+            const photoInput = document.getElementById('photo-input');
+            const photoPreviewImg = document.getElementById('photo-preview-img');
+            const photoPreviewDefault = document.getElementById('photo-preview-default');
+            const profilePicture = document.getElementById('profile-picture');
+            const profilePictureDefault = document.querySelector('.profile-picture-default');
+            const photoForm = document.getElementById('photo-form');
+            
+            // Datos originales para restaurar en caso de cancelar
+            let originalData = {};
+            
+            // Función para habilitar modo edición
+            function enableEditMode() {
+                contentSection.classList.add('editing');
+                // Guardar datos originales
+                originalData = {
+                    firstName: document.getElementById('first-name').value,
+                    lastName: document.getElementById('last-name').value,
+                    email: document.getElementById('email').value,
+                    phone: document.getElementById('phone').value,
+                    department: document.getElementById('department').value,
+                    bio: document.getElementById('bio').value
+                };
+            }
+            
+            // Función para deshabilitar modo edición
+            function disableEditMode() {
+                contentSection.classList.remove('editing');
+            }
+            
+            // Función para guardar cambios
+            function saveChanges(event) {
+                // Actualizamos la vista con los nuevos valores
+                document.getElementById('first-name-view').textContent = document.getElementById('first-name').value || 'No especificado';
+                document.getElementById('last-name-view').textContent = document.getElementById('last-name').value || 'No especificado';
+                document.getElementById('email-view').textContent = document.getElementById('email').value || 'No especificado';
+                document.getElementById('phone-view').textContent = document.getElementById('phone').value || 'No especificado';
+                document.getElementById('department-view').textContent = document.getElementById('department').value;
+                document.getElementById('bio-view').textContent = document.getElementById('bio').value || 'Sin biografía';
+                
+                // Actualizar nombre en la tarjeta de perfil
+                const newFirstName = document.getElementById('first-name').value;
+                const newLastName = document.getElementById('last-name').value;
+                document.getElementById('profile-name').textContent = 
+                    (newFirstName || newLastName) ? `${newFirstName} ${newLastName}` : '{{ user.username }}';
+                
+                disableEditMode();
+            }
+            
+            // Función para cancelar edición
+            function cancelEdit() {
+                // Restaurar valores originales
+                document.getElementById('first-name').value = originalData.firstName;
+                document.getElementById('last-name').value = originalData.lastName;
+                document.getElementById('email').value = originalData.email;
+                document.getElementById('phone').value = originalData.phone;
+                document.getElementById('department').value = originalData.department;
+                document.getElementById('bio').value = originalData.bio;
+                
+                disableEditMode();
+            }
+            
+            // Funciones para el modal de foto
+            function openPhotoModal() {
+                photoModal.style.display = 'flex';
+            }
+            
+            function closePhotoModal() {
+                photoModal.style.display = 'none';
+                // Resetear el input de archivo
+                photoInput.value = '';
+                // Restaurar vista previa original
+                if (photoPreviewImg) {
+                    photoPreviewImg.src = '{% if user.profile_picture %}{{ user.profile_picture.url }}{% endif %}';
+                }
+            }
+            
+            // Vista previa de la foto seleccionada
+            function previewPhoto(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    // Validar tipo de archivo
+                    const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
+                    if (!validTypes.includes(file.type)) {
+                        alert('Por favor, selecciona una imagen válida (JPG, PNG o GIF)');
+                        photoInput.value = '';
+                        return;
+                    }
+                    
+                    // Validar tamaño (5MB)
+                    if (file.size > 5 * 1024 * 1024) {
+                        alert('La imagen debe ser menor a 5MB');
+                        photoInput.value = '';
+                        return;
+                    }
+                    
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        if (photoPreviewImg) {
+                            photoPreviewImg.src = e.target.result;
+                        }
+                        if (photoPreviewDefault) {
+                            photoPreviewDefault.style.display = 'none';
+                            if (!photoPreviewImg) {
+                                const img = document.createElement('img');
+                                img.id = 'photo-preview-img';
+                                img.src = e.target.result;
+                                img.alt = 'Vista previa';
+                                img.style.width = '200px';
+                                img.style.height = '200px';
+                                img.style.borderRadius = '50%';
+                                img.style.objectFit = 'cover';
+                                document.querySelector('.photo-preview').appendChild(img);
+                            }
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+            
+            // Event listeners
+            editBtn.addEventListener('click', enableEditMode);
+            cancelBtn.addEventListener('click', cancelEdit);
+            changePhotoBtn.addEventListener('click', openPhotoModal);
+            closeModal.addEventListener('click', closePhotoModal);
+            cancelPhoto.addEventListener('click', closePhotoModal);
+            photoInput.addEventListener('change', previewPhoto);
+            
+            // Cerrar modal al hacer clic fuera del contenido
+            window.addEventListener('click', function(event) {
+                if (event.target === photoModal) {
+                    closePhotoModal();
+                }
+            });
+            
+            // Manejar el envío del formulario de perfil
+            profileForm.addEventListener('submit', function(event) {
+                // Validación básica
+                const email = document.getElementById('email').value;
+                if (email && !isValidEmail(email)) {
+                    event.preventDefault();
+                    alert('Por favor, ingresa un correo electrónico válido');
+                    return;
+                }
+                
+                saveChanges();
+                // Mostrar mensaje de carga
+                saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+                saveBtn.disabled = true;
+            });
+            
+            // Manejar el envío del formulario de foto
+            photoForm.addEventListener('submit', function(event) {
+                if (!photoInput.files || !photoInput.files[0]) {
+                    event.preventDefault();
+                    alert('Por favor, selecciona una imagen');
+                    return;
+                }
+                
+                // Actualizar la foto en la vista principal después de guardar
+                const file = photoInput.files[0];
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    if (profilePicture) {
+                        profilePicture.src = e.target.result;
+                    } else if (profilePictureDefault) {
+                        profilePictureDefault.style.display = 'none';
+                        const img = document.createElement('img');
+                        img.id = 'profile-picture';
+                        img.src = e.target.result;
+                        img.alt = 'Foto de perfil';
+                        img.className = 'profile-picture';
+                        img.style.width = '150px';
+                        img.style.height = '150px';
+                        img.style.borderRadius = '50%';
+                        img.style.objectFit = 'cover';
+                        document.querySelector('.profile-picture-container').insertBefore(img, changePhotoBtn);
+                    }
+                };
+                reader.readAsDataURL(file);
+                
+                closePhotoModal();
+            });
+            
+            // Función para validar email
+            function isValidEmail(email) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return emailRegex.test(email);
+            }
+            
+            // Auto-ocultar mensajes después de 5 segundos
+            const messages = document.querySelectorAll('.message');
+            messages.forEach(message => {
+                setTimeout(() => {
+                    message.style.opacity = '0';
+                    message.style.transition = 'opacity 0.5s ease';
+                    setTimeout(() => message.remove(), 500);
+                }, 5000);
+            });
+        });
+    </script>
+{% endblock %}

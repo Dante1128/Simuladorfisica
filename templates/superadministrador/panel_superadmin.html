@@ -1,6 +1,6 @@
 {% extends 'superadministrador/base_superadmin.html' %}
 {% load static %}
-{% block title %}Bienvenido al Sistema de Laboratorios{% endblock %}
+{% block title %}Panel de Control Superadministrador{% endblock %}
 
 {% block content %}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -465,10 +465,14 @@
                 
                 <div class="user-info">
                     <div class="user-avatar">
-                        <i class="fas fa-user-shield"></i>
+                        {% if usuario.correo %}
+                            {{ usuario.correo.0|upper }}
+                        {% else %}
+                            <i class="fas fa-user-shield"></i>
+                        {% endif %}
                     </div>
                     <div class="user-details">
-                        <h3>Super Administrador</h3>
+                        <h3>Superadmin {{ usuario.correo|default:"Administrador" }}</h3>
                         <p>Nivel de acceso: Máximo</p>
                     </div>
                     <div class="superuser-badge">SUPER</div>
@@ -480,34 +484,98 @@
                 </div>
             </div>
 
-            <div class="quick-stats">
-                <div class="stat-card" onclick="navigateTo('colegios')">
-                    <div class="stat-icon">
-                        <i class="fas fa-school"></i>
-                    </div>
-                    <div class="stat-value">24</div>
-                    <div class="stat-label">Colegios Activos</div>
-                </div>
-                <div class="stat-card" onclick="navigateTo('usuarios')">
-                    <div class="stat-icon">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <div class="stat-value">1,248</div>
-                    <div class="stat-label">Usuarios Totales</div>
-                </div>
-                <div class="stat-card" onclick="navigateTo('estadisticas')">
-                    <div class="stat-icon">
-                        <i class="fas fa-chart-line"></i>
-                    </div>
-                    <div class="stat-value">98%</div>
-                    <div class="stat-label">Sistema Activo</div>
-                </div>
-                <div class="stat-card" onclick="navigateTo('alertas')">
-                    <div class="stat-icon">
-                        <i class="fas fa-bell"></i>
-                    </div>
-                    <div class="stat-value">3</div>
-                    <div class="stat-label">Alertas Activas</div>
+            <!-- ESTADÍSTICAS PRINCIPALES -->
+            <div class="main-stats-container">
+                <div class="main-stats-grid">
+                    <!-- Tarjeta Colegios -->
+                    <a href="{% url 'gestion_colegios' %}" class="main-stat-card">
+                        <div class="main-stat-icon">
+                            <i class="fas fa-school"></i>
+                        </div>
+                        <div class="main-stat-content">
+                            <div class="main-stat-number">{{ total_colegios }}</div>
+                            <div class="main-stat-title">TOTAL COLEGIOS</div>
+                            <div class="main-stat-trend">
+                                <span class="trend-text">{{ colegios_activos }} activos</span>
+                            </div>
+                        </div>
+                        
+                    </a>
+
+                    <!-- Tarjeta Usuarios -->
+                    <a href="#" class="main-stat-card">
+                        <div class="main-stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="main-stat-content">
+                            <div class="main-stat-number">{{ total_usuarios }}</div>
+                            <div class="main-stat-title">TOTAL USUARIOS</div>
+                            <div class="main-stat-trend">
+                                <span class="trend-text">{{ usuarios_activos }} en línea</span>
+                            </div>
+                        </div>
+                        
+                    </a>
+
+                    <!-- Tarjeta Estudiantes -->
+                    <a href="{% url 'gestion_estudiante' %}" class="main-stat-card">
+                        <div class="main-stat-icon">
+                            <i class="fas fa-user-graduate"></i>
+                        </div>
+                        <div class="main-stat-content">
+                            <div class="main-stat-number">{{ total_estudiantes }}</div>
+                            <div class="main-stat-title">TOTAL ESTUDIANTES</div>
+                            <div class="main-stat-trend">
+                                <span class="trend-text">{{ estudiantes_activos }} activos</span>
+                            </div>
+                        </div>
+                        
+                    </a>
+
+                    <!-- Tarjeta Profesores -->
+                    <a href="{% url 'gestion_profesor' %}" class="main-stat-card">
+                        <div class="main-stat-icon">
+                            <i class="fas fa-chalkboard-teacher"></i>
+                        </div>
+                        <div class="main-stat-content">
+                            <div class="main-stat-number">{{ total_profesores }}</div>
+                            <div class="main-stat-title">TOTAL PROFESORES</div>
+                            <div class="main-stat-trend">
+                                <span class="trend-text">{{ profesores_activos }} activos</span>
+                            </div>
+                        </div>
+                       
+                    </a>
+
+                    <!-- Tarjeta Cursos -->
+                    <a href="#" class="main-stat-card">
+                        <div class="main-stat-icon">
+                            <i class="fas fa-book"></i>
+                        </div>
+                        <div class="main-stat-content">
+                            <div class="main-stat-number">{{ total_cursos }}</div>
+                            <div class="main-stat-title">TOTAL CURSOS</div>
+                            <div class="main-stat-trend">
+                                <span class="trend-text">{{ cursos_activos }} activos</span>
+                            </div>
+                        </div>
+                        
+                    </a>
+
+                    <!-- Tarjeta Laboratorios -->
+                    <a href="#" class="main-stat-card">
+                        <div class="main-stat-icon">
+                            <i class="fas fa-flask"></i>
+                        </div>
+                        <div class="main-stat-content">
+                            <div class="main-stat-number">{{ total_laboratorios }}</div>
+                            <div class="main-stat-title">LABORATORIOS</div>
+                            <div class="main-stat-trend">
+                                <span class="trend-text">{{ laboratorios_activos }} disponibles</span>
+                            </div>
+                        </div>
+                        
+                    </a>
                 </div>
             </div>
         </div>
@@ -519,53 +587,56 @@
                 <div class="modules-section">
                     <h2>Módulos del Sistema</h2>
                     <div class="modules-grid">
-                        <div class="module-card" onclick="navigateTo('colegios')">
+                        <a href="{% url 'gestion_colegios' %}" class="module-card">
                             <div class="module-icon">
                                 <i class="fas fa-school"></i>
                             </div>
                             <h3 class="module-title">Gestión de Colegios</h3>
-                            <p class="module-description">Administre colegios, docentes y información institucional del sistema educativo.</p>
+                            <p class="module-description">Administre colegios, sedes, información institucional y configuración del sistema educativo.</p>
                             <div class="module-stats">
-                                <span>24 colegios registrados</span>
+                                <span>{{ total_colegios }} colegios • {{ sedes_totales }} sedes</span>
                                 <i class="fas fa-arrow-right"></i>
                             </div>
-                        </div>
+                        </a>
 
-                        <div class="module-card" onclick="navigateTo('usuarios')">
-                            <div class="module-icon">
-                                <i class="fas fa-users-cog"></i>
-                            </div>
-                            <h3 class="module-title">Gestión de Usuarios</h3>
-                            <p class="module-description">Controle accesos, permisos y roles de todos los usuarios del sistema.</p>
-                            <div class="module-stats">
-                                <span>1,248 usuarios activos</span>
-                                <i class="fas fa-arrow-right"></i>
-                            </div>
-                        </div>
 
-                        <div class="module-card" onclick="navigateTo('estadisticas')">
+                        <a href="{% url 'gestion_estudiante' %}" class="module-card">
                             <div class="module-icon">
-                                <i class="fas fa-chart-bar"></i>
+                                <i class="fas fa-user-graduate"></i>
                             </div>
-                            <h3 class="module-title">Estadísticas y Reportes</h3>
-                            <p class="module-description">Visualice métricas y reportes del sistema en tiempo real.</p>
+                            <h3 class="module-title">Gestión de Estudiantes</h3>
+                            <p class="module-description">Administre estudiantes, matrículas, calificaciones e información académica completa.</p>
                             <div class="module-stats">
-                                <span>15 reportes disponibles</span>
+                                <span>{{ total_estudiantes }} estudiantes • {{ estudiantes_graduados }} graduados</span>
                                 <i class="fas fa-arrow-right"></i>
                             </div>
-                        </div>
+                        </a>
 
-                        <div class="module-card" onclick="navigateTo('configuracion')">
+                        <a href="{% url 'gestion_profesor' %}" class="module-card">
                             <div class="module-icon">
-                                <i class="fas fa-cogs"></i>
+                                <i class="fas fa-chalkboard-teacher"></i>
                             </div>
-                            <h3 class="module-title">Configuración del Sistema</h3>
-                            <p class="module-description">Ajuste parámetros del sistema y configuraciones generales.</p>
+                            <h3 class="module-title">Gestión de Profesores</h3>
+                            <p class="module-description">Administre profesores, asignaturas, horarios y carga académica.</p>
                             <div class="module-stats">
-                                <span>Configuración avanzada</span>
+                                <span>{{ total_profesores }} profesores • {{ asignaturas_totales }} asignaturas</span>
                                 <i class="fas fa-arrow-right"></i>
                             </div>
-                        </div>
+                        </a>
+
+                        
+
+                        <a href="#" class="module-card">
+                            <div class="module-icon">
+                                <i class="fas fa-flask"></i>
+                            </div>
+                            <h3 class="module-title">Gestión de Laboratorios</h3>
+                            <p class="module-description">Administre laboratorios, equipos, reservas y prácticas de laboratorio.</p>
+                            <div class="module-stats">
+                                <span>{{ total_laboratorios }} laboratorios • {{ equipos_totales }} equipos</span>
+                                <i class="fas fa-arrow-right"></i>
+                            </div>
+                        </a>
                     </div>
                 </div>
 
@@ -574,42 +645,42 @@
                     <h2>Actividad Reciente</h2>
                     <div class="activity-list">
                         <div class="activity-item">
-                            <div class="activity-icon">
+                            <div class="activity-icon new-user">
                                 <i class="fas fa-user-plus"></i>
                             </div>
                             <div class="activity-content">
                                 <h4>Nuevo usuario registrado</h4>
-                                <p>María González se unió al sistema</p>
+                                <p>Se ha registrado un nuevo administrador en el sistema</p>
                             </div>
                             <div class="activity-time">Hace 5 min</div>
                         </div>
                         <div class="activity-item">
-                            <div class="activity-icon">
-                                <i class="fas fa-school"></i>
+                            <div class="activity-icon update">
+                                <i class="fas fa-sync-alt"></i>
                             </div>
                             <div class="activity-content">
-                                <h4>Colegio actualizado</h4>
-                                <p>Colegio San Francisco modificado</p>
+                                <h4>Base de datos actualizada</h4>
+                                <p>Se realizó una sincronización completa de los datos</p>
                             </div>
                             <div class="activity-time">Hace 15 min</div>
                         </div>
                         <div class="activity-item">
-                            <div class="activity-icon">
+                            <div class="activity-icon security">
                                 <i class="fas fa-shield-alt"></i>
                             </div>
                             <div class="activity-content">
                                 <h4>Backup completado</h4>
-                                <p>Copia de seguridad del sistema</p>
+                                <p>Copia de seguridad del sistema realizada exitosamente</p>
                             </div>
                             <div class="activity-time">Hace 1 hora</div>
                         </div>
                         <div class="activity-item">
-                            <div class="activity-icon">
+                            <div class="activity-icon report">
                                 <i class="fas fa-chart-line"></i>
                             </div>
                             <div class="activity-content">
                                 <h4>Reporte generado</h4>
-                                <p>Estadísticas mensuales creadas</p>
+                                <p>Estadísticas mensuales del sistema educativo creadas</p>
                             </div>
                             <div class="activity-time">Hace 2 horas</div>
                         </div>
@@ -617,25 +688,417 @@
                 </div>
             </div>
 
-            <!-- GRÁFICOS Y ESTADÍSTICAS -->
+            <!-- GRÁFICOS SIMPLES -->
             <div class="charts-section">
                 <div class="chart-card">
-                    <h3>Uso del Sistema por Módulo</h3>
-                    <div class="chart-placeholder">
-                        <i class="fas fa-chart-pie" style="font-size: 3rem; margin-right: 15px;"></i>
-                        Gráfico de uso del sistema
+                    <h3>Distribución de Usuarios</h3>
+                    <div class="simple-chart">
+                        {% if total_usuarios > 0 %}
+                        <div class="chart-row">
+                            <div class="chart-label">
+                                <i class="fas fa-user-graduate"></i>
+                                Estudiantes
+                            </div>
+                            
+                            <div class="chart-value">{{ total_estudiantes }}</div>
+                        </div>
+                        <div class="chart-row">
+                            <div class="chart-label">
+                                <i class="fas fa-chalkboard-teacher"></i>
+                                Profesores
+                            </div>
+                        
+                            <div class="chart-value">{{ total_profesores }}</div>
+                        </div>
+                        <div class="chart-row">
+                            <div class="chart-label">
+                                <i class="fas fa-user-cog"></i>
+                                Administradores
+                            </div>
+                            <div class="chart-value">{{ total_usuarios|add:"-total_estudiantes"|add:"-total_profesores" }}</div>
+                        </div>
+                        {% else %}
+                        <div class="no-data">No hay usuarios registrados</div>
+                        {% endif %}
                     </div>
                 </div>
+                
                 <div class="chart-card">
-                    <h3>Actividad Mensual</h3>
-                    <div class="chart-placeholder">
-                        <i class="fas fa-chart-line" style="font-size: 3rem; margin-right: 15px;"></i>
-                        Gráfico de actividad
+                    <h3>Métricas del Sistema</h3>
+                    <div class="metrics-grid">
+                        <div class="metric-item">
+                            <div class="metric-icon">
+                                <i class="fas fa-database"></i>
+                            </div>
+                            <div class="metric-content">
+                                <div class="metric-value">{{ uso_bd }}%</div>
+                                <div class="metric-label">Uso de BD</div>
+                            </div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-icon">
+                                <i class="fas fa-server"></i>
+                            </div>
+                            <div class="metric-content">
+                                <div class="metric-value">{{ rendimiento }}%</div>
+                                <div class="metric-label">Rendimiento</div>
+                            </div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-icon">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <div class="metric-content">
+                                <div class="metric-value">{{ seguridad }}%</div>
+                                <div class="metric-label">Seguridad</div>
+                            </div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-icon">
+                                <i class="fas fa-sync-alt"></i>
+                            </div>
+                            <div class="metric-content">
+                                <div class="metric-value">{{ actualizaciones }}</div>
+                                <div class="metric-label">Actualizaciones</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
+            <!-- SISTEMA DE ALERTAS -->
+            <div class="alerts-section">
+                <h2>Estado del Sistema</h2>
+                <div class="alert-item success">
+                    <div class="alert-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="alert-content">
+                        <h4>Sistema Operativo</h4>
+                        <p>Todos los servicios funcionando correctamente</p>
+                    </div>
+                </div>
+                <div class="alert-item info">
+                    <div class="alert-icon">
+                        <i class="fas fa-info-circle"></i>
+                    </div>
+                    <div class="alert-content">
+                        <h4>Datos Conectados</h4>
+                        <p>Conexión a base de datos estable - {{ total_registros }} registros</p>
+                    </div>
+                </div>
+                <div class="alert-item warning">
+                    <div class="alert-icon">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <div class="alert-content">
+                        <h4>Actividad Reciente</h4>
+                        <p>{{ actividad_reciente }} acciones en las últimas 24 horas</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* ESTADÍSTICAS PRINCIPALES */
+        .main-stats-container {
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .main-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            width: 100%;
+        }
+
+        .main-stat-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+            position: relative;
+        }
+
+        .main-stat-card:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .main-stat-icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .main-stat-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .main-stat-number {
+            font-size: 28px;
+            font-weight: 700;
+            color: white;
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+
+        .main-stat-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #CBDCEB;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .main-stat-trend {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .trend-text {
+            font-size: 11px;
+            color: #CBDCEB;
+            font-weight: 500;
+        }
+
+        .main-stat-arrow {
+            color: rgba(255, 255, 255, 0.7);
+            transition: all 0.3s ease;
+        }
+
+        .main-stat-card:hover .main-stat-arrow {
+            transform: translateX(3px);
+            color: white;
+        }
+
+        /* MÓDULOS COMO BOTONES */
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .module-card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            border: 1px solid rgba(96, 139, 193, 0.2);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .module-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #133E87, #608BC1);
+        }
+
+        .module-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .module-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #133E87, #608BC1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+        }
+
+        .module-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #133E87;
+            margin-bottom: 10px;
+        }
+
+        .module-description {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+        }
+
+        .module-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #608BC1;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        /* ACTIVIDAD RECIENTE MEJORADA */
+        .activity-icon.new-user {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+
+        .activity-icon.update {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+        }
+
+        .activity-icon.security {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+
+        .activity-icon.report {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        }
+
+        /* MÉTRICAS DEL SISTEMA */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            padding: 20px 0;
+        }
+
+        .metric-item {
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .metric-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .metric-icon {
+            font-size: 20px;
+            color: #133E87;
+            margin-bottom: 8px;
+        }
+
+        .metric-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #133E87;
+            margin-bottom: 4px;
+        }
+
+        .metric-label {
+            font-size: 11px;
+            color: #64748b;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        /* GRÁFICOS SIMPLES */
+        .simple-chart {
+            padding: 20px 0;
+        }
+        
+        .chart-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            gap: 15px;
+        }
+        
+        .chart-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            color: #133E87;
+            font-size: 0.9rem;
+            width: 140px;
+        }
+        
+        .chart-bar-container {
+            flex: 1;
+            height: 20px;
+            background: #f1f5f9;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .chart-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #133E87, #608BC1);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+        
+        .chart-value {
+            width: 40px;
+            text-align: right;
+            font-weight: 700;
+            color: #133E87;
+            font-size: 1rem;
+        }
+
+        .no-data {
+            text-align: center;
+            color: #64748b;
+            font-style: italic;
+            padding: 40px 20px;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 1200px) {
+            .main-stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
             
+            .modules-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+
     <script>
         // Actualizar fecha y hora en tiempo real
         function updateDateTime() {
@@ -645,50 +1108,8 @@
             document.getElementById('currentTime').textContent = now.toLocaleTimeString('es-ES');
         }
 
-        // Actualizar cada segundo
+        // Actualizar cada segundos
         setInterval(updateDateTime, 1000);
         updateDateTime();
-
-        // Navegación entre módulos
-        function navigateTo(module) {
-            // Aquí iría la lógica de navegación real
-            console.log(`Navegando a: ${module}`);
-            // Por ahora solo mostramos un alert
-            const moduleNames = {
-                'colegios': 'Gestión de Colegios',
-                'usuarios': 'Gestión de Usuarios', 
-                'estadisticas': 'Estadísticas y Reportes',
-                'configuracion': 'Configuración del Sistema',
-                'alertas': 'Sistema de Alertas'
-            };
-            
-            // Simular navegación - en producción esto redirigiría a la URL correspondiente
-            alert(`Redirigiendo a: ${moduleNames[module] || module}`);
-        }
-
-        // Efectos hover mejorados para tarjetas
-        document.querySelectorAll('.module-card, .stat-card').forEach(card => {
-            card.addEventListener('mouseenter', function() {
-                this.style.transform = 'translateY(-8px)';
-            });
-            
-            card.addEventListener('mouseleave', function() {
-                this.style.transform = 'translateY(0)';
-            });
-        });
-
-        // Cargar datos dinámicos (simulado)
-        function loadDashboardData() {
-            // Simular carga de datos del servidor
-            setTimeout(() => {
-                // Aquí iría la lógica real para cargar datos del backend
-                console.log('Datos del dashboard cargados');
-            }, 1000);
-        }
-
-        // Inicializar dashboard
-        document.addEventListener('DOMContentLoaded', function() {
-            loadDashboardData();
-        });
     </script>
 {% endblock %}
