@@ -3,44 +3,43 @@
 {% block title %}Dashboard - Informes y Reportes{% endblock %}
 
 {% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <div class="dashboard-admin">
     <!-- Header -->
     <div class="dashboard-header">
         <div class="header-main">
             <h1 class="page-title">
-                <span class="icon">📊</span>
+                <i class="fas fa-chart-bar"></i>
                 Dashboard - Informes y Reportes
             </h1>
             <div class="user-info">
-                <div class="avatar">AD</div>
+                <div class="avatar">
+                    <i class="fas fa-user-shield"></i>
+                </div>
                 <span class="user-name">Administrador</span>
             </div>
         </div>
     </div>
 
-    <!-- Filtros -->
+    <!-- Filtros Simplificados -->
     <div class="filters-container">
         <div class="section-title">
-            <span class="icon">⚙️</span>
+            <i class="fas fa-filter"></i>
             Filtros de Datos
         </div>
         <form method="GET" class="filters-form">
             <div class="filter-row">
                 <div class="filter-group">
-                    <label class="filter-label">Fecha inicio:</label>
-                    <input type="date" name="fecha_inicio" value="{{ fecha_inicio|default:'' }}" class="filter-input">
-                </div>
-                <div class="filter-group">
-                    <label class="filter-label">Fecha fin:</label>
-                    <input type="date" name="fecha_fin" value="{{ fecha_fin|default:'' }}" class="filter-input">
+                    <label class="filter-label">Fecha:</label>
+                    <input type="date" name="fecha" value="{{ fecha|default:'' }}" class="filter-input">
                 </div>
                 <div class="filter-actions">
                     <button type="submit" class="btn btn-filter">
-                        <span class="btn-icon">🔍</span>
+                        <i class="fas fa-search"></i>
                         Filtrar
                     </button>
                     <a href="{% url 'dashboard_administrador' %}" class="btn btn-clear">
-                        <span class="btn-icon">🔄</span>
+                        <i class="fas fa-redo"></i>
                         Limpiar
                     </a>
                 </div>
@@ -54,13 +53,15 @@
             <!-- Tarjeta Estudiantes -->
             <div class="stat-card">
                 <div class="stat-header">
-                    <div class="stat-icon">🎓</div>
+                    <div class="stat-icon">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
                     <h3 class="stat-title">TOTAL ESTUDIANTES</h3>
                 </div>
                 <div class="stat-content">
                     <div class="stat-number">{{ estadisticas.total_estudiantes|default:"0" }}</div>
                     <a href="{% url 'reporte_estudiantes' %}" class="download-btn">
-                        <span class="download-icon">📥</span>
+                        <i class="fas fa-download"></i>
                         Descargar PDF
                     </a>
                 </div>
@@ -69,13 +70,15 @@
             <!-- Tarjeta Profesores -->
             <div class="stat-card">
                 <div class="stat-header">
-                    <div class="stat-icon">🧑‍🏫</div>
+                    <div class="stat-icon">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                    </div>
                     <h3 class="stat-title">TOTAL PROFESORES</h3>
                 </div>
                 <div class="stat-content">
                     <div class="stat-number">{{ estadisticas.total_profesores|default:"0" }}</div>
                     <a href="{% url 'reporte_profesores' %}" class="download-btn">
-                        <span class="download-icon">📥</span>
+                        <i class="fas fa-download"></i>
                         Descargar PDF
                     </a>
                 </div>
@@ -84,13 +87,15 @@
             <!-- Tarjeta Cursos -->
             <div class="stat-card">
                 <div class="stat-header">
-                    <div class="stat-icon">📚</div>
+                    <div class="stat-icon">
+                        <i class="fas fa-book"></i>
+                    </div>
                     <h3 class="stat-title">TOTAL CURSOS</h3>
                 </div>
                 <div class="stat-content">
                     <div class="stat-number">{{ estadisticas.total_cursos|default:"0" }}</div>
                     <a href="{% url 'reporte_cursos' %}" class="download-btn">
-                        <span class="download-icon">📥</span>
+                        <i class="fas fa-download"></i>
                         Descargar PDF
                     </a>
                 </div>
@@ -99,7 +104,9 @@
             <!-- Tarjeta Membresía -->
             <div class="stat-card membership-card">
                 <div class="stat-header">
-                    <div class="stat-icon">🌟</div>
+                    <div class="stat-icon">
+                        <i class="fas fa-crown"></i>
+                    </div>
                     <h3 class="stat-title">MEMBRESÍA ACTUAL</h3>
                 </div>
                 <div class="stat-content">
@@ -121,12 +128,15 @@
 
     <!-- Gráficos -->
     <div class="charts-container">
-        <div class="section-title">Visualización de Datos</div>
+        <div class="section-title">
+            <i class="fas fa-chart-line"></i>
+            Visualización de Datos
+        </div>
         <div class="charts-grid">
             <div class="chart-wrapper">
                 <div class="chart-header">
                     <h3 class="chart-title">
-                        <span class="icon">🥧</span>
+                        <i class="fas fa-chart-pie"></i>
                         Distribución de Estudiantes por Curso
                     </h3>
                 </div>
@@ -138,7 +148,7 @@
             <div class="chart-wrapper">
                 <div class="chart-header">
                     <h3 class="chart-title">
-                        <span class="icon">📊</span>
+                        <i class="fas fa-chart-bar"></i>
                         Cursos con Más Estudiantes
                     </h3>
                 </div>
@@ -313,8 +323,9 @@
         gap: 12px;
     }
 
-    .page-title .icon {
+    .page-title i {
         font-size: 28px;
+        color: var(--secondary-blue);
     }
 
     .user-info {
@@ -472,7 +483,15 @@
     }
 
     .stat-icon {
-        font-size: 32px;
+        width: 50px;
+        height: 50px;
+        background: var(--light-blue);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary-blue);
+        font-size: 20px;
     }
 
     .stat-title {
@@ -527,6 +546,11 @@
 
     .membership-card .stat-title,
     .membership-card .stat-number {
+        color: var(--white);
+    }
+
+    .membership-card .stat-icon {
+        background: rgba(255,255,255,0.2);
         color: var(--white);
     }
 

@@ -5,6 +5,11 @@ from . import views
 urlpatterns = [
     path('', views.index, name='index'),
     path('login/', views.login_view, name='login'),
+    # Reportes PDF
+    path('reportes/pdf/<str:tipo_reporte>/', views.generar_reporte_pdf, name='generar_reporte_pdf'),
+    # =================================================================
+    # SUPERADMINISTRADOR 
+    # =================================================================
     path('panel_superadmin/',views.panel_superadmin, name='panel_superadmin'),
     path('perfil_superadmin/',views.perfil_superadmin, name='perfil_superadmin'),
     #RUTAS DE GESTIÓN
@@ -12,9 +17,28 @@ urlpatterns = [
     path('gestion_administradores/', views.gestion_administradores, name='gestion_administradores'),
     path('gestion_profesor/', views.gestion_profesor, name='gestion_profesor'),
     path('gestion_estudiante/', views.gestion_estudiante, name='gestion_estudiante'),
+
+    # =================================================================
+    # ADMINISTRADOR 
+    # =================================================================
     path('panel_admin/', views.panel_admin, name='panel_admin'),
-    path('panel_estudiante/', views.panel_estudiante, name='panel_estudiante'),
+    path('perfil_admin/',views.perfil_admin, name='perfil_admin'),
+    path('gestion_adminprofesor/', views.gestion_adminprofesor, name='gestion_adminprofesor'),
+    path('gestion_adminestudiante/', views.gestion_adminestudiante, name='gestion_adminestudiante'),
+    path('gestion_admincurso/', views.gestion_admincurso, name='gestion_admincurso'),
+ 
+ 
+    # =================================================================
+    # PROFESOR  
+    # =================================================================
     path('panel_profesor/', views.panel_profesor, name='panel_profesor'),
+
+
+    # =================================================================
+    # ESTUDIANTE 
+    # =================================================================
+    path('panel_estudiante/', views.panel_estudiante, name='panel_estudiante'),
+    
 
     # =================================================================
     # NUEVAS URLs PARA INFORMES Y REPORTES
