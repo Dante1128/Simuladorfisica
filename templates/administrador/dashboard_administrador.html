@@ -198,79 +198,82 @@
         };
     }
 
-    // Gráfico de Torta
-    if (document.getElementById('chartTorta') && datosTorta.length > 0) {
-        Highcharts.chart('chartTorta', {
-            chart: { 
-                type: 'pie',
-                backgroundColor: 'transparent',
-                height: 280
-            },
-            title: { text: null },
-            tooltip: { 
-                pointFormat: '<b>{point.y}</b> estudiantes ({point.percentage:.1f}%)' 
-            },
-            plotOptions: {
-                pie: {
-                    allowPointSelect: true,
-                    cursor: 'pointer',
-                    dataLabels: { 
-                        enabled: true, 
-                        format: '<b>{point.name}</b>: {point.y}',
-                        distance: -30
-                    },
-                    showInLegend: true
-                }
-            },
-            series: [{
-                name: 'Estudiantes',
-                colorByPoint: true,
-                data: datosTorta
-            }],
-            credits: { enabled: false }
-        });
-    } else if (document.getElementById('chartTorta')) {
-        document.getElementById('chartTorta').innerHTML = 
-            '<div class="no-data"><p>No hay datos disponibles</p></div>';
-    }
+    // Inicializar gráficos cuando el DOM esté listo
+    document.addEventListener('DOMContentLoaded', function() {
+        // Gráfico de Torta
+        if (document.getElementById('chartTorta') && datosTorta.length > 0) {
+            Highcharts.chart('chartTorta', {
+                chart: { 
+                    type: 'pie',
+                    backgroundColor: 'transparent',
+                    height: 280
+                },
+                title: { text: null },
+                tooltip: { 
+                    pointFormat: '<b>{point.y}</b> estudiantes ({point.percentage:.1f}%)' 
+                },
+                plotOptions: {
+                    pie: {
+                        allowPointSelect: true,
+                        cursor: 'pointer',
+                        dataLabels: { 
+                            enabled: true, 
+                            format: '<b>{point.name}</b>: {point.y}',
+                            distance: -30
+                        },
+                        showInLegend: true
+                    }
+                },
+                series: [{
+                    name: 'Estudiantes',
+                    colorByPoint: true,
+                    data: datosTorta
+                }],
+                credits: { enabled: false }
+            });
+        } else if (document.getElementById('chartTorta')) {
+            document.getElementById('chartTorta').innerHTML = 
+                '<div class="no-data"><p>No hay datos disponibles</p></div>';
+        }
 
-    // Gráfico de Barras
-    if (document.getElementById('chartBarras') && datosBarras.cursos.length > 0) {
-        Highcharts.chart('chartBarras', {
-            chart: { 
-                type: 'column',
-                backgroundColor: 'transparent',
-                height: 280
-            },
-            title: { text: null },
-            xAxis: { 
-                categories: datosBarras.cursos,
-                title: { text: null }
-            },
-            yAxis: {
-                min: 0,
-                title: { text: 'Estudiantes' }
-            },
-            tooltip: { 
-                valueSuffix: ' estudiantes' 
-            },
-            plotOptions: { 
-                column: { 
-                    dataLabels: { enabled: true } 
-                } 
-            },
-            legend: { enabled: false },
-            series: [{
-                name: 'Estudiantes',
-                data: datosBarras.estudiantes,
-                color: '#608BC1'
-            }],
-            credits: { enabled: false }
-        });
-    } else if (document.getElementById('chartBarras')) {
-        document.getElementById('chartBarras').innerHTML = 
-            '<div class="no-data"><p>No hay datos disponibles</p></div>';
-    }
+        // Gráfico de Barras
+        if (document.getElementById('chartBarras') && datosBarras.cursos.length > 0) {
+            Highcharts.chart('chartBarras', {
+                chart: { 
+                    type: 'column',
+                    backgroundColor: 'transparent',
+                    height: 280
+                },
+                title: { text: null },
+                xAxis: { 
+                    categories: datosBarras.cursos,
+                    title: { text: null }
+                },
+                yAxis: {
+                    min: 0,
+                    title: { text: 'Estudiantes' }
+                },
+                tooltip: { 
+                    valueSuffix: ' estudiantes' 
+                },
+                plotOptions: { 
+                    column: { 
+                        dataLabels: { enabled: true } 
+                    } 
+                },
+                legend: { enabled: false },
+                series: [{
+                    name: 'Estudiantes',
+                    data: datosBarras.estudiantes,
+                    color: '#608BC1'
+                }],
+                credits: { enabled: false }
+            });
+        } else if (document.getElementById('chartBarras')) {
+            document.getElementById('chartBarras').innerHTML = 
+                '<div class="no-data"><p>No hay datos disponibles</p></div>';
+        }
+    });
 </script>
 
 <style>

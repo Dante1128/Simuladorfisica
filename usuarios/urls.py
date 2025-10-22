@@ -88,7 +88,10 @@ urlpatterns = [
     path('componentes/agregar/', views.componente_create, name='componente_create'),
     path('componentes/<int:pk>/editar/', views.componente_update, name='componente_update'),
     path('componentes/<int:pk>/eliminar/', views.componente_delete_confirm, name='componente_delete_confirm'),
-    # Reportes PDF
+    # Reportes PDF - URLs ESPECÍFICAS (AGREGA ESTAS)
+    path('reportes/estudiantes/', views.generar_reporte_pdf, {'tipo_reporte': 'estudiantes'}, name='reporte_estudiantes'),
+    path('reportes/profesores/', views.generar_reporte_pdf, {'tipo_reporte': 'profesores'}, name='reporte_profesores'),
+    path('reportes/cursos/', views.generar_reporte_pdf, {'tipo_reporte': 'cursos'}, name='reporte_cursos'),
     path('reportes/pdf/<str:tipo_reporte>/', views.generar_reporte_pdf, name='generar_reporte_pdf'),
    #MODULO GESTION CONTENIDO-TEORICO
     path('gestion-documentos-profesor/', views.gestion_documentos_profesor, name='gestion_documentos_profesor'),
