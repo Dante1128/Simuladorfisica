@@ -486,7 +486,7 @@ input:checked + .slider:before {
 }
 
 .modal-body {
-    padding: 32px;
+    padding: 0px 30px 30px 30px;
 }
 
 .form-group {
@@ -568,15 +568,15 @@ input:checked + .slider:before {
     <!-- Modal de Confirmación -->
     <div class="modal-overlay" id="modalConfirmacion">
         <div class="modal-content">
-            <h3 class="modal-title">Confirmar eliminación</h3>
+            <h3 class="modal-title" style="padding: 20px 35px;">Confirmar eliminación</h3>
             <div class="modal-body">
-                <p>¿Está seguro que desea eliminar el componente <strong id="componenteNombre"></strong>?</p>
+                <p style="font-size: 16px;">¿Está seguro que desea eliminar el componente <strong id="componenteNombre"></strong>?</p>
                 <p style="color:#dc2626;font-size:0.9em">Esta acción no se puede deshacer.</p>
                 <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:16px">
-                    <button onclick="cerrarModal()" class="modal-btn modal-btn-secondary">Cancelar</button>
-                    <form id="formEliminar" method="post" style="margin:0">
+                    <a onclick="cerrarModal()" class="modal-btn modal-btn-secondary" style="margin-top:-8px;padding: 10px;background-color: #b8b8b8;font-size: 15px;border-radius: 10px;">Cancelar</a>
+                    <form id="formEliminar" method="post" >
                         {% csrf_token %}
-                        <button type="submit" class="modal-btn modal-btn-danger">Eliminar</button>
+                        <a type="submit" class="modal-btn modal-btn-danger" style="padding: 10px;background-color: #ff0000; color: #ffffff;font-size: 15px;border-radius: 10px;">Eliminar</a>
                     </form>
                 </div>
             </div>

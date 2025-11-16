@@ -11,7 +11,7 @@ body {
 .component-avatar{width:56px;height:56px;border-radius:50%;overflow:hidden;flex:0 0 56px;display:flex;align-items:center;justify-content:center}
 .page-card{
     max-width:1180px;
-    margin:28px auto;
+    margin:5px 5px;
     background:white;
     border-radius:18px;
     overflow:visible;
@@ -81,9 +81,8 @@ body {
 .switch.checked{background:linear-gradient(90deg,#10b981,#059669)}
 .switch.checked .knob{transform:translateX(20px)}
 
-/* Edit button style similar to image: small rounded square */
-.btn-edit{background:#fff;border:1px solid #e6edf6;padding:8px 10px;border-radius:8px;color:#11396f;box-shadow:0 6px 18px rgba(17,64,143,0.06)}
-    gap:8px;
+.btnedit{background:#afafaf;border:1px solid #535353;padding:8px 10px;border-radius:8px;color:#11396f;width: 10px;height: 10px;box-shadow:0 6px 18px rgba(17,64,143,0.06)}
+
 }
 
 .components-header h2{
@@ -253,7 +252,7 @@ body {
 .col.actions{
     width:180px;
     display:flex;
-    justify-content:flex-end;
+    justify-content:center;
     gap: 8px;
 }
 
@@ -396,6 +395,54 @@ body {
 .btn-primary{background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;padding:8px 14px;border-radius:8px;border:0;font-weight:700}
 .btn-secondary{background:#eef2ff;color:#0f172a;padding:8px 12px;border-radius:8px;border:0}
 .close-btn{background:rgba(255,255,255,0.12);color:#fff;border-radius:8px;padding:6px 8px;border:0}
+/* Toggle Switch */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: 0.4s;
+    border-radius: 24px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.4s;
+    border-radius: 50%;
+}
+input:checked + .slider {
+    background-color: #27ae60;
+}
+
+input:focus + .slider {
+    box-shadow: 0 0 1px #27ae60;
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
 
 @media (max-width:900px){
     .modal-body{flex-direction:column}
@@ -461,13 +508,13 @@ body {
             <div class="col lab">{% if c.laboratorio %}{{ c.laboratorio.nombre }}{% else %}-{% endif %}</div>
             <div class="col desc">{{ c.descripcion|default:'Sin descripción'|truncatechars:100 }}</div>
             <div class="col status">
-                <label class="switch{% if c.estado == 'Activo' %} checked{% endif %}" data-id="{{ c.id }}" title="Cambiar estado">
-                    <input type="checkbox" {% if c.estado == 'Activo' %}checked{% endif %} aria-label="Estado componente {{ c.nombre }}">
-                    <span class="knob"></span>
+                <label class="switch">
+                    <input type="checkbox" data-id="{{ c.id }}" {% if c.estado == 'Activo' %}checked{% endif %}>
+                    <span class="slider"></span>
                 </label>
             </div>
             <div class="col actions">
-                <a href="{% url 'componente_update' c.id %}" class="btn-edit" title="Editar"><i class="fas fa-edit"></i></a>
+                <a href="{% url 'componente_update' c.id %}" class="btnedit" title="Editar" style="display: flex;justify-content: center;"><i class="fas fa-edit" style="background:#d3d3d3;padding:12px 15px;border-radius:8px;color:#11396f;width: 45px;height: 45px;box-shadow:0 6px 18px rgba(17,64,143,0.06)"></i></a>
             </div>
         </div>
         {% endfor %}
