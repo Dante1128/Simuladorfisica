@@ -15,7 +15,7 @@
     <div class="top-bar">
         <div class="busqueda-container">
             <div class="busqueda-bar">
-                <input type="text" id="busquedaInput" placeholder="Buscar por nombre, tema o laboratorio...">
+                <input type="text" id="busquedaInput" placeholder="Buscar por nombre o laboratorio...">
             </div>
             <button class="btn-buscar" onclick="realizarBusqueda()">
                 🔍 Buscar
@@ -27,7 +27,7 @@
     <!-- Grid de tarjetas -->
     <div class="tarjetas-grid" id="tarjetasGrid">
         {% for c in componentes %}
-        <div class="componente-card" data-nombre="{{ c.nombre|lower }}" data-tema="" data-lab="{{ c.laboratorio.nombre|default:''|lower }}">
+        <div class="componente-card" data-nombre="{{ c.nombre|lower }}" data-lab="{{ c.laboratorio.nombre|default:''|lower }}">
             <!-- Thumbnail izquierda -->
             <div class="card-thumbnail">
                 {% if c.imagen %}
@@ -48,7 +48,7 @@
                         </div>
                         <div class="card-metadata-item">
                             <span class="icon-user"></span>
-                            <span>{% if c.laboratorio %}{{ c.laboratorio.nombre }}{% else %}Sin tema{% endif %}</span>
+                            <span>{% if c.laboratorio %}{{ c.laboratorio.nombre }}{% else %}Sin laboratorio{% endif %}</span>
                         </div>
                     </div>
                 </div>
@@ -127,7 +127,6 @@ function verMasComponente(id) {
                 `<a href='${comp.video_explicacion}' target='_blank'>Ver video</a>` : 
                 '<span style="color:#94a3b8;">No disponible</span>'}
         </p>
-        <p><strong>Tema:</strong><br>${comp.tema_nombre || 'Sin tema'}</p>
         <p><strong>Laboratorio:</strong><br>${comp.laboratorio_nombre || 'Sin laboratorio'}</p>
     `;
 
@@ -189,10 +188,9 @@ function filtrarComponentes(term) {
 
     cards.forEach(card => {
         const nombre = card.dataset.nombre || '';
-        const tema = card.dataset.tema || '';
         const lab = card.dataset.lab || '';
-        
-        const match = nombre.includes(term) || tema.includes(term) || lab.includes(term);
+
+        const match = nombre.includes(term) || lab.includes(term);
         
         if (match) {
             card.style.display = '';

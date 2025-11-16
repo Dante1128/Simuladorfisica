@@ -29,6 +29,8 @@ from django.utils.text import slugify
 from django.http import Http404
 from .models import Colegio
 from django.http import JsonResponse, HttpResponse
+from django.template.loader import render_to_string
+from django.urls import reverse
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q, Count, Sum
 from django.db import models
@@ -916,6 +918,23 @@ def componentes_list(request):
     usuario_id = request.session.get('usuario_id')
     if not usuario_id:
         return redirect('login')
+    # Manejar cambio de estado vía POST (AJAX o formulario)
+    if request.method == 'POST' and request.POST.get('cambiar_estado') == '1':
+        componente_id = request.POST.get('componente_id')
+        try:
+            componente = get_object_or_404(Componente, pk=componente_id)
+            componente.estado = 'Inactivo' if componente.estado == 'Activo' else 'Activo'
+            componente.save()
+            # Si es petición AJAX, responder JSON
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'success': True, 'estado': componente.estado})
+            messages.success(request, f"Estado cambiado a {componente.estado} correctamente.")
+            return redirect('componentes_list')
+        except Exception as e:
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'success': False, 'error': str(e)})
+            messages.error(request, f"Error al cambiar estado: {str(e)}")
+            return redirect('componentes_list')
     q = request.GET.get('q', '').strip()
     qs = Componente.objects.select_related('laboratorio').all().order_by('nombre')
     if q:
@@ -945,14 +964,28 @@ def componente_create(request):
     if not usuario_id:
         return redirect('login')
 
+    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest'
+
     if request.method == 'POST':
         form = ComponenteForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
             messages.success(request, 'Componente creado correctamente')
+            if is_ajax:
+                return JsonResponse({'success': True, 'redirect': reverse('componentes_list')})
             return redirect('componentes_list')
+        else:
+            if is_ajax:
+                # devolver el partial con errores para reemplazar el contenido del modal
+                html = render_to_string('administrador/_componente_form_partial.html', {'form': form, 'accion': 'Agregar'}, request=request)
+                return JsonResponse({'success': False, 'html': html})
     else:
         form = ComponenteForm()
+
+    # Si es petición AJAX GET, devolver sólo el partial (la tarjeta/modal)
+    if is_ajax and request.method == 'GET':
+        html = render_to_string('administrador/_componente_form_partial.html', {'form': form, 'accion': 'Agregar'}, request=request)
+        return HttpResponse(html)
 
     return render(request, 'administrador/componente_form.html', {'form': form, 'accion': 'Agregar'})
 

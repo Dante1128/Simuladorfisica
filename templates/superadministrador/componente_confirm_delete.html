@@ -1,6 +1,17 @@
 {% extends 'superadministrador/base_superadmin.html' %}
 {% load static %}
-
+{% block extra_css %}
+<style>
+.container { max-width:820px;margin:36px auto;padding:0; }
+.confirm-card{ background:#fff;border-radius:12px;box-shadow:0 8px 30px rgba(2,6,23,0.08);overflow:hidden }
+.confirm-inner{ padding:28px; }
+.confirm-inner h2{ margin:0 0 8px 0;color:#0f172a }
+.confirm-inner p{ color:#475569;margin:0 0 18px 0 }
+.btn { padding:10px 16px;border-radius:8px;border:0;cursor:pointer;font-weight:600 }
+.btn-danger{ background:#dc2626;color:#fff }
+.btn-secondary{ background:#eef2ff;color:#0f172a }
+</style>
+{% endblock %}
 {% block content %}
 <div class="container">
     <div class="confirm-card">
