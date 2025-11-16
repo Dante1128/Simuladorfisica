@@ -917,9 +917,9 @@ def componentes_list(request):
     if not usuario_id:
         return redirect('login')
     q = request.GET.get('q', '').strip()
-    qs = Componente.objects.select_related('tema', 'laboratorio').all().order_by('nombre')
+    qs = Componente.objects.select_related('laboratorio').all().order_by('nombre')
     if q:
-        qs = qs.filter(Q(nombre__icontains=q) | Q(tema__nombre_archivo__icontains=q))
+        qs = qs.filter(Q(nombre__icontains=q) | Q(descripcion__icontains=q) | Q(laboratorio__nombre__icontains=q))
 
     # paginación simple
     page = request.GET.get('page', 1)
@@ -1015,7 +1015,7 @@ def componentes_estudiante(request):
 
     # Búsqueda
     q = request.GET.get('q', '').strip()
-    qs = Componente.objects.select_related('tema', 'laboratorio').all().order_by('nombre')
+    qs = Componente.objects.select_related('laboratorio').all().order_by('nombre')
     
     if q:
         qs = qs.filter(Q(nombre__icontains=q) | Q(tema__nombre_archivo__icontains=q))
@@ -1031,7 +1031,6 @@ def componentes_estudiante(request):
             'imagen_url': comp.imagen.url if comp.imagen else None,
             'modelo3D_url': comp.modelo3D.url if hasattr(comp, 'modelo3D') and comp.modelo3D else None,
             'video_explicacion': comp.video_explicacion if hasattr(comp, 'video_explicacion') else None,
-            'tema_nombre': comp.tema.nombre_archivo if comp.tema else None,
             'laboratorio_nombre': comp.laboratorio.nombre if comp.laboratorio else None
         })
 
@@ -2630,7 +2629,7 @@ def preview_documento(request, documento_id):
 from django.core.serializers.json import DjangoJSONEncoder
 
 def componentes_profesor_tarjetas(request):
-    componentes = Componente.objects.all().select_related('tema', 'laboratorio')
+    componentes = Componente.objects.all().select_related('laboratorio')
     # Serializar componentes para JS
     componentes_json = []
     for c in componentes:
@@ -2642,7 +2641,8 @@ def componentes_profesor_tarjetas(request):
             'imagen_url': c.imagen.url if c.imagen else '',
             'modelo3D_url': c.modelo3D.url if c.modelo3D else '',
             'video_explicacion': c.video_explicacion,
-            'tema_nombre': c.tema.nombre_archivo if c.tema else '',
+            # 'tema' eliminado, mantener campo vacío o derivado de otra entidad si es necesario
+            'tema_nombre': '',
             'laboratorio_nombre': c.laboratorio.nombre if c.laboratorio else '',
         })
     context = {
@@ -2655,7 +2655,7 @@ def componentes_profesor_tarjetas(request):
 # COMPONENTES EN TARJETAS PARA ESTUDIANTE
 # =====================
 def componentes_estudiante_tarjetas(request):
-    componentes = Componente.objects.all().select_related('tema', 'laboratorio')
+    componentes = Componente.objects.all().select_related('laboratorio')
     componentes_json = []
     for c in componentes:
         componentes_json.append({
@@ -2666,7 +2666,7 @@ def componentes_estudiante_tarjetas(request):
             'imagen_url': c.imagen.url if c.imagen else '',
             'modelo3D_url': c.modelo3D.url if c.modelo3D else '',
             'video_explicacion': c.video_explicacion,
-            'tema_nombre': c.tema.nombre_archivo if c.tema else '',
+            'tema_nombre': '',
             'laboratorio_nombre': c.laboratorio.nombre if c.laboratorio else '',
         })
     context = {

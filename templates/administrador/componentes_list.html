@@ -48,7 +48,7 @@
                             {% endif %}
                         </td>
                         <td><strong>{{ c.nombre }}</strong></td>
-                        <td>{{ c.tema.nombre_archivo }}</td>
+                        <td>{% if c.laboratorio %}{{ c.laboratorio.nombre }}{% else %}-{% endif %}</td>
                         <td>{% if c.laboratorio %}{{ c.laboratorio.nombre }}{% else %}-{% endif %}</td>
                         <td>{% if c.descripcion %}{{ c.descripcion|truncatechars:100 }}{% else %}-{% endif %}</td>
                         <td>

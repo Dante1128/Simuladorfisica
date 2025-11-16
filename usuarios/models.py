@@ -251,7 +251,7 @@ class Componente(models.Model):
     modelo3D = models.FileField(upload_to='modelos3D/', null=True, blank=True)
     especificaciones = models.TextField(blank=True)
     video_explicacion = models.URLField(max_length=500, blank=True)
-    tema = models.ForeignKey(Temas, on_delete=models.CASCADE, related_name='componentes')
+    # Campo `tema` eliminado según solicitud. Si necesita referenciar temas, usar otra relación.
     laboratorio = models.ForeignKey(Laboratorio, on_delete=models.SET_NULL, null=True, blank=True, related_name='componentes')
     estado = models.CharField(max_length=20, choices=[
         ('Activo', 'activo'),
@@ -263,7 +263,10 @@ class Componente(models.Model):
         verbose_name_plural = 'Componentes'
 
     def __str__(self):
-        return f"{self.tema.nombre_archivo} - {self.nombre}"
+        # `tema` fue removido; mostrar nombre y laboratorio si existe
+        if self.laboratorio:
+            return f"{self.laboratorio.nombre} - {self.nombre}"
+        return self.nombre
 
 
 # ======================

@@ -19,27 +19,35 @@ body {
 }
 
 .table-responsive {
+    display: flex;
     overflow-x: auto;
+    justify-content: center;
+    padding-bottom: 10px;
 }
 
 .custom-table {
-    width: 100%;
+    width: 98%;
     border-collapse: separate;
     border-spacing: 0;
-    margin: 1rem 0;
+    margin: 5px 0 0 0px;
 }
 
-.custom-table th,
-.custom-table td {
-    padding: 1rem;
-    text-align: left;
+.custom-table th
+{
+    padding: 10px;
+    text-align: center;
+    font-weight: 620;
+    font-size: 16px;
     border-bottom: 1px solid #e2e8f0;
-}
-
-.custom-table th {
     background: #f8fafc;
-    font-weight: 600;
     color: #1a202c;
+}
+.custom-table td {
+    padding: 12px 5px 12px 5px;
+    text-align: left;
+    border-left: 0.5px solid #e2e8f0;
+
+    border-bottom: 1px solid #e2e8f0;
 }
 
 .custom-table tr:hover {
@@ -127,7 +135,7 @@ body {
     color: #fff;
     border: none;
     border-radius: 10px;
-    padding: 14px 24px;
+    padding: 12px 24px;
     font-weight: 600;
     font-size: 15px;
     cursor: pointer;
@@ -149,7 +157,7 @@ body {
     color: white;
     border: none;
     border-radius: 10px;
-    padding: 14px 20px;
+    padding: 11px 17px;
     cursor: pointer;
     transition: all 0.2s;
     font-weight: 600;
@@ -157,7 +165,7 @@ body {
     text-decoration: none;
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
 }
 
 .btn-secondary:hover {
@@ -171,7 +179,7 @@ body {
     color: white;
     border: none;
     border-radius: 10px;
-    padding: 10px 18px;
+    padding: 13px 11px;
     cursor: pointer;
     transition: all 0.2s;
     font-weight: 600;
@@ -580,18 +588,18 @@ body {
         <table class="custom-table">
             <thead>
                 <tr>
-                    <th>Imagen</th>
-                    <th>Nombre</th>
-                    <th>Tema</th>
-                    <th>Laboratorio</th>
-                    <th>Descripción</th>
-                    <th>Acciones</th>
+                    <th class="titulo">Imagen</th>
+                    <th class="titulo">Nombre</th>
+                    <th class="titulo">Tema</th>
+                    <th class="titulo">Laboratorio</th>
+                    <th class="titulo">Descripción</th>
+                    <th class="titulo">Acciones</th>
                 </tr>
             </thead>
             <tbody>
                 {% for c in componentes %}
                 <tr>
-                    <td style="width: 80px">
+                    <td style="width: 60px">
                         {% if c.imagen %}
                             <img src="{{ c.imagen.url }}" alt="{{ c.nombre }}" style="width:60px;height:60px;object-fit:cover;border-radius:8px" />
                         {% else %}
@@ -599,7 +607,7 @@ body {
                         {% endif %}
                     </td>
                     <td><strong>{{ c.nombre }}</strong></td>
-                    <td>{{ c.tema.nombre_archivo }}</td>
+                    <td>{% if c.laboratorio %}{{ c.laboratorio.nombre }}{% else %}-{% endif %}</td>
                     <td>{% if c.laboratorio %}{{ c.laboratorio.nombre }}{% else %}-{% endif %}</td>
                     <td>{% if c.descripcion %}{{ c.descripcion|truncatechars:100 }}{% else %}-{% endif %}</td>
                     <td>
@@ -729,6 +737,43 @@ async function loadComponenteModal(url){
             // También permitir ESC para cerrar
             const escHandler = (e) => { if (e.key === 'Escape') { removeModal(); document.removeEventListener('keydown', escHandler); } };
             document.addEventListener('keydown', escHandler);
+
+            // Inicializar preview y nombres de archivo para inputs dentro del modal
+            (function initModalFileHandlers(ov){
+                try{
+                    const imgInput = ov.querySelector('input[type=file][name*=imagen], input[type=file][id*=imagen]');
+                    const modelInput = ov.querySelector('input[type=file][name*=modelo3D], input[type=file][id*=modelo3D]');
+                    const previewBox = ov.querySelector('.preview-box');
+                    const placeholder = ov.querySelector('.preview-placeholder');
+                    let previewImg = ov.querySelector('.preview-image');
+                    const imageNameEl = ov.querySelector('#image-file-name');
+                    const modelNameEl = ov.querySelector('#model-file-name');
+                    const modelStatusEl = ov.querySelector('#model-status');
+
+                    function showPreview(file){
+                        if(!file || !previewBox) return;
+                        const url = URL.createObjectURL(file);
+                        if(!previewImg){
+                            previewImg = document.createElement('img');
+                            previewImg.className = 'preview-image';
+                            if(placeholder) placeholder.remove();
+                            previewBox.innerHTML = '';
+                            previewBox.appendChild(previewImg);
+                        }
+                        try{ if(ov._previewURL) URL.revokeObjectURL(ov._previewURL); }catch(e){}
+                        previewImg.src = url; ov._previewURL = url;
+                    }
+
+                    function updateFileName(el, file){ if(!el) return; el.textContent = file ? file.name : 'Ningún archivo seleccionado'; }
+
+                    if(imgInput){
+                        imgInput.addEventListener('change', function(e){ const f = e.target.files && e.target.files[0]; if(f) showPreview(f); updateFileName(imageNameEl, f); });
+                    }
+                    if(modelInput){
+                        modelInput.addEventListener('change', function(e){ const f = e.target.files && e.target.files[0]; updateFileName(modelNameEl, f); if(modelStatusEl){ if(f){ modelStatusEl.style.color='green'; modelStatusEl.innerHTML = '<i class="fas fa-check-circle"></i><span>Archivo 3D listo</span>'; } else { modelStatusEl.style.color='#64748b'; modelStatusEl.innerHTML = '<i class="fas fa-file"></i><span>No hay archivo 3D</span>'; } } });
+                    }
+                }catch(err){ console.error('initModalFileHandlers error', err); }
+            })(overlay);
         }
     }catch(err){
         console.error(err);
