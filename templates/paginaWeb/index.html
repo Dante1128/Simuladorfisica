@@ -4,129 +4,318 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Iniciar Sesión - PhysicsLab</title>
-    <link
-      rel="stylesheet"
-      href="{% static 'usuarios/css/paginaWeb/login.css' %}"
-    />
-    <style>
-      /* Botón circular de volver afuera del contenedor */
-      .back-btn {
-        position: fixed;
-        top: 20px;
-        left: 20px;
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        border: none;
-        background-color: #4CAF50;
-        color: white;
-        font-size: 20px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-        transition: background-color 0.3s;
-        z-index: 1000;
-      }
-
-      .back-btn:hover {
-        background-color: #45a049;
-      }
-
-      /* Ajuste para el logo dentro del right-panel */
-      .login-logo {
-        display: block;
-        margin: 0 auto 1.5rem auto;
-        width: 120px; /* Ajusta tamaño según prefieras */
-        height: auto;
-      }
-    </style>
+    <title>PhysicsLab PRO - Simuladores de Laboratorios de Física</title>
+    <link rel="stylesheet" href="{% static 'usuarios/css/paginaWeb/index.css' %}" />
+    <link rel="stylesheet" href="{% static 'usuarios/css/paginaWeb/atomo.css' %}" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   </head>
   <body>
-    <!-- Botón circular de volver -->
-    <button type="button" class="back-btn" onclick="window.history.back()">←</button>
+    <!-- ============================================
+         HEADER / NAVEGACIÓN
+    ============================================ -->
+    <header class="header">
+      <nav class="nav container">
+        <div class="logo">
+          <img
+            src="{% static 'img/logo.png' %}"
+            alt="PhysicsLab PRO"
+            class="logo-img"
+          />
+        </div>
 
-    <div class="container">
-      <div class="left-panel">
-        <div class="logo-container">
-          <div class="logo-icon">
-            <div class="cube">
-              <div class="cube-face front"></div>
-              <div class="cube-face back"></div>
-              <div class="cube-face right"></div>
-              <div class="cube-face left"></div>
-              <div class="cube-face top"></div>
-              <div class="cube-face bottom"></div>
+        <ul class="nav-menu">
+          <li><a href="#inicio">Inicio</a></li>
+          <li><a href="#caracteristicas">Características</a></li>
+          <li><a href="#precios">Precios</a></li>
+          <li><a href="#testimonios">Testimonios</a></li>
+          <li><a href="#contacto">Contacto</a></li>
+        </ul>
+        <div class="nav-buttons">
+          <a href="{% url 'login' %}" class="btn login-btn">Iniciar Sesión</a>
+        </div>
+      </nav>
+    </header>
+
+    <!-- ============================================
+         SECCIÓN HERO
+    ============================================ -->
+    <section id="inicio" class="hero">
+      <div class="container">
+        <div class="hero-content fade-in">
+          <h1>PhysicsLab PRO</h1>
+          <p class="slogan">
+            Experimenta la física como nunca antes con nuestros simuladores 3D
+            interactivos
+          </p>
+          <a href="#precios" class="cta-button">Prueba por solo 40 Bs</a>
+
+          <div class="hero-image">
+            <div id="container">
+              
             </div>
-            <div class="platform"></div>
           </div>
         </div>
-        <div class="particle particle1"></div>
-        <div class="particle particle2"></div>
-        <div class="particle particle3"></div>
       </div>
+    </section>
 
-      <div class="right-panel">
-        <!-- Logo arriba del título -->
-        <img src="{% static 'img/logo.png' %}" alt="PhysicsLab PRO" class="login-logo" />
+    <!-- ============================================
+         SECCIÓN CARACTERÍSTICAS
+    ============================================ -->
+    <section id="caracteristicas" class="features section fade-in">
+      <div class="container">
+        <h2 class="section-title">¿Por qué elegir PhysicsLab PRO?</h2>
 
-        <div class="form-header">
-          <h2 class="form-title">Bienvenido a PhysicsLab</h2>
-          <p class="form-subtitle">
-            Ingresa tus credenciales para acceder a tu cuenta personal
-          </p>
+        <div class="features-grid">
+          <!-- Característica 1 -->
+          <div class="feature-card">
+            <div class="feature-icon">🌊</div>
+            <h3>Simulaciones Realistas</h3>
+            <p>
+              Experimenta con ondas, mecánica cuántica y termodinámica en
+              entornos 3D ultra-realistas que replican laboratorios reales.
+            </p>
+          </div>
+
+          <!-- Característica 2 -->
+          <div class="feature-card">
+            <div class="feature-icon">⚡</div>
+            <h3>Experimentos Interactivos</h3>
+            <p>
+              Manipula variables en tiempo real y observa resultados
+              instantáneos. Aprende física de manera práctica y visual.
+            </p>
+          </div>
+
+          <!-- Característica 3 -->
+          <div class="feature-card">
+            <div class="feature-icon">📊</div>
+            <h3>Análisis Avanzado</h3>
+            <p>
+              Genera gráficos, reportes y análisis estadísticos automáticos de
+              tus experimentos para un aprendizaje profundo.
+            </p>
+          </div>
+
+          <!-- Característica 4 -->
+          <div class="feature-card">
+            <div class="feature-icon">🎯</div>
+            <h3>Currículum Adaptado</h3>
+            <p>
+              Contenido alineado con planes de estudio universitarios y de
+              bachillerato. Perfecto para estudiantes y profesores.
+            </p>
+          </div>
+
+          <!-- Característica 5 -->
+          <div class="feature-card">
+            <div class="feature-icon">☁️</div>
+            <h3>Acceso en la Nube</h3>
+            <p>
+              Accede desde cualquier dispositivo, en cualquier momento. Tus
+              experimentos se sincronizan automáticamente.
+            </p>
+          </div>
+
+          <!-- Característica 6 -->
+          <div class="feature-card">
+            <div class="feature-icon">🤝</div>
+            <h3>Colaboración en Tiempo Real</h3>
+            <p>
+              Trabaja en equipo con otros estudiantes y comparte tus
+              descubrimientos con la comunidad global.
+            </p>
+          </div>
         </div>
+      </div>
+    </section>
 
-        <form method="POST" action="">
-          {% csrf_token %}
-          {% if messages %}
-          <div class="messages">
-            {% for message in messages %}
-            <div
-              class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}"
+    <!-- ============================================
+         SECCIÓN PRECIOS
+    ============================================ -->
+    <section id="precios" class="pricing section fade-in">
+      <div class="container">
+        <h2 class="section-title">Planes Flexibles para Todos</h2>
+
+        <div class="pricing-grid">
+          <!-- Plan Mensual -->
+          <div class="pricing-card">
+            <h3 style="color: #133e87; font-size: 1.5rem; margin-bottom: 1rem">
+              Plan Mensual
+            </h3>
+            <div class="price"><span class="price-currency">Bs</span>40</div>
+            <p class="price-description">Acceso completo por 30 días</p>
+
+            <ul class="pricing-features">
+              <li>Más de 50 simuladores interactivos</li>
+              <li>Experimentos de mecánica y óptica</li>
+              <li>Reportes en PDF</li>
+              <li>Acceso multiplataforma</li>
+              <li>Soporte técnico básico</li>
+            </ul>
+
+            <a href="{% url 'login' %}" class="cta-button" style="margin-top: 1.5rem"
+              >Probar 30 Días</a
             >
-              {{ message }}
+          </div>
+
+          <!-- Plan Anual -->
+          <div class="pricing-card featured">
+            <h3 style="color: #133e87; font-size: 1.5rem; margin-bottom: 1rem">
+              Plan Anual
+            </h3>
+            <div class="price">
+              <span class="price-currency">Bs</span>360
+              <div style="font-size: 1rem; color: #666; margin-top: 0.5rem">
+                <span style="text-decoration: line-through; color: #999"
+                  >Bs 480</span
+                >
+                <span
+                  style="color: #133e87; font-weight: bold; margin-left: 10px"
+                  >¡Ahorra 25%!</span
+                >
+              </div>
             </div>
-            {% endfor %}
-          </div>
-          {% endif %}
+            <p class="price-description">Acceso completo por 12 meses</p>
 
-          <div class="form-group">
-            <label class="form-label" for="email">Correo</label>
-            <input
-              type="email"
-              id="email"
-              name="correo"
-              class="form-input"
-              placeholder="tucorreo@ejemplo.com"
-              required
-            />
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="password">Contraseña</label>
-            <input
-              type="password"
-              id="password"
-              name="contrasenia"
-              class="form-input"
-              placeholder="Ingresa tu contraseña"
-              required
-            />
-          </div>
-          <button type="submit" class="submit-btn">Iniciar Sesión</button>
-        </form>
+            <ul class="pricing-features">
+              <li>Más de 50 simuladores interactivos</li>
+              <li>Experimentos de mecánica, óptica y termodinámica</li>
+              <li>Reportes automáticos en PDF</li>
+              <li>Acceso multiplataforma</li>
+              <li>Soporte técnico prioritario</li>
+              <li>Actualizaciones exclusivas</li>
+              <li>Biblioteca de recursos premium</li>
+              <li>Certificados de finalización</li>
+            </ul>
 
-        <div class="form-footer">
-          <p>
-            ¿Primera vez aquí?
-            <a href="#" id="createAccountLink">Crea una cuenta</a>
-          </p>
+            <a
+              href="{% url 'login' %}"
+              class="cta-button"
+              style="margin-top: 1.5rem; background: #133e87"
+              >Comprar Plan Anual</a
+            >
+          </div>
         </div>
       </div>
-    </div>
+    </section>
 
-    <script src="{% static 'js/paginaWeb/login.js' %}"></script>
+    <!-- ============================================
+         SECCIÓN TESTIMONIOS
+    ============================================ -->
+    <section id="testimonios" class="testimonials section fade-in">
+      <div class="container">
+        <h2 class="section-title">Lo que dicen nuestros usuarios</h2>
+
+        <div class="testimonials-grid">
+          <!-- Testimonio 1 -->
+          <div class="testimonial-card">
+            <p class="testimonial-text">
+              "PhysicsLab PRO revolucionó mi manera de enseñar física. Mis
+              estudiantes ahora comprenden conceptos complejos de manera visual
+              e interactiva."
+            </p>
+            <div class="testimonial-author">
+              <div class="author-avatar">MR</div>
+              <div class="author-info">
+                <h4>Dr. María Rodríguez</h4>
+                <p>Profesora de Física - UMSA</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Testimonio 2 -->
+          <div class="testimonial-card">
+            <p class="testimonial-text">
+              "Como estudiante de ingeniería, estos simuladores me ayudaron a
+              entender la mecánica cuántica de una forma que los libros nunca
+              pudieron."
+            </p>
+            <div class="testimonial-author">
+              <div class="author-avatar">CL</div>
+              <div class="author-info">
+                <h4>Carlos López</h4>
+                <p>Estudiante de Ingeniería</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Testimonio 3 -->
+          <div class="testimonial-card">
+            <p class="testimonial-text">
+              "La calidad de las simulaciones es impresionante. Es como tener un
+              laboratorio completo en mi computadora por un precio increíble."
+            </p>
+            <div class="testimonial-author">
+              <div class="author-avatar">AS</div>
+              <div class="author-info">
+                <h4>Ana Sánchez</h4>
+                <p>Investigadora</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================
+         FOOTER
+    ============================================ -->
+    <footer id="contacto" class="footer">
+      <div class="container">
+        <div class="footer-content">
+          <!-- Información de contacto -->
+          <div class="footer-section">
+            <h3>Contacto</h3>
+            <p>📧 info@physicslabpro.com</p>
+            <p>📱 +591 7000-0000</p>
+            <p>📍 La Paz, Bolivia</p>
+
+            <div class="social-links">
+             
+            </div>
+          </div>
+
+          <!-- Enlaces rápidos -->
+          <div class="footer-section">
+            <h3>Enlaces Rápidos</h3>
+            <a href="#inicio">Inicio</a>
+            <a href="#caracteristicas">Características</a>
+            <a href="#precios">Precios</a>
+            <a href="#testimonios">Testimonios</a>
+          </div>
+
+          <!-- Soporte -->
+          <div class="footer-section">
+            <h3>Soporte</h3>
+            <a href="#">Centro de Ayuda</a>
+            <a href="#">Tutoriales</a>
+            <a href="#">Preguntas Frecuentes</a>
+            <a href="#">Términos de Servicio</a>
+          </div>
+
+          <!-- Acerca de -->
+          <div class="footer-section">
+            <h3>PhysicsLab PRO</h3>
+            <p>
+              Transformando la educación en física a través de simulaciones
+              interactivas de alta calidad.
+            </p>
+            <p style="margin-top: 1rem; font-size: 0.9rem">
+              Hecho con ❤️ para estudiantes y educadores
+            </p>
+          </div>
+        </div>
+
+        <div class="footer-bottom">
+          <p>&copy; 2025 PhysicsLab PRO. Todos los derechos reservados.</p>
+        </div>
+      </div>
+    </footer>
+
+    <!-- ============================================
+         JAVASCRIPT PARA INTERACTIVIDAD
+    ============================================ -->
+    <script src="{% static 'js/paginaWeb/index.js' %}"></script>
+    <script src="{% static 'js/paginaWeb/atomo.js'%}"></script>
   </body>
 </html>

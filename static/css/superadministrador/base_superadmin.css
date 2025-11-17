@@ -1,4 +1,3 @@
-/* ESTILOS BASE PARA LA ESTRUCTURA */
 * {
     margin: 0;
     padding: 0;
@@ -13,7 +12,6 @@ body {
     overflow-x: hidden;
 }
 
-/* SIDEBAR STYLES - VERSIÓN PROFESIONAL */
 .sidebar {
     width: 280px;
     height: 100vh;
@@ -298,7 +296,7 @@ body {
 /* MAIN CONTENT AREA */
 .main-content {
     flex: 1;
-    margin-left: 280px;
+    margin-left: 170px;
     padding: 30px;
     min-height: 100vh;
     background: #F3F3E0;

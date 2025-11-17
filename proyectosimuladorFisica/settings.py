@@ -80,13 +80,14 @@ WSGI_APPLICATION = 'proyectosimuladorFisica.wsgi.app'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'simuladordefisica',  
-        'USER': 'postgres',         
+        'NAME': 'simuladordefisica',  # nombre de la base de datos
+        'USER': 'postgres',
         'PASSWORD': 'contra',
-        'HOST': 'localhost',        
-        'PORT': '5432',              
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
+
 
 
 # Configuración para archivos grandes
@@ -144,11 +145,17 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # CONFIGURACIÓN ADICIONAL PARA REPORTES PDF 
 
 # Directorio para almacenar reportes PDF temporales
-REPORTS_DIR = os.path.join(BASE_DIR, 'reportes_pdf')
-if not os.path.exists(REPORTS_DIR):
-    os.makedirs(REPORTS_DIR)
+#REPORTS_DIR = os.path.join(BASE_DIR, 'reportes_pdf')
+#if not os.path.exists(REPORTS_DIR):
+#    os.makedirs(REPORTS_DIR)
+REPORTS_DIR = '/tmp/reportes_pdf' if os.environ.get('VERCEL') else os.path.join(BASE_DIR, 'reportes_pdf')
 
-# Configuración para generación de PDFs
+# Haz que la verificación del directorio sea condicional
+if not os.path.exists(REPORTS_DIR):
+    try:
+        os.makedirs(REPORTS_DIR)
+    except OSError:
+        pass  # El directorio podría ya existir o no podemos crearlo
 PDF_SETTINGS = {
     'PAGE_SIZE': 'A4',
     'MARGINS': (40, 40, 40, 40),  # izquierda, arriba, derecha, abajo

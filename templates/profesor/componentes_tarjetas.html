@@ -27,7 +27,7 @@
     <!-- Grid de tarjetas -->
     <div class="tarjetas-grid" id="tarjetasGrid">
         {% for c in componentes %}
-        <div class="componente-card" data-nombre="{{ c.nombre|lower }}" data-tema="{{ c.tema.nombre|default:''|lower }}" data-lab="{{ c.laboratorio.nombre|default:''|lower }}">
+        <div class="componente-card" data-nombre="{{ c.nombre|lower }}" data-tema="" data-lab="{{ c.laboratorio.nombre|default:''|lower }}">
             <!-- Thumbnail izquierda -->
             <div class="card-thumbnail">
                 {% if c.imagen %}
@@ -48,7 +48,7 @@
                         </div>
                         <div class="card-metadata-item">
                             <span class="icon-user"></span>
-                            <span>{{ c.tema.nombre|default:"Sin tema" }}</span>
+                            <span>{% if c.laboratorio %}{{ c.laboratorio.nombre }}{% else %}Sin tema{% endif %}</span>
                         </div>
                     </div>
                 </div>
