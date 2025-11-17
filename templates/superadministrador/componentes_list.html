@@ -5,62 +5,30 @@
 
 {% block extra_css %}
 <style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
 body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
     min-height: 100vh;
 }
 
-.componentes-container {
-    margin: 20px 30px 20px 310px;
+.laboratorios-container {
+    max-width: 1200px;
+    margin: 0 auto;
     background: #fff;
     border-radius: 16px;
     box-shadow: 0 8px 32px rgba(19, 62, 135, 0.12);
     overflow: hidden;
+    margin-left: 120px;
+    margin-top: 5px;
 }
 
-.table-responsive {
-    display: flex;
-    overflow-x: auto;
-    justify-content: center;
-    padding-bottom: 10px;
-}
-
-.custom-table {
-    width: 98%;
-    border-collapse: separate;
-    border-spacing: 0;
-    margin: 5px 0 0 0px;
-}
-
-.custom-table th
-{
-    padding: 10px;
-    text-align: center;
-    font-weight: 620;
-    font-size: 16px;
-    border-bottom: 1px solid #e2e8f0;
-    background: #f8fafc;
-    color: #1a202c;
-}
-.custom-table td {
-    padding: 12px 5px 12px 5px;
-    text-align: left;
-    border-left: 0.5px solid #e2e8f0;
-
-    border-bottom: 1px solid #e2e8f0;
-}
-
-.custom-table tr:hover {
-    background-color: #f8fafc;
-}
-
-/* Asegurar que el main-content no tenga estilos que interfieran */
-.main-content {
-    margin-left: 0 !important;
-    padding: 0 !important;
-}
-
-/* Header */
+/* Header mejorado */
 .page-header {
     background: linear-gradient(135deg, #133E87 0%, #0A2952 100%);
     padding: 32px 40px;
@@ -95,7 +63,46 @@ body {
     z-index: 1;
 }
 
-/* Toolbar */
+/* Estadísticas rápidas (no usadas aquí pero mantenidas por consistencia) */
+.stats-bar {
+    display: flex;
+    gap: 24px;
+    padding: 24px 40px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.stat-card {
+    flex: 1;
+    background: white;
+    padding: 16px 20px;
+    border-radius: 12px;
+    border-left: 4px solid #133E87;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.stat-card .stat-label {
+    font-size: 0.85rem;
+    color: #64748b;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.stat-card .stat-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #133E87;
+}
+
+/* Toolbar mejorado */
 .toolbar {
     display: flex;
     justify-content: space-between;
@@ -105,17 +112,15 @@ body {
     flex-wrap: wrap;
 }
 
-.search-form {
-    display: flex;
-    gap: 12px;
-    align-items: center;
+.search-container {
+    position: relative;
     flex: 1;
-    max-width: 600px;
+    max-width: 450px;
 }
 
-.search-form input {
-    flex: 1;
-    padding: 14px 18px;
+.search-container input {
+    width: 100%;
+    padding: 14px 50px 14px 48px;
     border: 2px solid #e2e8f0;
     border-radius: 12px;
     font-size: 15px;
@@ -123,11 +128,43 @@ body {
     background: #f8fafc;
 }
 
-.search-form input:focus {
+.search-container input:focus {
     outline: none;
     border-color: #133E87;
     box-shadow: 0 0 0 4px rgba(19, 62, 135, 0.08);
     background: white;
+}
+
+.search-container .search-icon {
+    position: absolute;
+    left: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #64748b;
+    font-size: 16px;
+}
+
+.search-container .clear-search {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    display: none;
+    padding: 4px;
+    transition: color 0.2s;
+}
+
+.search-container .clear-search:hover {
+    color: #133E87;
+}
+
+.actions-container {
+    display: flex;
+    gap: 12px;
 }
 
 .btn-primary {
@@ -135,16 +172,33 @@ body {
     color: #fff;
     border: none;
     border-radius: 10px;
-    padding: 12px 24px;
+    padding: 14px 24px;
     font-weight: 600;
     font-size: 15px;
     cursor: pointer;
     transition: all 0.3s;
-    display: inline-flex;
+    display: flex;
     align-items: center;
     gap: 10px;
     box-shadow: 0 4px 12px rgba(19, 62, 135, 0.25);
+    position: relative;
+    overflow: hidden;
     text-decoration: none;
+}
+
+.btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.btn-primary:hover::before {
+    left: 100%;
 }
 
 .btn-primary:hover {
@@ -152,409 +206,354 @@ body {
     box-shadow: 0 6px 20px rgba(19, 62, 135, 0.35);
 }
 
-.btn-secondary {
-    background: #64748b;
-    color: white;
-    border: none;
-    border-radius: 10px;
-    padding: 11px 17px;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-weight: 600;
-    font-size: 15px;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
+.btn-primary:active {
+    transform: translateY(0);
 }
 
-.btn-secondary:hover {
-    background: #475569;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(100, 116, 139, 0.3);
+/* Tabla profesional */
+.table-wrapper {
+    padding: 0 40px 40px 40px;
 }
 
-.btn-danger {
-    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-    color: white;
-    border: none;
-    border-radius: 10px;
-    padding: 13px 11px;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-weight: 600;
-    font-size: 14px;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.btn-danger:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
-}
-
-/* Messages/Alerts */
-.messages-container {
-    padding: 0 40px;
-    margin-top: 20px;
-}
-
-.alert {
-    padding: 16px 20px;
+.table-container {
+    overflow-x: auto;
     border-radius: 12px;
-    margin-bottom: 12px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.laboratorios-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    min-width: 700px;
+}
+
+.laboratorios-table thead {
+    background: linear-gradient(180deg, #133E87 0%, #0e3270 100%);
+}
+
+.laboratorios-table th {
+    padding: 18px 20px;
+    text-align: left;
+    color: white;
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.laboratorios-table th:last-child {
+    text-align: center;
+}
+
+.laboratorios-table tbody tr {
+    border-bottom: 1px solid #e2e8f0;
+    transition: all 0.2s;
+}
+
+.laboratorios-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+.laboratorios-table td {
+    padding: 20px;
+    color: #334155;
+    font-size: 15px;
+}
+
+.lab-info {
     display: flex;
     align-items: center;
     gap: 12px;
+}
+
+.lab-icon {
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(135deg, #133E87 0%, #0A2952 100%);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.lab-details .lab-name {
+    font-weight: 600;
+    color: #133E87;
+    margin-bottom: 4px;
     font-size: 15px;
-    animation: slideDown 0.3s ease-out;
 }
 
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+.lab-details .lab-id {
+    font-size: 0.8rem;
+    color: #94a3b8;
 }
 
-.alert-success {
-    background: #d1fae5;
-    color: #065f46;
-    border-left: 4px solid #10b981;
+.address-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #64748b;
 }
 
-.alert-error {
-    background: #fee2e2;
-    color: #991b1b;
-    border-left: 4px solid #ef4444;
+.address-cell i {
+    color: #94a3b8;
+    font-size: 14px;
 }
 
-/* Modal styles */
+.acciones {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+.btn-icon {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 15px;
+    padding: 10px;
+    border-radius: 8px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+}
+
+.btn-edit {
+    color: #133E87;
+    background: rgba(19, 62, 135, 0.08);
+}
+
+.btn-edit:hover {
+    background: #133E87;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(19, 62, 135, 0.25);
+}
+
+.btn-delete {
+    color: #dc2626;
+    background: rgba(220, 38, 38, 0.08);
+}
+
+.btn-delete:hover {
+    background: #dc2626;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(220, 38, 38, 0.25);
+}
+
+/* Toggle Switch */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: 0.4s;
+    border-radius: 24px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: #27ae60;
+}
+
+input:focus + .slider {
+    box-shadow: 0 0 1px #27ae60;
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+/* Modal profesional */
 .modal-overlay {
+    display: none;
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    display: none;
-    justify-content: center;
-    align-items: center;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
     z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s;
+}
+
+.modal-overlay.active {
+    display: flex !important;
 }
 
 .modal-content {
-    background: white;
-    padding: 24px;
-    border-radius: 12px;
-    width: 90%;
-    max-width: 400px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-    position: relative;
-}
-
-.modal-title {
-    margin: 0 0 16px 0;
-    color: #1e293b;
-}
-
-.modal-text {
-    margin: 0 0 20px 0;
-    color: #475569;
-}
-
-.modal-warning {
-    margin: 0 0 24px 0;
-    color: #dc2626;
-    font-size: 0.9em;
-}
-
-.modal-actions {
-    display: flex;
-    gap: 12px;
-    justify-content: flex-end;
-}
-
-.modal-btn {
-    padding: 10px 20px;
-    border-radius: 8px;
-    border: none;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.modal-btn-secondary {
-    background: #e2e8f0;
-    color: #475569;
-}
-
-.modal-btn-secondary:hover {
-    background: #cbd5e1;
-}
-
-.modal-btn-danger {
-    background: #ef4444;
-    color: white;
-}
-
-.modal-btn-danger:hover {
-    background: #dc2626;
-}
-
-.alert-warning {
-    background: #fef3c7;
-    color: #92400e;
-    border-left: 4px solid #f59e0b;
-}
-
-.alert-info {
-    background: #dbeafe;
-    color: #1e40af;
-    border-left: 4px solid #3b82f6;
-}
-
-/* Components Grid */
-.components-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-    gap: 24px;
-    padding: 24px 40px;
-}
-
-.component-card {
-    background: white;
+    background: #fff;
     border-radius: 16px;
-    padding: 24px;
-    border: 2px solid #e2e8f0;
-    transition: all 0.3s;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-}
-
-.component-card:hover {
-    border-color: #133E87;
-    box-shadow: 0 8px 24px rgba(19, 62, 135, 0.12);
-    transform: translateY(-4px);
-}
-
-.component-header {
-    display: flex;
-    gap: 16px;
-    margin-bottom: 16px;
-}
-
-.component-image {
-    width: 96px;
-    height: 96px;
-    border-radius: 12px;
+    width: 90%;
+    max-width: 550px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     overflow: hidden;
-    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    animation: slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { 
+        opacity: 0;
+        transform: translateY(40px) scale(0.95);
+    }
+    to { 
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.modal-header {
+    background: linear-gradient(135deg, #133E87 0%, #0A2952 100%);
+    color: white;
+    padding: 28px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.close-modal {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: white;
+    font-size: 22px;
+    cursor: pointer;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    flex-shrink: 0;
-    box-shadow: 0 2px 8px rgba(19, 62, 135, 0.1);
+    transition: all 0.2s;
 }
 
-.component-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+.close-modal:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: rotate(90deg);
 }
 
-.component-image-placeholder {
-    font-size: 48px;
-    opacity: 0.6;
+.modal-body {
+    padding: 0px 30px 30px 30px;
 }
 
-.component-info {
-    flex: 1;
-    min-width: 0;
+.form-group {
+    margin-bottom: 24px;
 }
 
-.component-info h3 {
-    font-size: 18px;
+.form-group label {
+    display: block;
+    margin-bottom: 10px;
     font-weight: 600;
     color: #133E87;
-    margin: 0 0 8px 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.component-meta {
-    font-size: 13px;
-    color: #64748b;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
-.component-meta span {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.component-description {
-    margin-top: 12px;
-    color: #475569;
     font-size: 14px;
-    line-height: 1.6;
-    display: -webkit-box;
-    
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-
-.component-actions {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    margin-top: 16px;
-    padding-top: 16px;
-    border-top: 1px solid #e2e8f0;
-}
-
-.component-tag {
-    margin-left: auto;
-    padding: 6px 12px;
-    background: #dbeafe;
-    color: #1e40af;
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
-/* Pagination */
-.pagination-container {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-    justify-content: center;
-    padding: 24px 40px;
-    border-top: 1px solid #e2e8f0;
-}
-
-.page-info {
-    padding: 10px 20px;
+.form-control {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid #e2e8f0;
     border-radius: 10px;
-    background: white;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-    font-weight: 600;
-    color: #133E87;
-    font-size: 14px;
-}
-
-/* Empty State */
-.empty-state {
-    text-align: center;
-    padding: 80px 40px;
-}
-
-.empty-state i {
-    font-size: 72px;
-    margin-bottom: 24px;
-    color: #cbd5e1;
-}
-
-.empty-state h3 {
-    margin-bottom: 12px;
-    color: #133E87;
-    font-size: 1.5rem;
-}
-
-.empty-state p {
-    color: #64748b;
     font-size: 15px;
-    margin-bottom: 24px;
+    transition: all 0.3s;
+    background: #f8fafc;
 }
 
-/* Responsive */
-@media (max-width: 1200px) {
-    .components-grid {
-        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    }
+.form-control:focus {
+    outline: none;
+    border-color: #133E87;
+    box-shadow: 0 0 0 4px rgba(19, 62, 135, 0.08);
+    background: white;
 }
-
-@media (max-width: 768px) {
-    .componentes-container {
-        margin: 20px 15px;
-    }
-
-    .page-header,
-    .toolbar,
-    .components-grid,
-    .pagination-container,
-    .messages-container {
-        padding-left: 20px;
-        padding-right: 20px;
-    }
-
-    .toolbar {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .search-form {
-        max-width: 100%;
-    }
-
-    .components-grid {
-        grid-template-columns: 1fr;
-        gap: 16px;
-    }
-
-    .component-header {
-        flex-direction: column;
-    }
-
-    .component-image {
-        width: 100%;
-        height: 180px;
-    }
+.nohay
+{
+    padding: 20px 31px 25px 45px;
+    font-size: 15px;
+}
+.nohay i
+{
+    padding-right: 10px;
+}
+.parrafo
+{
+    padding: 10px 0px;
+    
 }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="componentes-container">
-    <!-- Header -->
+<div class="laboratorios-container">
     <div class="page-header">
         <h2><i class="fas fa-puzzle-piece"></i> Gestión de Componentes</h2>
         <p>Administre los componentes de laboratorios virtuales del sistema</p>
     </div>
 
-    <!-- Toolbar -->
     <div class="toolbar">
-        <form method="get" class="search-form">
-            <input 
-                type="text" 
-                name="q" 
-                placeholder="Buscar por nombre, tema o laboratorio..." 
-                value="{{ q|default:'' }}"
-            />
-            <button type="submit" class="btn-secondary">
-                <i class="fas fa-search"></i>
-                Buscar
-            </button>
+        <form method="get" class="search-container">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" name="q" placeholder="Buscar por nombre, tema o laboratorio..." value="{{ q|default:'' }}" />
+            <button type="button" class="clear-search" title="Limpiar">✖</button>
         </form>
-        <a href="{% url 'superadmin_componente_form_partial' %}" class="btn-primary">
-            <i class="fas fa-plus"></i>
-            Agregar Componente
-        </a>
+        <div class="actions-container">
+            <a href="{% url 'superadmin_componente_form_partial' %}" class="btn-primary"><i class="fas fa-plus"></i> Agregar Componente</a>
+        </div>
     </div>
 
-    <!-- Messages -->
     {% if messages %}
     <div class="messages-container">
         {% for message in messages %}
@@ -567,99 +566,80 @@ body {
     {% endif %}
 
     <!-- Modal de Confirmación -->
-    <div class="modal-overlay" id="modalConfirmacion" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000;justify-content:center;align-items:center;">
-        <div class="modal-content" style="background:white;padding:24px;border-radius:12px;width:90%;max-width:400px;box-shadow:0 4px 20px rgba(0,0,0,0.15);">
-            <h3 style="margin:0 0 16px 0;color:#1e293b">Confirmar eliminación</h3>
-            <p style="margin:0 0 20px 0;color:#475569">¿Está seguro que desea eliminar el componente <strong id="componenteNombre"></strong>?</p>
-            <p style="margin:0 0 24px 0;color:#dc2626;font-size:0.9em">Esta acción no se puede deshacer.</p>
-            <div style="display:flex;gap:12px;justify-content:flex-end">
-                <button onclick="cerrarModal()" class="btn btn-secondary">Cancelar</button>
-                <form id="formEliminar" method="post" style="margin:0">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger">Eliminar</button>
-                </form>
+    <div class="modal-overlay" id="modalConfirmacion">
+        <div class="modal-content">
+            <h3 class="modal-title" style="padding: 20px 35px;">Confirmar eliminación</h3>
+            <div class="modal-body">
+                <p style="font-size: 16px;">¿Está seguro que desea eliminar el componente <strong id="componenteNombre"></strong>?</p>
+                <p style="color:#dc2626;font-size:0.9em">Esta acción no se puede deshacer.</p>
+                <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:16px">
+                    <a onclick="cerrarModal()" class="modal-btn modal-btn-secondary" style="margin-top:-8px;padding: 10px;background-color: #b8b8b8;font-size: 15px;border-radius: 10px;">Cancelar</a>
+                    <form id="formEliminar" method="post" >
+                        {% csrf_token %}
+                        <a type="submit" class="modal-btn modal-btn-danger" style="padding: 10px;background-color: #ff0000; color: #ffffff;font-size: 15px;border-radius: 10px;">Eliminar</a>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Components Table -->
+    <!-- Tabla con estilos de laboratorios -->
     {% if componentes %}
-    <div class="table-responsive">
-        <table class="custom-table">
-            <thead>
-                <tr>
-                    <th class="titulo">Imagen</th>
-                    <th class="titulo">Nombre</th>
-                    <th class="titulo">Tema</th>
-                    <th class="titulo">Laboratorio</th>
-                    <th class="titulo">Descripción</th>
-                    <th class="titulo">Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for c in componentes %}
-                <tr>
-                    <td style="width: 60px">
-                        {% if c.imagen %}
-                            <img src="{{ c.imagen.url }}" alt="{{ c.nombre }}" style="width:60px;height:60px;object-fit:cover;border-radius:8px" />
-                        {% else %}
-                            <span style="font-size:24px">🧩</span>
-                        {% endif %}
-                    </td>
-                    <td><strong>{{ c.nombre }}</strong></td>
-                    <td>{% if c.laboratorio %}{{ c.laboratorio.nombre }}{% else %}-{% endif %}</td>
-                    <td>{% if c.laboratorio %}{{ c.laboratorio.nombre }}{% else %}-{% endif %}</td>
-                    <td>{% if c.descripcion %}{{ c.descripcion|truncatechars:100 }}{% else %}-{% endif %}</td>
-                    <td>
-                        <div class="btn-group">
-            </div>
-                            <a href="#" data-pk="{{ c.id }}" data-partial-url="{% url 'superadmin_componente_form_partial' %}" class="btn btn-secondary componente-edit-btn">
-                                <i class="fas fa-edit"></i>
-                                Editar
-                            </a>
-                            <button onclick="confirmarEliminacion('{{ c.id }}', '{{ c.nombre|escapejs }}')" class="btn btn-danger">
-                                <i class="fas fa-trash-alt"></i>
-                                Eliminar
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+    <div class="table-wrapper">
+        <div class="table-container">
+            <table class="laboratorios-table">
+                <thead>
+                    <tr>
+                        <th>Imagen</th>
+                        <th>Nombre</th>
+                        <th>Laboratorio</th>
+                        <th>Descripción</th>
+                        <th>Estado</th>
+                        <th style="text-align:center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in componentes %}
+                    <tr>
+                        <td>
+                            {% if c.imagen %}
+                                <div class="lab-info"><div class="lab-icon"><img src="{{ c.imagen.url }}" style="width:44px;height:44px;object-fit:cover;border-radius:6px"/></div></div>
+                            {% else %}
+                                <div class="lab-info"><div class="lab-icon"><i class="fas fa-puzzle-piece"></i></div></div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="lab-details">
+                                <div class="lab-name">{{ c.nombre }}</div>
+                                <div class="lab-id">ID: {{ c.id }}</div>
+                            </div>
+                        </td>
+                        <td>{% if c.laboratorio %}{{ c.laboratorio.nombre }}{% else %}-{% endif %}</td>
+                        <td>{% if c.descripcion %}{{ c.descripcion|truncatechars:100 }}{% else %}-{% endif %}</td>
+                        <td>
+                            <label class="switch">
+                                <input type="checkbox" data-id="{{ c.id }}" {% if c.estado == 'Activo' %}checked{% endif %}>
+                                <span class="slider"></span>
+                            </label>
 
-    <!-- Pagination -->
-    {% if paginator.num_pages > 1 %}
-    <div class="pagination-container">
-        {% if page_obj.has_previous %}
-            <a href="?q={{ q }}&page={{ page_obj.previous_page_number }}" class="btn-secondary">
-                <i class="fas fa-chevron-left"></i>
-                Anterior
-            </a>
-        {% endif %}
-        
-        <div class="page-info">
-            Página {{ page_obj.number }} de {{ paginator.num_pages }}
+                        </td>
+                        <td class="acciones">
+                            <button class="btn-icon btn-edit componente-edit-btn" data-pk="{{ c.id }}" data-partial-url="{% url 'superadmin_componente_form_partial' %}"><i class="fas fa-edit"></i></button>
+                            <button onclick="confirmarEliminacion('{{ c.id }}', '{{ c.nombre|escapejs }}')" class="btn-icon btn-delete" title="Eliminar"><i class="fas fa-trash-alt"></i></button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
-        
-        {% if page_obj.has_next %}
-            <a href="?q={{ q }}&page={{ page_obj.next_page_number }}" class="btn-secondary">
-                Siguiente
-                <i class="fas fa-chevron-right"></i>
-            </a>
-        {% endif %}
+    </div>
+    {% else %}
+    <div class="nohay">
+        <h3 ><i class="fas fa-puzzle-piece"></i>No hay componentes registrados</h3>
+        <p class="parrafo">Comienza agregando componentes para los laboratorios virtuales</p>
     </div>
     {% endif %}
 
-    {% else %}
-    <div class="empty-state">
-        <i class="fas fa-puzzle-piece"></i>
-        <h3>No hay componentes registrados</h3>
-        <p>Comienza agregando componentes para los laboratorios virtuales</p>
-        
-    </div>
-    {% endif %}
 </div>
 
 <script>
@@ -801,5 +781,47 @@ document.addEventListener('click', function(e){
         return;
     }
 });
+</script>
+<script>
+// Inicializar switches de estado en el listado superadmin
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function initSuperadminEstadoSwitches(){
+    document.querySelectorAll('.laboratorios-container .switch').forEach(function(label){
+        const checkbox = label.querySelector('input[type=checkbox]');
+        const componenteId = checkbox ? (checkbox.getAttribute('data-id') || checkbox.dataset.id) : null;
+        if (checkbox && checkbox.checked) label.classList.add('checked'); else label.classList.remove('checked');
+        if(!checkbox) return;
+        checkbox.addEventListener('change', function(){
+            const checked = checkbox.checked;
+            if (checked) label.classList.add('checked'); else label.classList.remove('checked');
+            const formData = new FormData();
+            formData.append('cambiar_estado','1');
+            formData.append('componente_id', componenteId);
+            fetch(window.location.pathname, {
+                method: 'POST',
+                headers: {'X-CSRFToken': getCookie('csrftoken'), 'X-Requested-With': 'XMLHttpRequest'},
+                body: formData
+            }).then(r=>r.json()).then(data=>{
+                if(!data.success){ checkbox.checked = !checked; if(checkbox.checked) label.classList.add('checked'); else label.classList.remove('checked'); alert('No se pudo cambiar estado'); }
+            }).catch(err=>{ checkbox.checked = !checked; if(checkbox.checked) label.classList.add('checked'); else label.classList.remove('checked'); alert('Error en la petición'); });
+        });
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function(){ initSuperadminEstadoSwitches(); });
 </script>
 {% endblock %}
