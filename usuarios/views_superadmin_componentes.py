@@ -12,9 +12,9 @@ def superadmin_componentes_list(request):
     if not usuario_id:
         return redirect('login')
     q = request.GET.get('q', '').strip()
-    qs = Componente.objects.select_related('tema', 'laboratorio').all()
+    qs = Componente.objects.select_related('laboratorio').all()
     if q:
-        qs = qs.filter(Q(nombre__icontains=q) | Q(tema__nombre_archivo__icontains=q))
+        qs = qs.filter(Q(nombre__icontains=q) | Q(descripcion__icontains=q) | Q(laboratorio__nombre__icontains=q))
 
     # paginación simple
     page = request.GET.get('page', 1)
