@@ -1,17 +1,472 @@
 {% extends 'administrador/base_admin.html' %}
 {% load static %}
 
+{% block extra_css %}
+<style>
+/* Página: fondo claro similar a la imagen */
+body { 
+    background: linear-gradient(180deg, #f7f7e8 0%, #f3f6ee 100%); 
+}
+
+.component-avatar{width:56px;height:56px;border-radius:50%;overflow:hidden;flex:0 0 56px;display:flex;align-items:center;justify-content:center}
+.page-card{
+    max-width:1180px;
+    margin:5px 5px;
+    background:white;
+    border-radius:18px;
+    overflow:visible;
+    box-shadow: 0 8px 24px rgba(12,30,80,0.08);
+}
+
+/* Encabezado estilo tarjeta azul */
+.components-header {
+    background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+    color: white;
+    padding: 32px 36px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+.col.status{width:140px;display:flex;align-items:center;}
+.col.actions{width:140px;display:flex;justify-content:flex-end;}
+    border-radius: 18px 18px 0 0;
+}
+
+.components-header::after{
+    content: '';
+    position: absolute;
+    right: 0; 
+    top:0; 
+    bottom:0;
+    width:260px;
+    background: radial-gradient(circle at 20% 30%, rgba(255,255,255,0.08), transparent 40%);
+    pointer-events:none;
+}
+
+.components-header .title {
+    display:flex;
+    flex-direction:column;
+
+/* Avatar fallback style */
+.avatar-fallback{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#11408f,#2b6ad6);color:white;font-size:20px}
+
+/* Estado pill */
+.status-pill{padding:6px 10px;border-radius:999px;font-weight:700;font-size:0.85rem;display:inline-flex;align-items:center;gap:8px}
+.status-available{background:rgba(16,185,129,0.12);color:#059669}
+.status-unavailable{background:rgba(148,163,184,0.12);color:#64748b}
+
+/* Toggle switch */
+.switch{
+    width:48px;
+    height:28px;
+    background:#e6edf6;
+    border-radius:999px;
+    position:relative;
+    display:inline-block;
+    vertical-align:middle;
+    transition:background 0.2s ease;
+}
+.switch input{display:none}
+.switch .knob{
+    position:absolute;
+    top:3px;
+    left:3px;
+    width:22px;
+    height:22px;
+    background:white;
+    border-radius:50%;
+    box-shadow:0 6px 14px rgba(2,6,23,0.12);
+    transition:all 0.18s ease;
+}
+.switch.checked{background:linear-gradient(90deg,#10b981,#059669)}
+.switch.checked .knob{transform:translateX(20px)}
+
+.btnedit{background:#afafaf;border:1px solid #535353;padding:8px 10px;border-radius:8px;color:#11396f;width: 10px;height: 10px;box-shadow:0 6px 18px rgba(17,64,143,0.06)}
+
+}
+
+.components-header h2{
+    margin:0;
+    font-size:1.75rem;
+    font-weight:700;
+}
+
+.components-header p{
+    margin:0;
+    opacity:0.95;
+    color:rgba(255,255,255,0.9);
+    font-size:0.95rem;
+}
+
+/* Search row below header */
+.controls {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:24px 36px;
+    background: #fff;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.search-create{
+    display:flex;
+    gap:16px;
+    align-items:center;
+    width:100%;
+}
+
+.search-box{
+    position:relative;
+    flex:1;
+    max-width: 400px;
+}
+
+.search-box input[type=text]{
+    width:100%;
+    padding:12px 18px 12px 44px;
+    border-radius:12px;
+    border:1px solid #d1d5db;
+    background:#fff;
+    box-shadow:none;
+    font-size:0.95rem;
+    transition: all 0.2s ease;
+}
+
+.search-box input[type=text]:focus{
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.search-box i{
+    position:absolute;
+    left:16px;
+    top:50%;
+    transform:translateY(-50%);
+    color:#9ca3af;
+    font-size: 0.9rem;
+}
+
+.btn-new{
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 12px;
+    border: 0;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.95rem;
+}
+
+.btn-new:hover{
+    background: linear-gradient(135deg, #1d4ed8, #1e40af);
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
+    transform: translateY(-1px);
+}
+
+.components-list{
+    margin: 0;
+    padding: 24px 36px 36px 36px;
+}
+
+.list-header{
+    display:flex;
+    align-items:center;
+    background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+    color:white;
+    padding:0;
+    border-radius:12px 12px 0 0;
+    margin-bottom: 1px;
+}
+
+.list-header .col{
+    font-weight:700;
+    font-size:0.8rem;
+    padding:16px 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.component-card{
+    background:#fff;
+    border-radius:0;
+    padding:18px 0;
+    display:flex;
+    align-items:center;
+    border-bottom: 1px solid #e5e7eb;
+    transition: all 0.2s ease;
+}
+
+.component-card:last-child{
+    border-bottom: none;
+    border-radius: 0 0 12px 12px;
+}
+
+.component-card:hover{
+    background: #f9fafb;
+}
+
+.component-avatar{
+    width:56px;
+    height:56px;
+    border-radius:50%;
+    overflow:hidden;
+    flex:0 0 56px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    box-shadow: 0 6px 18px rgba(2,6,23,0.06);
+    background: #eef2ff;
+}
+
+.col{
+    padding:0 12px;
+    display: flex;
+    align-items: center;
+}
+/* Columna imagen fija */
+.col.img{width:80px;justify-content:center}
+
+.col.name{
+    flex:1;
+    justify-content: flex-start;
+}
+
+.col.lab{
+    flex: 1;
+    justify-content: flex-start;
+    padding-left: 12px;
+    padding-right: 12px;
+}
+
+.col.desc{
+    flex:2;
+}
+
+.col.actions{
+    width:180px;
+    display:flex;
+    justify-content:center;
+    gap: 8px;
+}
+
+.component-avatar img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+}
+
+.component-actions{
+    display:flex;
+    gap:8px;
+}
+
+.component-meta{
+    color:#6b7280;
+    font-size:0.9rem;
+    margin-top:6px;
+}
+
+.btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: none;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.875rem;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-sm {
+    padding: 6px 14px;
+    font-size: 0.8rem;
+}
+
+.btn-secondary {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.btn-secondary:hover {
+    background: #d1d5db;
+    transform: translateY(-1px);
+}
+
+.btn-danger {
+    background: #dc2626;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #b91c1c;
+    transform: translateY(-1px);
+}
+
+.admin-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    margin: 0 36px 24px 36px;
+}
+
+.message-success {
+    background: #d1fae5;
+    color: #065f46;
+    border-left: 4px solid #10b981;
+}
+
+.message-error {
+    background: #fee2e2;
+    color: #991b1b;
+    border-left: 4px solid #ef4444;
+}
+
+.message-info {
+    background: #dbeafe;
+    color: #1e40af;
+    border-left: 4px solid #3b82f6;
+}
+
+@media (max-width:900px){
+    .search-box{
+        max-width: 100%;
+    }
+    .search-box input[type=text]{
+        min-width:160px;
+    }
+    .page-card{
+        margin:16px;
+    }
+    .controls{
+        flex-direction: column;
+        gap: 12px;
+    }
+    .search-create{
+        width: 100%;
+        flex-direction: column;
+    }
+    .search-box{
+        width: 100%;
+        max-width: 100%;
+    }
+}
+
+/* Modal/form styles (used when loading partial via AJAX into overlay) */
+.modal-card{
+    max-width:980px;
+    margin:0 auto;
+    background:#fff;
+    border-radius:12px;
+    box-shadow:0 12px 40px rgba(2,6,23,0.24);
+    overflow:hidden;
+}
+.modal-header{
+    background: linear-gradient(135deg,#1e3a8a 0%,#1e40af 100%);
+    color:#fff;
+    padding:18px 22px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+}
+.modal-header h3{margin:0;font-size:1.25rem}
+.modal-body{display:flex;gap:18px;padding:18px;background:#f8fafc}
+.left-col{flex:1}
+.right-col{width:320px}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:0.85rem;color:#334155;margin-bottom:8px;font-weight:700}
+.field input[type=text], .field select, .field textarea, .field input[type=file]{
+    width:100%;padding:10px;border-radius:8px;border:1px solid #e6edf6;background:#fbfdff;font-size:0.95rem;color:#0f172a;box-shadow:none;resize:vertical;
+}
+.field textarea{min-height:100px}
+.preview-box{background:#fff;border-radius:8px;border:1px solid #e6edf6;padding:12px;display:flex;align-items:center;justify-content:center;min-height:160px}
+.preview-box img{max-width:100%;max-height:200px;object-fit:contain;border-radius:6px}
+.no-image{color:#94a3b8;display:flex;flex-direction:column;align-items:center;gap:8px}
+.files-box{margin-top:12px;padding:10px;border-radius:8px;border:1px dashed #e6edf6;background:#fff}
+.modal-footer{display:flex;justify-content:flex-end;gap:12px;padding:12px 18px 18px 18px;background:white}
+.btn-primary{background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;padding:8px 14px;border-radius:8px;border:0;font-weight:700}
+.btn-secondary{background:#eef2ff;color:#0f172a;padding:8px 12px;border-radius:8px;border:0}
+.close-btn{background:rgba(255,255,255,0.12);color:#fff;border-radius:8px;padding:6px 8px;border:0}
+/* Toggle Switch */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: 0.4s;
+    border-radius: 24px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.4s;
+    border-radius: 50%;
+}
+input:checked + .slider {
+    background-color: #27ae60;
+}
+
+input:focus + .slider {
+    box-shadow: 0 0 1px #27ae60;
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+@media (max-width:900px){
+    .modal-body{flex-direction:column}
+    .right-col{width:100%}
+}
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container">
-    <div class="admin-card">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">
-            <h2>Lista de Componentes</h2>
-            <div style="display:flex;gap:8px;align-items:center">
-                <form method="get" style="display:flex;gap:8px;align-items:center">
-                    <input type="text" name="q" placeholder="Buscar por nombre o tema..." class="form-control" value="{{ q|default:'' }}" />
-                    <button type="submit" class="btn btn-secondary">Buscar</button>
-                </form>
-            </div>
+<div class="page-card">
+    <div class="components-header">
+        <div class="title">
+            <h2><i class="fas fa-puzzle-piece"></i> Gestión de Componentes</h2>
+            <p>Administre y organice los componentes del sistema</p>
+        </div>
+    </div>
+
+    <div class="controls">
+        <div class="search-create">
+            <form method="get" action="{% url 'componentes_list' %}" style="margin:0;position:relative" class="search-box">
+                <input type="text" name="q" placeholder="Buscar componente..." value="{{ q|default:'' }}" />
+                <button type="submit" title="Buscar" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);background:transparent;border:0;color:#9ca3af;font-size:0.9rem;cursor:pointer;padding:0"><i class="fas fa-search"></i></button>
+            </form>
+            
         </div>
     </div>
 
@@ -24,54 +479,45 @@
     {% endif %}
 
     {% if componentes %}
-    <div class="admin-card" style="margin-top:18px">
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>Imagen</th>
-                        <th>Nombre</th>
-                        <th>Tema</th>
-                        <th>Laboratorio</th>
-                        <th>Descripción</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for c in componentes %}
-                    <tr>
-                        <td style="width: 80px">
-                            {% if c.imagen %}
-                                <img src="{{ c.imagen.url }}" alt="{{ c.nombre }}" style="width:60px;height:60px;object-fit:cover;border-radius:8px" />
-                            {% else %}
-                                <span style="font-size:24px">🧩</span>
-                            {% endif %}
-                        </td>
-                        <td><strong>{{ c.nombre }}</strong></td>
-                        <td>{{ c.tema.nombre_archivo }}</td>
-                        <td>{% if c.laboratorio %}{{ c.laboratorio.nombre }}{% else %}-{% endif %}</td>
-                        <td>{% if c.descripcion %}{{ c.descripcion|truncatechars:100 }}{% else %}-{% endif %}</td>
-                        <td>
-                            <div class="btn-group">
-                                <a href="{% url 'componente_update' c.id %}" class="btn btn-sm btn-secondary">Editar</a>
-                                <button onclick="confirmarEliminacion('{{ c.id }}', '{{ c.nombre|escapejs }}')" class="btn btn-sm btn-danger">Eliminar</button>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <div class="components-list">
+        <div class="list-header">
+            <div class="col name">IMAGEN</div>
+            <div class="col name">NOMBRE</div>
+            <div class="col name">LABORATORIO</div>
+            <div class="col name">DESCRIPCIÓN</div>
+            <div class="col status">ESTADO</div>
+            <div class="col name">ACCIONES</div>
         </div>
-    </div>
-    </div>
-    <div style="margin-top:18px;display:flex;gap:8px;align-items:center;justify-content:center">
-        {% if page_obj.has_previous %}
-            <a href="?q={{ q }}&page={{ page_obj.previous_page_number }}" class="btn btn-secondary">← Anterior</a>
-        {% endif %}
-        <div style="padding:6px 12px;border-radius:8px;background:#fff;box-shadow:0 4px 12px rgba(8,18,40,0.04);margin:0 6px">Página {{ page_obj.number }} de {{ paginator.num_pages }}</div>
-        {% if page_obj.has_next %}
-            <a href="?q={{ q }}&page={{ page_obj.next_page_number }}" class="btn btn-secondary">Siguiente →</a>
-        {% endif %}
+        {% for c in componentes %}
+        <div class="component-card">
+            <div class="col img">
+                <div class="component-avatar">
+                    {% if c.imagen %}
+                        <img src="{{ c.imagen.url }}" alt="{{ c.nombre }}" />
+                    {% else %}
+                        <div class="avatar-fallback"><i class="fas fa-puzzle-piece"></i></div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col name">
+                <div style="display:flex;flex-direction:column">
+                    <strong>{{ c.nombre }}</strong>
+                    <div class="component-meta">ID: {{ c.id }}</div>
+                </div>
+            </div>
+            <div class="col lab">{% if c.laboratorio %}{{ c.laboratorio.nombre }}{% else %}-{% endif %}</div>
+            <div class="col desc">{{ c.descripcion|default:'Sin descripción'|truncatechars:100 }}</div>
+            <div class="col status">
+                <label class="switch">
+                    <input type="checkbox" data-id="{{ c.id }}" {% if c.estado == 'Activo' %}checked{% endif %}>
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="col actions">
+                <a href="{% url 'componente_update' c.id %}" class="btnedit" title="Editar" style="display: flex;justify-content: center;"><i class="fas fa-edit" style="background:#d3d3d3;padding:12px 15px;border-radius:8px;color:#11396f;width: 45px;height: 45px;box-shadow:0 6px 18px rgba(17,64,143,0.06)"></i></a>
+            </div>
+        </div>
+        {% endfor %}
     </div>
     {% else %}
         <div class="admin-card" style="margin-top:18px">No hay componentes registrados.</div>
@@ -133,4 +579,177 @@ document.addEventListener('keydown', function(e) {
     }
 });
 </script>
+
+<script>
+// Obtener CSRF token desde cookie (Django)
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function initEstadoSwitches() {
+    document.querySelectorAll('.switch').forEach(function(label){
+        const checkbox = label.querySelector('input[type=checkbox]');
+        // ensure visual state matches checked
+        if (checkbox.checked) label.classList.add('checked'); else label.classList.remove('checked');
+
+        checkbox.addEventListener('change', function(e){
+            const lbl = label;
+            const componenteId = lbl.getAttribute('data-id');
+            const checked = checkbox.checked;
+
+            // optimistically toggle UI
+            if (checked) lbl.classList.add('checked'); else lbl.classList.remove('checked');
+
+            const formData = new FormData();
+            formData.append('cambiar_estado','1');
+            formData.append('componente_id', componenteId);
+
+            fetch(window.location.pathname, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            }).then(resp => resp.json()).then(data => {
+                if (!data.success) {
+                    // revert visual change
+                    checkbox.checked = !checked;
+                    if (checkbox.checked) lbl.classList.add('checked'); else lbl.classList.remove('checked');
+                    alert('No se pudo cambiar el estado: ' + (data.error || 'error desconocido'));
+                }
+            }).catch(err => {
+                // revert visual change
+                checkbox.checked = !checked;
+                if (checkbox.checked) lbl.classList.add('checked'); else lbl.classList.remove('checked');
+                alert('Error en la petición: ' + err);
+            });
+        });
+    });
+}
+
+// Initialize on load
+document.addEventListener('DOMContentLoaded', function(){
+    initEstadoSwitches();
+});
+</script>
 {% endblock %}
+
+<!-- Remote modal overlay: carga el formulario de creación/edición vía AJAX -->
+<div id="remoteModalOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:4000;align-items:center;justify-content:center;padding:28px;">
+    <div id="remoteModalContent" style="max-width:980px;width:100%;max-height:94vh;overflow:auto;border-radius:14px;background:transparent;">
+        <!-- Aquí se insertará el HTML del formulario -->
+    </div>
+    <button id="remoteModalClose" aria-label="Cerrar" style="position:fixed;right:36px;top:28px;z-index:4100;background:transparent;border-radius:10px;border:0;color:#fff;font-size:28px">&times;</button>
+</div>
+
+<script>
+// Abrir modal remoto y cargar formulario desde la URL de creación
+document.addEventListener('DOMContentLoaded', function(){
+    const openBtn = document.getElementById('openComponenteModal');
+    const overlay = document.getElementById('remoteModalOverlay');
+    const content = document.getElementById('remoteModalContent');
+    const closeBtn = document.getElementById('remoteModalClose');
+
+    function bindPreviewInside(container){
+        const fileInput = container.querySelector('input[type=file]#id_imagen');
+        const previewImg = container.querySelector('#previewImg');
+        const noImageBlock = container.querySelector('#noImageBlock');
+        if(!fileInput) return;
+        fileInput.addEventListener('change', function(e){
+            const file = e.target.files && e.target.files[0];
+            if (!file) {
+                if(previewImg) previewImg.style.display = 'none';
+                if(noImageBlock) noImageBlock.style.display = 'flex';
+                if(previewImg) previewImg.src = '';
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function(ev){
+                if(previewImg){ previewImg.src = ev.target.result; previewImg.style.display = 'block'; }
+                if(noImageBlock) noImageBlock.style.display = 'none';
+            }
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function openModalWithUrl(url){
+        fetch(url, {headers: {'X-Requested-With':'XMLHttpRequest'}})
+        .then(r => r.text())
+        .then(html => {
+            // Insert HTML
+            content.innerHTML = html;
+            // Ensure overlay visible
+            overlay.style.display = 'flex';
+            // Bind close buttons inside content
+            content.querySelectorAll('.close-btn').forEach(btn => btn.addEventListener('click', closeModal));
+            // Bind preview for uploaded image inside modal
+            bindPreviewInside(content);
+            // Trap focus optionally (not implemented)
+        }).catch(err => {
+            alert('Error al cargar el formulario: ' + err);
+        });
+    }
+
+    function closeModal(){
+        overlay.style.display = 'none';
+        content.innerHTML = '';
+    }
+
+    if(openBtn){
+        openBtn.addEventListener('click', function(e){
+            e.preventDefault();
+            const url = this.getAttribute('href');
+            openModalWithUrl(url);
+        });
+    }
+
+    if(closeBtn) closeBtn.addEventListener('click', closeModal);
+
+    // Cerrar al hacer clic fuera del modal content
+    overlay.addEventListener('click', function(e){
+        if (e.target === overlay) closeModal();
+    });
+
+    // Cerrar con Escape
+    document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && overlay.style.display === 'flex') closeModal(); });
+});
+</script>
+
+<script>
+// Fallback para garantizar que el formulario de búsqueda funcione
+document.addEventListener('DOMContentLoaded', function(){
+    const searchForm = document.querySelector('form.search-box');
+    if(!searchForm) return;
+    searchForm.addEventListener('submit', function(e){
+        // Intentar realizar búsqueda normal; si algo previene submit, forzamos navegación
+        try {
+            const input = this.querySelector('input[name="q"]');
+            const q = input ? input.value.trim() : '';
+            const action = this.getAttribute('action') || window.location.pathname;
+            // Si el navegador no envía el formulario por alguna razón, navegamos manualmente
+            // Permitimos dejar que el submit continúe normalmente primero by using a short timeout
+            setTimeout(function(){
+                // Si la URL no cambió en 50ms, forzamos la búsqueda
+                if (window.location.search.indexOf('q=') === -1 || (q && window.location.search.indexOf('q=' + encodeURIComponent(q)) === -1)) {
+                    const target = action + (q ? ('?q=' + encodeURIComponent(q)) : '');
+                    window.location.href = target;
+                }
+            }, 50);
+        } catch(err){
+            console.error('Error en submit search fallback:', err);
+        }
+    });
+});
+</script>

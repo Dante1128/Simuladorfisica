@@ -5,8 +5,6 @@ from . import views
 urlpatterns = [
     path('', views.index, name='index'),
     path('login/', views.login_view, name='login'),
-    # Reportes PDF
-    path('reportes/pdf/<str:tipo_reporte>/', views.generar_reporte_pdf, name='generar_reporte_pdf'),
     # =================================================================
     # SUPERADMINISTRADOR 
     # =================================================================
@@ -76,23 +74,19 @@ urlpatterns = [
     # =================================================================
     
     # Dashboards principales
-    path('informes/', views.informes_principal, name='informes_principal'),
     path('dashboard/superadmin/', views.dashboard_superadmin, name='dashboard_superadmin'),
     path('dashboard/administrador/', views.dashboard_administrador, name='dashboard_administrador'),
     path('dashboard/profesor/', views.dashboard_profesor, name='dashboard_profesor'),
-    path('dashboard/estudiante/', views.dashboard_estudiante, name='dashboard_estudiante'),
-    # APIs para datos en tiempo real
-    path('api/estadisticas-tiempo-real/', views.api_estadisticas_tiempo_real, name='api_estadisticas_tiempo_real'),
+    # Vista principal de informes (redirige según rol)
+    path('informes/', views.informes_principal, name='informes_principal'),
+    # Generación de PDF completo (un solo PDF por rol)
+    path('informes/generar-pdf/', views.generar_reporte_completo_pdf, name='generar_reporte_completo_pdf'),
     # Rutas para Componentes
     path('componentes/', views.componentes_list, name='componentes_list'),
     path('componentes/agregar/', views.componente_create, name='componente_create'),
     path('componentes/<int:pk>/editar/', views.componente_update, name='componente_update'),
     path('componentes/<int:pk>/eliminar/', views.componente_delete_confirm, name='componente_delete_confirm'),
-    # Reportes PDF - URLs ESPECÍFICAS (AGREGA ESTAS)
-    path('reportes/estudiantes/', views.generar_reporte_pdf, {'tipo_reporte': 'estudiantes'}, name='reporte_estudiantes'),
-    path('reportes/profesores/', views.generar_reporte_pdf, {'tipo_reporte': 'profesores'}, name='reporte_profesores'),
-    path('reportes/cursos/', views.generar_reporte_pdf, {'tipo_reporte': 'cursos'}, name='reporte_cursos'),
-    path('reportes/pdf/<str:tipo_reporte>/', views.generar_reporte_pdf, name='generar_reporte_pdf'),
+
    #MODULO GESTION CONTENIDO-TEORICO
     path('gestion-documentos-profesor/', views.gestion_documentos_profesor, name='gestion_documentos_profesor'),
     path('gestion-documentos-administrador/', views.gestion_documentos_administrador, name='gestion_documentos_administrador'),

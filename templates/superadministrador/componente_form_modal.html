@@ -13,7 +13,7 @@ body {
     align-items: center;
     justify-content: center;
     overflow: hidden; /* keep rounded corners */
-    max-height: 92vh;
+    max-height: 100vh;
     display: flex;
     flex-direction: column;
     z-index: 2000;
@@ -24,7 +24,7 @@ body {
     width: 920px;
     max-width: 100%;
     background: white;
-    border-radius: 12px;
+    border-radius: 15px;
     overflow: hidden;
     max-height: 92vh;
     box-shadow: 0 12px 40px rgba(2,6,23,0.5);
@@ -40,7 +40,7 @@ body {
 }
 .form-container {
     background: #fff;
-    border-radius: 16px;
+    border-radius: 15px;
     box-shadow: 0 8px 32px rgba(19, 62, 135, 0.12);
     overflow: hidden;
 }
@@ -184,7 +184,7 @@ textarea {
     background: #f8fafc;
     border: 2px solid #e2e8f0;
     border-radius: 12px;
-    padding: 20px;
+    padding: 5px;
     margin-bottom: 20px;
 }
 
@@ -219,7 +219,7 @@ textarea {
     align-items: center;
     gap: 12px;
     padding: 14px 16px;
-    border: 2px dashed #cbd5e1;
+    border: 1px dashed #cbd5e1;
     border-radius: 10px;
     background: white;
     color: #64748b;
@@ -311,10 +311,11 @@ textarea {
 /* Form Actions */
 .form-actions {
     display: flex;
+    justify-content: center;
     gap: 12px;
     padding: 24px 40px;
     background: #f8fafc;
-    border-top: 1px solid #e2e8f0;
+    
 }
 
 .btn-primary {
@@ -417,8 +418,7 @@ textarea {
                                 {{ form.nombre }}
                             </div>
                             <div class="form-group">
-                                {{ form.tema.label_tag }}
-                                {{ form.tema }}
+                                {# Campo 'tema' eliminado del formulario #}
                             </div>
                             <div class="form-group">
                                 {{ form.laboratorio.label_tag }}
@@ -459,6 +459,9 @@ textarea {
                                     <label class="file-input-label">Imagen de componente
                                         {{ form.imagen }}
                                     </label>
+                                    <div style="margin-top:8px;font-size:13px;color:#475569">
+                                        <small id="image-file-name">{% if componente and componente.imagen %}{{ componente.imagen.name|default:"" }}{% else %}Ningún archivo seleccionado{% endif %}</small>
+                                    </div>
                                     {{ form.imagen.errors }}
                                 </div>
 
@@ -466,6 +469,20 @@ textarea {
                                     <label class="file-input-label">Archivo 3D
                                         {{ form.modelo3D }}
                                     </label>
+                                    <div style="margin-top:8px;font-size:13px;color:#475569">
+                                        <small id="model-file-name">{% if componente and componente.modelo3D %}{{ componente.modelo3D.name|default:"" }}{% else %}Ningún archivo seleccionado{% endif %}</small>
+                                    </div>
+                                    {% if componente and componente.modelo3D %}
+                                    <div id="model-status" style="margin-top:10px;color:green;font-weight:600;display:flex;align-items:center;gap:8px">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Archivo 3D cargado</span>
+                                    </div>
+                                    {% else %}
+                                    <div id="model-status" style="margin-top:10px;color:#64748b;display:flex;align-items:center;gap:8px">
+                                        <i class="fas fa-file"></i>
+                                        <span>No hay archivo 3D</span>
+                                    </div>
+                                    {% endif %}
                                     {{ form.modelo3D.errors }}
                                 </div>
                             </div>
@@ -540,6 +557,38 @@ textarea {
                     const ph = document.createElement('div'); ph.className='preview-placeholder'; ph.innerHTML = '<i class="fas fa-puzzle-piece"></i><div>No hay imagen</div>';
                     previewBox.innerHTML=''; previewBox.appendChild(ph);
                 }
+            }
+        });
+    }
+
+    // --- Mostrar nombre y estado para archivo 3D ---
+    const modelInput = overlay.querySelector('input[type=file][name*=modelo3D], input[type=file][id*=modelo3D]');
+    const imageNameEl = overlay.querySelector('#image-file-name');
+    const modelNameEl = overlay.querySelector('#model-file-name');
+    const modelStatusEl = overlay.querySelector('#model-status');
+
+    function updateFileName(el, file){
+        if(!el) return;
+        if(file) el.textContent = file.name;
+        else el.textContent = 'Ningún archivo seleccionado';
+    }
+
+    if(imgInput){
+        imgInput.addEventListener('change', function(e){
+            const f = e.target.files && e.target.files[0];
+            updateFileName(imageNameEl, f);
+        });
+    }
+
+    if(modelInput){
+        // inicial: si ya hay nombre en modelNameEl (servidor) mantener estado
+        modelInput.addEventListener('change', function(e){
+            const f = e.target.files && e.target.files[0];
+            updateFileName(modelNameEl, f);
+            if(f){
+                if(modelStatusEl){ modelStatusEl.style.color='green'; modelStatusEl.innerHTML = '<i class="fas fa-check-circle"></i><span>Archivo 3D listo</span>'; }
+            } else {
+                if(modelStatusEl){ modelStatusEl.style.color='#64748b'; modelStatusEl.innerHTML = '<i class="fas fa-file"></i><span>No hay archivo 3D</span>'; }
             }
         });
     }
