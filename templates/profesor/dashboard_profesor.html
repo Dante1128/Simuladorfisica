@@ -1,65 +1,45 @@
-{% extends 'profesor/base_profesor.html' %}
+{% extends 'administrador/base_admin.html' %}
 {% load static %}
 {% block title %}Dashboard - Informes y Reportes{% endblock %}
 
 {% block content %}
-<div class="dashboard-profesor">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<div class="dashboard-admin">
     <!-- Header -->
     <div class="dashboard-header">
         <div class="header-main">
             <h1 class="page-title">
-                <span class="icon">📊</span>
-                Dashboard - Informes del Profesor
+                <i class="fas fa-chart-bar"></i>
+                Dashboard - Informes y Reportes
             </h1>
             <div class="user-info">
                 <div class="avatar">
-                    {% if usuario.correo %}
-                        {{ usuario.correo.0|upper }}
-                    {% else %}
-                        P
-                    {% endif %}
+                    <i class="fas fa-user-shield"></i>
                 </div>
-                <span class="user-name">
-                    Prof. {{ usuario.correo }}
-                </span>
+                <span class="user-name">{{ usuario.correo }}</span>
             </div>
         </div>
     </div>
 
-    <!-- Filtros -->
+    <!-- Filtros Simplificados -->
     <div class="filters-container">
         <div class="section-title">
-            <span class="icon">⚙️</span>
+            <i class="fas fa-filter"></i>
             Filtros de Datos
         </div>
         <form method="GET" class="filters-form">
             <div class="filter-row">
                 <div class="filter-group">
-                    <label class="filter-label">Fecha inicio:</label>
-                    <input type="date" name="fecha_inicio" value="{{ fecha_inicio|default:'' }}" class="filter-input">
-                </div>
-                <div class="filter-group">
-                    <label class="filter-label">Fecha fin:</label>
-                    <input type="date" name="fecha_fin" value="{{ fecha_fin|default:'' }}" class="filter-input">
-                </div>
-                <div class="filter-group">
-                    <label class="filter-label">Curso:</label>
-                    <select name="curso" class="filter-input">
-                        <option value="">Todos los cursos</option>
-                        {% for curso in cursos %}
-                        <option value="{{ curso.id }}" {% if curso_filtro == curso.id|stringformat:"s" %}selected{% endif %}>
-                            {{ curso.nombre }}
-                        </option>
-                        {% endfor %}
-                    </select>
+                    <label class="filter-label">Fecha:</label>
+                    <input type="date" name="fecha" value="{{ fecha_filtro }}" class="filter-input">
                 </div>
                 <div class="filter-actions">
                     <button type="submit" class="btn btn-filter">
-                        <span class="btn-icon">🔍</span>
+                        <i class="fas fa-search"></i>
                         Filtrar
                     </button>
-                    <a href="{% url 'dashboard_profesor' %}" class="btn btn-clear">
-                        <span class="btn-icon">🔄</span>
+                    <a href="{% url 'dashboard_administrador' %}" class="btn btn-clear">
+                        <i class="fas fa-redo"></i>
                         Limpiar
                     </a>
                 </div>
@@ -67,85 +47,83 @@
         </form>
     </div>
 
+    <!-- Botón Generar PDF Completo -->
+    <div class="pdf-action-container">
+        <a href="{% url 'generar_reporte_completo_pdf' %}" class="btn-generate-pdf" target="_blank">
+            <i class="fas fa-file-pdf"></i>
+            Generar Informe Completo en PDF
+        </a>
+    </div>
+
     <!-- Estadísticas -->
     <div class="stats-container">
         <div class="stats-grid">
-            <!-- Tarjeta Cursos -->
-            <div class="stat-card">
+            <!-- Tarjeta Estudiantes -->
+            <div class="stat-card card-estudiantes">
                 <div class="stat-header">
-                    <div class="stat-icon">📚</div>
-                    <h3 class="stat-title">TOTAL CURSOS</h3>
+                    <div class="stat-icon">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                    <h3 class="stat-title">Total Estudiantes</h3>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number">{{ estadisticas.total_estudiantes|default:"0" }}</div>
+                    <div class="stat-label">Estudiantes activos</div>
+                </div>
+            </div>
+
+            <!-- Tarjeta Profesores -->
+            <div class="stat-card card-profesores">
+                <div class="stat-header">
+                    <div class="stat-icon">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                    </div>
+                    <h3 class="stat-title">Total Profesores</h3>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number">{{ estadisticas.total_profesores|default:"0" }}</div>
+                    <div class="stat-label">Profesores activos</div>
+                </div>
+            </div>
+
+            <!-- Tarjeta Cursos -->
+            <div class="stat-card card-cursos">
+                <div class="stat-header">
+                    <div class="stat-icon">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <h3 class="stat-title">Total Cursos</h3>
                 </div>
                 <div class="stat-content">
                     <div class="stat-number">{{ estadisticas.total_cursos|default:"0" }}</div>
-                    <a href="{% url 'reporte_cursos' %}" class="download-btn">
-                        <span class="download-icon">📥</span>
-                        Descargar PDF
-                    </a>
+                    <div class="stat-label">Cursos disponibles</div>
                 </div>
             </div>
 
-            <!-- Tarjeta Temas Totales -->
-            <div class="stat-card">
+            <!-- Tarjeta Membresía -->
+            <div class="stat-card membership-card">
                 <div class="stat-header">
-                    <div class="stat-icon">📝</div>
-                    <h3 class="stat-title">TOTAL TEMAS</h3>
-                </div>
-                <div class="stat-content">
-                    <div class="stat-number">{{ estadisticas.total_temas|default:"0" }}</div>
-                    <a href="{% url 'reporte_temas' %}" class="download-btn">
-                        <span class="download-icon">📥</span>
-                        Descargar PDF
-                    </a>
-                </div>
-            </div>
-
-            <!-- Tarjeta Temas Disponibles -->
-            <div class="stat-card">
-                <div class="stat-header">
-                    <div class="stat-icon">✅</div>
-                    <h3 class="stat-title">TEMAS DISPONIBLES</h3>
-                </div>
-                <div class="stat-content">
-                    <div class="stat-number">{{ estadisticas.temas_disponibles|default:"0" }}</div>
-                    <div class="stat-progress">
-                        <div class="progress-bar">
-                            {% if estadisticas.total_temas > 0 %}
-                                {% widthratio estadisticas.temas_disponibles estadisticas.total_temas 100 as progress %}
-                                <div class="progress-fill" id="progressFill"></div>
-                            {% else %}
-                                <div class="progress-fill" style="width: 0%"></div>
-                            {% endif %}
-                        </div>
-                        <span class="progress-text">
-                            {{ estadisticas.temas_disponibles|default:"0" }}/{{ estadisticas.total_temas|default:"0" }}
-                        </span>
+                    <div class="stat-icon">
+                        <i class="fas fa-crown"></i>
                     </div>
-                </div>
-            </div>
-
-            <!-- Tarjeta Estado -->
-            <div class="stat-card highlight-card">
-                <div class="stat-header">
-                    <div class="stat-icon">👨‍🏫</div>
-                    <h3 class="stat-title">ESTADO DEL PROFESOR</h3>
+                    <h3 class="stat-title">Membresía Actual</h3>
                 </div>
                 <div class="stat-content">
-                    <div class="stat-status">Activo</div>
-                    <div class="stat-details">
+                    <div class="membership-name">{{ estadisticas.membresia_actual|default:"Sin membresía" }}</div>
+                    <div class="membership-details">
                         <div class="detail-row">
-                            <span class="detail-label">Colegio:</span>
-                            <span class="detail-value">
-                                {% if profesor.colegio %}
-                                    {{ profesor.colegio.nombre }}
-                                {% else %}
-                                    No asignado
-                                {% endif %}
+                            <span class="detail-label">
+                                <i class="fas fa-users"></i>
+                                Usuarios:
                             </span>
+                            <span class="detail-value">{{ estadisticas.usuarios_actuales|default:"0" }}</span>
                         </div>
                         <div class="detail-row">
-                            <span class="detail-label">Cursos activos:</span>
-                            <span class="detail-value">{{ estadisticas.total_cursos|default:"0" }}</span>
+                            <span class="detail-label">
+                                <i class="fas fa-calendar-alt"></i>
+                                Días restantes:
+                            </span>
+                            <span class="detail-value">{{ estadisticas.dias_restantes|default:"0" }}</span>
                         </div>
                     </div>
                 </div>
@@ -155,134 +133,134 @@
 
     <!-- Gráficos -->
     <div class="charts-container">
-        <div class="section-title">Visualización de Datos</div>
+        <div class="section-title">
+            <i class="fas fa-chart-line"></i>
+            Visualización de Datos
+        </div>
         <div class="charts-grid">
-            <!-- Gráfico de Torta - Estado de Temas -->
             <div class="chart-wrapper">
                 <div class="chart-header">
                     <h3 class="chart-title">
-                        <span class="icon">🥧</span>
-                        Estado de los Temas
+                        <i class="fas fa-chart-pie"></i>
+                        Distribución de Estudiantes por Curso
                     </h3>
                 </div>
                 <div class="chart-area">
-                    <div id="chartTortaTemas" class="chart"></div>
+                    <div id="chartTorta" class="chart"></div>
                 </div>
             </div>
 
-            <!-- Gráfico de Barras - Temas por Curso -->
             <div class="chart-wrapper">
                 <div class="chart-header">
                     <h3 class="chart-title">
-                        <span class="icon">📊</span>
-                        Temas por Curso
+                        <i class="fas fa-chart-bar"></i>
+                        Cursos con Más Estudiantes
                     </h3>
                 </div>
                 <div class="chart-area">
-                    <div id="chartBarrasTemas" class="chart"></div>
+                    <div id="chartBarras" class="chart"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Tablas -->
+    <!-- Tablas de Datos -->
     <div class="tables-container">
+        <div class="section-title">
+            <i class="fas fa-table"></i>
+            Datos Recientes
+        </div>
+        
         <div class="tables-grid">
-            <!-- Tabla de Temas Recientes -->
+            <!-- Tabla de Estudiantes Recientes -->
             <div class="table-wrapper">
-                <div class="table-header">
-                    <h3 class="table-title">
-                        <span class="icon">🆕</span>
-                        Temas Recientes
-                    </h3>
-                    <a href="{% url 'reporte_temas' %}" class="download-btn">
-                        <span class="download-icon">📥</span>
-                        Descargar PDF
-                    </a>
-                </div>
-                <div class="table-content">
+                <h3 class="table-title">
+                    <i class="fas fa-user-graduate"></i>
+                    Estudiantes Recientes
+                </h3>
+                <div class="table-responsive">
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th>Tema</th>
+                                <th>Nombre Completo</th>
                                 <th>Curso</th>
-                                <th>Fecha Inicio</th>
                                 <th>Estado</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for tema in temas_recientes %}
-                            <tr>
-                                <td>
-                                    <div class="item-info">
-                                        <div class="item-icon">📄</div>
-                                        <span class="item-name">{{ tema.nombre_archivo }}</span>
-                                    </div>
-                                </td>
-                                <td>
-                                    {% if tema.curso %}
-                                        {{ tema.curso.nombre }}
-                                    {% else %}
-                                        Sin curso
-                                    {% endif %}
-                                </td>
-                                <td>{{ tema.fecha_inicio|date:"d/m/Y" }}</td>
-                                <td>
-                                    <span class="status-badge {% if tema.estado == 'disponible' %}status-available{% else %}status-unavailable{% endif %}">
-                                        {{ tema.estado }}
-                                    </span>
-                                </td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="4" class="no-data">No hay temas recientes</td>
-                            </tr>
-                            {% endfor %}
+                            {% if estudiantes_recientes %}
+                                {% for estudiante in estudiantes_recientes %}
+                                <tr>
+                                    <td>
+                                        {% if estudiante.persona %}
+                                            {{ estudiante.persona.nombre }} {{ estudiante.persona.apellidoPaterno }} {{ estudiante.persona.apellidoMaterno }}
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if estudiante.curso %}
+                                            {{ estudiante.curso.nombre }}
+                                        {% else %}
+                                            Sin curso
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-{{ estudiante.estado|lower }}">
+                                            {{ estudiante.estado }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="3" class="text-center">No hay estudiantes registrados</td>
+                                </tr>
+                            {% endif %}
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- Tabla de Cursos -->
+            <!-- Tabla de Profesores -->
             <div class="table-wrapper">
-                <div class="table-header">
-                    <h3 class="table-title">
-                        <span class="icon">📚</span>
-                        Mis Cursos
-                    </h3>
-                    <a href="{% url 'reporte_cursos' %}" class="download-btn">
-                        <span class="download-icon">📥</span>
-                        Descargar PDF
-                    </a>
-                </div>
-                <div class="table-content">
+                <h3 class="table-title">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                    Profesores del Colegio
+                </h3>
+                <div class="table-responsive">
                     <table class="data-table">
                         <thead>
                             <tr>
+                                <th>Correo</th>
                                 <th>Curso</th>
-                                <th>Temas</th>
                                 <th>Estado</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for curso in cursos %}
-                            <tr>
-                                <td>
-                                    <div class="item-info">
-                                        <div class="item-icon">🎯</div>
-                                        <span class="item-name">{{ curso.nombre }}</span>
-                                    </div>
-                                </td>
-                                <td>{{ curso.temas_set.count }} temas</td>
-                                <td>
-                                    <span class="status-badge status-active">Activo</span>
-                                </td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="3" class="no-data">No hay cursos asignados</td>
-                            </tr>
-                            {% endfor %}
+                            {% if profesores %}
+                                {% for profesor in profesores %}
+                                <tr>
+                                    <td>
+                                        {% if profesor.usuario %}
+                                            {{ profesor.usuario.correo }}
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ profesor.curso|default:"N/A" }}</td>
+                                    <td>
+                                        <span class="badge badge-{{ profesor.estado|lower }}">
+                                            {{ profesor.estado }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="3" class="text-center">No hay profesores registrados</td>
+                                </tr>
+                            {% endif %}
                         </tbody>
                     </table>
                 </div>
@@ -302,139 +280,159 @@
     try {
         // Parsear datos de torta
         const tortaRaw = '{{ datos_torta_cursos|escapejs }}';
-        console.log("Datos torta crudos:", tortaRaw);
-        
-        if (tortaRaw && tortaRaw !== 'None' && tortaRaw !== '[]') {
-            datosTorta = JSON.parse(tortaRaw.replace(/&quot;/g, '"'));
+        if (tortaRaw && tortaRaw !== 'None' && tortaRaw !== '[]' && tortaRaw !== '') {
+            datosTorta = JSON.parse(tortaRaw);
         }
         
         // Parsear datos de barras
         const barrasRaw = '{{ datos_barras_cursos|escapejs }}';
-        console.log("Datos barras crudos:", barrasRaw);
-        
-        if (barrasRaw && barrasRaw !== 'None' && barrasRaw !== '{"cursos": [], "estudiantes": []}') {
-            datosBarras = JSON.parse(barrasRaw.replace(/&quot;/g, '"'));
+        if (barrasRaw && barrasRaw !== 'None' && barrasRaw !== '{"cursos": [], "estudiantes": []}' && barrasRaw !== '') {
+            datosBarras = JSON.parse(barrasRaw);
         }
     } catch (error) {
         console.error('Error parsing chart data:', error);
-        // Datos de ejemplo como fallback
-        datosTorta = [
-            { name: 'Curso A', y: 10 },
-            { name: 'Curso B', y: 5 },
-            { name: 'Curso C', y: 3 }
-        ];
-        datosBarras = {
-            cursos: ['Curso A', 'Curso B', 'Curso C'],
-            estudiantes: [10, 5, 3]
-        };
     }
 
-    // Gráfico de Torta
-    if (document.getElementById('chartTorta') && datosTorta.length > 0) {
-        Highcharts.chart('chartTorta', {
-            chart: { 
-                type: 'pie',
-                backgroundColor: 'transparent',
-                height: 280
-            },
-            title: { text: null },
-            tooltip: { 
-                pointFormat: '<b>{point.y}</b> estudiantes ({point.percentage:.1f}%)' 
-            },
-            plotOptions: {
-                pie: {
-                    allowPointSelect: true,
-                    cursor: 'pointer',
-                    dataLabels: { 
-                        enabled: true, 
-                        format: '<b>{point.name}</b>: {point.y}',
-                        distance: -30
+    // Inicializar gráficos cuando el DOM esté listo
+    document.addEventListener('DOMContentLoaded', function() {
+        // Gráfico de Torta
+        if (document.getElementById('chartTorta')) {
+            if (datosTorta.length > 0) {
+                Highcharts.chart('chartTorta', {
+                    chart: { 
+                        type: 'pie',
+                        backgroundColor: 'transparent',
+                        height: 320
                     },
-                    showInLegend: true
-                }
-            },
-            series: [{
-                name: 'Estudiantes',
-                colorByPoint: true,
-                data: datosTorta
-            }],
-            credits: { enabled: false }
-        });
-    } else if (document.getElementById('chartTorta')) {
-        document.getElementById('chartTorta').innerHTML = 
-            '<div class="no-data"><p>No hay datos disponibles</p></div>';
-    }
+                    title: { text: null },
+                    tooltip: { 
+                        pointFormat: '<b>{point.y}</b> estudiantes ({point.percentage:.1f}%)' 
+                    },
+                    plotOptions: {
+                        pie: {
+                            allowPointSelect: true,
+                            cursor: 'pointer',
+                            dataLabels: { 
+                                enabled: true, 
+                                format: '<b>{point.name}</b>: {point.y}',
+                                distance: -30,
+                                style: {
+                                    fontSize: '12px',
+                                    textOutline: 'none'
+                                }
+                            },
+                            showInLegend: true
+                        }
+                    },
+                    series: [{
+                        name: 'Estudiantes',
+                        colorByPoint: true,
+                        data: datosTorta
+                    }],
+                    credits: { enabled: false },
+                    colors: ['#133E87', '#608BC1', '#CBDCEB', '#F3F3E0', '#8B9DC3', '#5A7BA6']
+                });
+            } else {
+                document.getElementById('chartTorta').innerHTML = 
+                    '<div class="no-data"><i class="fas fa-chart-pie"></i><p>No hay datos disponibles</p></div>';
+            }
+        }
 
-    // Gráfico de Barras
-    if (document.getElementById('chartBarras') && datosBarras.cursos.length > 0) {
-        Highcharts.chart('chartBarras', {
-            chart: { 
-                type: 'column',
-                backgroundColor: 'transparent',
-                height: 280
-            },
-            title: { text: null },
-            xAxis: { 
-                categories: datosBarras.cursos,
-                title: { text: null }
-            },
-            yAxis: {
-                min: 0,
-                title: { text: 'Estudiantes' }
-            },
-            tooltip: { 
-                valueSuffix: ' estudiantes' 
-            },
-            plotOptions: { 
-                column: { 
-                    dataLabels: { enabled: true } 
-                } 
-            },
-            legend: { enabled: false },
-            series: [{
-                name: 'Estudiantes',
-                data: datosBarras.estudiantes,
-                color: '#608BC1'
-            }],
-            credits: { enabled: false }
-        });
-    } else if (document.getElementById('chartBarras')) {
-        document.getElementById('chartBarras').innerHTML = 
-            '<div class="no-data"><p>No hay datos disponibles</p></div>';
-    }
+        // Gráfico de Barras
+        if (document.getElementById('chartBarras')) {
+            if (datosBarras.cursos && datosBarras.cursos.length > 0) {
+                Highcharts.chart('chartBarras', {
+                    chart: { 
+                        type: 'column',
+                        backgroundColor: 'transparent',
+                        height: 320
+                    },
+                    title: { text: null },
+                    xAxis: { 
+                        categories: datosBarras.cursos,
+                        title: { text: null },
+                        labels: {
+                            style: {
+                                fontSize: '11px'
+                            }
+                        }
+                    },
+                    yAxis: {
+                        min: 0,
+                        title: { 
+                            text: 'Número de Estudiantes',
+                            style: {
+                                fontSize: '12px'
+                            }
+                        }
+                    },
+                    tooltip: { 
+                        valueSuffix: ' estudiantes' 
+                    },
+                    plotOptions: { 
+                        column: { 
+                            dataLabels: { 
+                                enabled: true,
+                                style: {
+                                    fontSize: '11px',
+                                    textOutline: 'none'
+                                }
+                            },
+                            colorByPoint: false,
+                            color: '#608BC1'
+                        } 
+                    },
+                    legend: { enabled: false },
+                    series: [{
+                        name: 'Estudiantes',
+                        data: datosBarras.estudiantes
+                    }],
+                    credits: { enabled: false }
+                });
+            } else {
+                document.getElementById('chartBarras').innerHTML = 
+                    '<div class="no-data"><i class="fas fa-chart-bar"></i><p>No hay datos disponibles</p></div>';
+            }
+        }
+    });
 </script>
 
-
 <style>
+    /* Variables de diseño */
     :root {
         --primary-blue: #133E87;
         --secondary-blue: #608BC1;
         --light-blue: #CBDCEB;
-        --success-green: #27ae60;
-        --warning-orange: #f39c12;
         --background: #F3F3E0;
         --white: #FFFFFF;
         --text-dark: #333333;
         --text-light: #666666;
         --border: #E0E0E0;
-        --shadow: 0 2px 8px rgba(0,0,0,0.1);
-        --shadow-hover: 0 4px 12px rgba(0,0,0,0.15);
-        --border-radius: 8px;
+        --shadow: 0 2px 8px rgba(0,0,0,0.08);
+        --shadow-hover: 0 4px 16px rgba(0,0,0,0.12);
+        --border-radius: 12px;
+        --transition: all 0.3s ease;
     }
 
-    .dashboard-profesor {
+    /* Reset y base */
+    * {
+        box-sizing: border-box;
+    }
+
+    .dashboard-admin {
         min-height: 100vh;
         background: var(--background);
-        padding: 20px;
+        padding: 24px;
         display: flex;
         flex-direction: column;
         gap: 24px;
     }
 
+    /* Header */
     .dashboard-header {
         background: var(--white);
         border-radius: var(--border-radius);
-        padding: 24px;
+        padding: 28px;
         box-shadow: var(--shadow);
     }
 
@@ -445,8 +443,8 @@
     }
 
     .page-title {
-        font-size: 24px;
-        font-weight: 600;
+        font-size: 28px;
+        font-weight: 700;
         color: var(--primary-blue);
         margin: 0;
         display: flex;
@@ -454,30 +452,39 @@
         gap: 12px;
     }
 
+    .page-title i {
+        font-size: 32px;
+        color: var(--secondary-blue);
+    }
+
     .user-info {
         display: flex;
         align-items: center;
         gap: 12px;
+        padding: 8px 16px;
+        background: var(--light-blue);
+        border-radius: 50px;
     }
 
     .avatar {
-        width: 40px;
-        height: 40px;
-        background: linear-gradient(135deg, var(--success-green), #2ecc71);
+        width: 42px;
+        height: 42px;
+        background: linear-gradient(135deg, var(--secondary-blue), var(--primary-blue));
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         color: var(--white);
-        font-weight: 600;
-        font-size: 14px;
+        font-size: 16px;
     }
 
     .user-name {
         font-weight: 500;
         color: var(--text-dark);
+        font-size: 14px;
     }
 
+    /* Filtros */
     .filters-container {
         background: var(--white);
         border-radius: var(--border-radius);
@@ -492,13 +499,22 @@
         margin-bottom: 20px;
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 10px;
+    }
+
+    .section-title i {
+        font-size: 20px;
+        color: var(--secondary-blue);
+    }
+
+    .filters-form {
+        width: 100%;
     }
 
     .filter-row {
         display: flex;
         align-items: end;
-        gap: 20px;
+        gap: 16px;
         flex-wrap: wrap;
     }
 
@@ -507,7 +523,8 @@
         flex-direction: column;
         gap: 8px;
         flex: 1;
-        min-width: 200px;
+        min-width: 220px;
+        max-width: 300px;
     }
 
     .filter-label {
@@ -517,30 +534,39 @@
     }
 
     .filter-input {
-        padding: 12px;
-        border: 1px solid var(--border);
-        border-radius: 6px;
+        padding: 12px 16px;
+        border: 2px solid var(--border);
+        border-radius: 8px;
         font-size: 14px;
+        transition: var(--transition);
+        background: var(--white);
+    }
+
+    .filter-input:focus {
+        outline: none;
+        border-color: var(--secondary-blue);
+        box-shadow: 0 0 0 3px rgba(96, 139, 193, 0.1);
     }
 
     .filter-actions {
         display: flex;
         gap: 12px;
-        margin-bottom: 8px;
     }
 
+    /* Botones */
     .btn {
-        padding: 12px 20px;
+        padding: 12px 24px;
         border: none;
-        border-radius: 6px;
-        font-weight: 500;
+        border-radius: 8px;
+        font-weight: 600;
         font-size: 14px;
         cursor: pointer;
         text-decoration: none;
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        transition: all 0.3s ease;
+        transition: var(--transition);
+        white-space: nowrap;
     }
 
     .btn-filter {
@@ -550,21 +576,61 @@
 
     .btn-filter:hover {
         background: var(--primary-blue);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-hover);
     }
 
     .btn-clear {
         background: var(--light-blue);
         color: var(--primary-blue);
+        border: 2px solid var(--light-blue);
     }
 
     .btn-clear:hover {
-        background: var(--secondary-blue);
+        background: var(--white);
+        border-color: var(--secondary-blue);
+        color: var(--secondary-blue);
+    }
+
+    /* Botón PDF */
+    .pdf-action-container {
+        display: flex;
+        justify-content: center;
+    }
+
+    .btn-generate-pdf {
+        padding: 16px 32px;
+        background: linear-gradient(135deg, #d32f2f, #b71c1c);
         color: var(--white);
+        text-decoration: none;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 16px;
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        transition: var(--transition);
+        box-shadow: 0 4px 12px rgba(211, 47, 47, 0.3);
+    }
+
+    .btn-generate-pdf:hover {
+        background: linear-gradient(135deg, #b71c1c, #7f0000);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(211, 47, 47, 0.4);
+    }
+
+    .btn-generate-pdf i {
+        font-size: 20px;
+    }
+
+    /* Estadísticas */
+    .stats-container {
+        width: 100%;
     }
 
     .stats-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
         gap: 20px;
     }
 
@@ -573,35 +639,65 @@
         border-radius: var(--border-radius);
         padding: 24px;
         box-shadow: var(--shadow);
-        transition: transform 0.3s ease;
-        border: 1px solid var(--border);
+        transition: var(--transition);
+        border-left: 4px solid transparent;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 100px;
+        height: 100px;
+        background: var(--light-blue);
+        border-radius: 50%;
+        transform: translate(30%, -30%);
+        opacity: 0.3;
     }
 
     .stat-card:hover {
-        transform: translateY(-2px);
+        transform: translateY(-4px);
         box-shadow: var(--shadow-hover);
     }
 
-    .highlight-card {
-        background: linear-gradient(135deg, var(--success-green), #2ecc71);
-        color: var(--white);
+    .card-estudiantes {
+        border-left-color: #3498db;
     }
 
-    .highlight-card .stat-title,
-    .highlight-card .stat-number,
-    .highlight-card .stat-status {
-        color: var(--white);
+    .card-profesores {
+        border-left-color: #9b59b6;
+    }
+
+    .card-cursos {
+        border-left-color: #2ecc71;
+    }
+
+    .membership-card {
+        border-left-color: #f39c12;
     }
 
     .stat-header {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 14px;
         margin-bottom: 16px;
+        position: relative;
+        z-index: 1;
     }
 
     .stat-icon {
-        font-size: 32px;
+        width: 54px;
+        height: 54px;
+        background: var(--light-blue);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary-blue);
+        font-size: 24px;
     }
 
     .stat-title {
@@ -616,118 +712,105 @@
     .stat-content {
         display: flex;
         flex-direction: column;
-        gap: 16px;
+        gap: 8px;
+        position: relative;
+        z-index: 1;
     }
 
     .stat-number {
-        font-size: 36px;
+        font-size: 42px;
         font-weight: 700;
         color: var(--primary-blue);
         line-height: 1;
     }
 
-    .stat-status {
-        font-size: 24px;
-        font-weight: 700;
-        color: var(--primary-blue);
-    }
-
-    .download-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 10px 16px;
-        background: var(--light-blue);
-        color: var(--primary-blue);
-        text-decoration: none;
-        border-radius: 6px;
-        font-size: 14px;
+    .stat-label {
+        font-size: 13px;
+        color: var(--text-light);
         font-weight: 500;
-        transition: all 0.3s ease;
     }
 
-    .download-btn:hover {
-        background: var(--secondary-blue);
+    /* Tarjeta especial destacada */
+    .membership-card {
+        background: linear-gradient(135deg, var(--secondary-blue) 0%, var(--primary-blue) 100%);
         color: var(--white);
+        border-left-color: transparent;
     }
 
-    .highlight-card .download-btn {
+    .membership-card::before {
+        background: rgba(255,255,255,0.1);
+    }
+
+    .membership-card .stat-title,
+    .membership-card .stat-label {
+        color: rgba(255,255,255,0.9);
+    }
+
+    .membership-card .stat-icon {
         background: rgba(255,255,255,0.2);
         color: var(--white);
     }
 
-    .highlight-card .download-btn:hover {
-        background: var(--white);
-        color: var(--success-green);
+    .membership-name {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--white);
+        margin-bottom: 12px;
     }
 
-    .stat-progress {
+    .membership-details {
         display: flex;
         flex-direction: column;
-        gap: 8px;
-    }
-
-    .progress-bar {
-        width: 100%;
-        height: 8px;
-        background: var(--light-blue);
-        border-radius: 4px;
-        overflow: hidden;
-    }
-
-    .progress-fill {
-        height: 100%;
-        background: var(--success-green);
-        border-radius: 4px;
-        transition: width 0.3s ease;
-    }
-
-    .progress-text {
-        font-size: 12px;
-        color: var(--text-light);
-        text-align: center;
-    }
-
-    .stat-details {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
+        gap: 10px;
     }
 
     .detail-row {
         display: flex;
         justify-content: space-between;
+        align-items: center;
         font-size: 14px;
+        padding: 8px 12px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 6px;
     }
 
     .detail-label {
-        opacity: 0.9;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        opacity: 0.95;
     }
 
     .detail-value {
-        font-weight: 600;
+        font-weight: 700;
+        font-size: 16px;
     }
 
+    /* Gráficos */
     .charts-container {
         background: var(--white);
         border-radius: var(--border-radius);
-        padding: 24px;
+        padding: 28px;
         box-shadow: var(--shadow);
     }
 
     .charts-grid {
         display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 24px;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 28px;
+        margin-top: 20px;
     }
 
     .chart-wrapper {
         display: flex;
         flex-direction: column;
+        background: var(--background);
+        padding: 20px;
+        border-radius: 10px;
     }
 
     .chart-header {
-        margin-bottom: 20px;
+        margin-bottom: 16px;
     }
 
     .chart-title {
@@ -737,12 +820,15 @@
         margin: 0;
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 10px;
     }
 
     .chart-area {
         flex: 1;
-        min-height: 300px;
+        min-height: 320px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .chart {
@@ -750,86 +836,128 @@
         height: 100%;
     }
 
-    .tables-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 24px;
+    .no-data {
+        text-align: center;
+        color: var(--text-light);
+        padding: 60px 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
     }
 
-    .table-wrapper {
+    .no-data i {
+        font-size: 48px;
+        opacity: 0.3;
+    }
+
+    .no-data p {
+        margin: 0;
+        font-size: 14px;
+        font-style: italic;
+    }
+
+    /* Tablas */
+    .tables-container {
         background: var(--white);
         border-radius: var(--border-radius);
-        padding: 24px;
+        padding: 28px;
         box-shadow: var(--shadow);
     }
 
-    .table-header {
+    .tables-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 24px;
+        margin-top: 20px;
+    }
+
+    .table-wrapper {
+        background: var(--background);
+        border-radius: 10px;
+        padding: 20px;
+        overflow: hidden;
+    }
+
+    .table-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--primary-blue);
+        margin: 0 0 16px 0;
         display: flex;
-        justify-content: space-between;
         align-items: center;
-        margin-bottom: 20px;
+        gap: 10px;
+    }
+
+    .table-responsive {
+        overflow-x: auto;
     }
 
     .data-table {
         width: 100%;
         border-collapse: collapse;
-        font-size: 14px;
+        background: var(--white);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .data-table thead {
+        background: var(--primary-blue);
+        color: var(--white);
     }
 
     .data-table th {
-        background: var(--light-blue);
-        color: var(--primary-blue);
+        padding: 14px 16px;
         text-align: left;
-        padding: 12px 16px;
         font-weight: 600;
-        border-bottom: 2px solid var(--secondary-blue);
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
 
     .data-table td {
-        padding: 12px 16px;
+        padding: 14px 16px;
         border-bottom: 1px solid var(--border);
+        font-size: 14px;
+        color: var(--text-dark);
     }
 
-    .data-table tr:hover {
-        background: rgba(203, 220, 235, 0.3);
+    .data-table tbody tr:last-child td {
+        border-bottom: none;
     }
 
-    .item-info {
-        display: flex;
-        align-items: center;
-        gap: 12px;
+    .data-table tbody tr:hover {
+        background: var(--light-blue);
     }
 
-    .status-badge {
+    .text-center {
+        text-align: center;
+        color: var(--text-light);
+        font-style: italic;
+    }
+
+    .badge {
+        display: inline-block;
         padding: 4px 12px;
         border-radius: 20px;
         font-size: 12px;
         font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
     }
 
-    .status-available {
-        background: #d4f8e8;
-        color: var(--success-green);
+    .badge-activo {
+        background: #e8f5e9;
+        color: #2e7d32;
     }
 
-    .status-unavailable {
-        background: #fde8e6;
-        color: #e74c3c;
+    .badge-inactivo {
+        background: #ffebee;
+        color: #c62828;
     }
 
-    .status-active {
-        background: #e8f4fd;
-        color: var(--secondary-blue);
-    }
-
-    .no-data {
-        text-align: center;
-        color: var(--text-light);
-        font-style: italic;
-        padding: 40px 20px;
-    }
-
-    @media (max-width: 1024px) {
+    /* Responsive */
+    @media (max-width: 1200px) {
         .charts-grid,
         .tables-grid {
             grid-template-columns: 1fr;
@@ -837,25 +965,174 @@
     }
 
     @media (max-width: 768px) {
-        .dashboard-profesor {
+        .dashboard-admin {
             padding: 16px;
+            gap: 20px;
         }
+
         .header-main {
             flex-direction: column;
             gap: 16px;
             text-align: center;
         }
+
+        .page-title {
+            font-size: 22px;
+        }
+
         .filter-row {
             flex-direction: column;
+            align-items: stretch;
         }
+
+        .filter-group {
+            min-width: auto;
+            max-width: 100%;
+        }
+
+        .filter-actions {
+            justify-content: center;
+            width: 100%;
+        }
+
+        .filter-actions .btn {
+            flex: 1;
+        }
+
+        .pdf-action-container {
+            padding: 0 8px;
+        }
+
+        .btn-generate-pdf {
+            width: 100%;
+            justify-content: center;
+            padding: 14px 20px;
+            font-size: 14px;
+        }
+
         .stats-grid {
             grid-template-columns: 1fr;
         }
-        .table-header {
-            flex-direction: column;
-            gap: 12px;
-            align-items: flex-start;
+
+        .stat-number {
+            font-size: 36px;
         }
+
+        .membership-name {
+            font-size: 20px;
+        }
+
+        .chart-area {
+            min-height: 280px;
+        }
+
+        .table-wrapper {
+            padding: 16px;
+        }
+
+        .data-table {
+            font-size: 13px;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 10px 12px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .dashboard-header {
+            padding: 20px;
+        }
+
+        .page-title {
+            font-size: 18px;
+        }
+
+        .page-title i {
+            font-size: 24px;
+        }
+
+        .user-name {
+            font-size: 12px;
+        }
+
+        .section-title {
+            font-size: 16px;
+        }
+
+        .stat-number {
+            font-size: 32px;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            font-size: 20px;
+        }
+
+        .chart-title {
+            font-size: 14px;
+        }
+
+        .table-title {
+            font-size: 14px;
+        }
+
+        .data-table {
+            font-size: 12px;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 8px 10px;
+        }
+
+        .btn-generate-pdf {
+            font-size: 13px;
+            padding: 12px 16px;
+        }
+
+        .btn-generate-pdf i {
+            font-size: 16px;
+        }
+    }
+
+    /* Animaciones */
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .stat-card,
+    .chart-wrapper,
+    .table-wrapper {
+        animation: fadeIn 0.5s ease-out;
+    }
+
+    /* Scrollbar personalizado */
+    .table-responsive::-webkit-scrollbar {
+        height: 8px;
+    }
+
+    .table-responsive::-webkit-scrollbar-track {
+        background: var(--background);
+        border-radius: 4px;
+    }
+
+    .table-responsive::-webkit-scrollbar-thumb {
+        background: var(--secondary-blue);
+        border-radius: 4px;
+    }
+
+    .table-responsive::-webkit-scrollbar-thumb:hover {
+        background: var(--primary-blue);
     }
 </style>
 {% endblock %}
