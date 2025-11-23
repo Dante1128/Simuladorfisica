@@ -221,10 +221,12 @@ class Temas(models.Model):
 # ======================
 # MODELO: LABORATORIO
 # ======================
+from django.db import models
+
 class Laboratorio(models.Model):
     nombre = models.CharField(max_length=200)
-    # ruta relativa dentro de MEDIA_ROOT donde se extrae el paquete (por ejemplo: 'laboratorios/23/')
-    carpeta = models.CharField(max_length=300, blank=True, null=True)
+    # URL pública desde donde se puede acceder al laboratorio (por ejemplo, GitHub Pages)
+    url = models.URLField(max_length=500, blank=True, null=True)
     estado = models.CharField(max_length=50, choices=[
         ('activo', 'Activo'),
         ('inactivo', 'Inactivo'),
