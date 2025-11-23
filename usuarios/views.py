@@ -1,6 +1,8 @@
 # ======================
 # IMPORTS DE DJANGO
 # ======================
+from django.shortcuts import render
+from .models import ConfiguracionVisual
 from .views_superadmin_componentes import (
     superadmin_componentes_list,
     superadmin_componente_create,
@@ -35,6 +37,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q, Count, Sum
 from django.db import models
 from django.contrib.admin.views.decorators import staff_member_required
+from .models import Colegio, ConfiguracionVisual
 
 # ======================
 # IMPORTS DE MODELOS
@@ -187,7 +190,9 @@ def perfil_superadmin(request):
         return redirect('login')
 
 def gestion_colegios(request):
+    # =========================
     # CAMBIO DE ESTADO
+    # =========================
     estado_id = request.GET.get('estado_id')
     if estado_id:
         try:
@@ -199,20 +204,35 @@ def gestion_colegios(request):
             messages.error(request, 'Colegio no encontrado.')
         return HttpResponse(status=204)
 
-    # CREAR COLEGIO
+    # =========================
+    # CREAR COLEGIO + CONFIGURACION VISUAL
+    # =========================
     if request.method == 'POST' and 'crear' in request.POST:
         nombre = request.POST.get('nombre', '').strip()
         direccion = request.POST.get('direccion', '').strip()
+        color_primario = request.POST.get('color_primario', '#007bff')
+        color_secundario = request.POST.get('color_secundario', '#6c757d')
+        logo = request.FILES.get('logo')
+      
         if nombre and direccion:
             if not Colegio.objects.filter(nombre__iexact=nombre).exists():
-                Colegio.objects.create(nombre=nombre, direccion=direccion)
-                messages.success(request, 'Colegio creado correctamente.')
+                colegio = Colegio.objects.create(nombre=nombre, direccion=direccion)
+                # Crear configuración visual
+                ConfiguracionVisual.objects.create(
+                    colegio=colegio,
+                    color_primario=color_primario,
+                    color_secundario=color_secundario,
+                    logo=logo,
+                )
+                messages.success(request, 'Colegio creado correctamente con configuración visual.')
             else:
                 messages.error(request, 'Ya existe un colegio con ese nombre.')
         else:
             messages.error(request, 'Todos los campos son obligatorios.')
 
+    # =========================
     # EDITAR COLEGIO
+    # =========================
     if request.method == 'POST' and 'editar_id' in request.POST:
         editar_id = request.POST.get('editar_id')
         nombre = request.POST.get('editar_nombre', '').strip()
@@ -229,7 +249,9 @@ def gestion_colegios(request):
         else:
             messages.error(request, 'Todos los campos son obligatorios para editar.')
 
+    # =========================
     # FILTRO
+    # =========================
     search_term = request.GET.get('search', '').strip()
     if search_term:
         colegios = Colegio.objects.filter(
@@ -239,7 +261,6 @@ def gestion_colegios(request):
         colegios = Colegio.objects.all().order_by('-id')  
 
     return render(request, 'superadministrador/gestion_colegios.html', {'colegios': colegios})
-
 
 def gestion_administradores(request):
     administradores = Administrador.objects.all().select_related('usuario', 'persona', 'colegio')
@@ -1563,14 +1584,12 @@ def dashboard_superadmin(request):
         usuario = Usuario.objects.get(id=usuario_id)
         
         # Verificar que sea superadministrador
-        if not usuario.rol or usuario.rol.tipo != 'SuperAdmin':
+        if not usuario.rol or usuario.rol.tipo.strip() != 'SuperAdmin':
             messages.error(request, 'No tiene permisos para acceder a esta página')
-            return redirect('dashboard_superadmin')
-
+            return redirect('login')
         
-        # FILTROS
-        fecha_inicio = request.GET.get('fecha_inicio', '')
-        fecha_fin = request.GET.get('fecha_fin', '')
+        # FILTRO ÚNICO DE FECHA
+        fecha_filtro = request.GET.get('fecha', '')
         filtro_colegio = request.GET.get('colegio', '')
         
         # Consultas base
@@ -1581,19 +1600,15 @@ def dashboard_superadmin(request):
         suscripciones_query = Suscripcion.objects.all()
         pagos_query = Pago.objects.filter(estado='aprobado')
         
-        # Aplicar filtros
-        if fecha_inicio and fecha_fin:
+        # Aplicar filtro de fecha única
+        if fecha_filtro:
             try:
-                fecha_inicio_dt = datetime.strptime(fecha_inicio, '%Y-%m-%d').date()
-                fecha_fin_dt = datetime.strptime(fecha_fin, '%Y-%m-%d').date()
+                fecha_dt = datetime.strptime(fecha_filtro, '%Y-%m-%d').date()
                 suscripciones_query = suscripciones_query.filter(
-                    fecha_inicio__gte=fecha_inicio_dt,
-                    fecha_fin__lte=fecha_fin_dt
+                    fecha_inicio__lte=fecha_dt,
+                    fecha_fin__gte=fecha_dt
                 )
-                pagos_query = pagos_query.filter(
-                    fecha__date__gte=fecha_inicio_dt,
-                    fecha__date__lte=fecha_fin_dt
-                )
+                pagos_query = pagos_query.filter(fecha__date=fecha_dt)
             except ValueError:
                 messages.error(request, 'Formato de fecha inválido')
         
@@ -1665,8 +1680,7 @@ def dashboard_superadmin(request):
             'suscripciones_recientes': suscripciones_recientes,
             'pagos_recientes': pagos_recientes,
             'colegios': colegios_query,
-            'fecha_inicio': fecha_inicio,
-            'fecha_fin': fecha_fin,
+            'fecha_filtro': fecha_filtro,
             'filtro_colegio': filtro_colegio,
         }
         
@@ -1677,7 +1691,7 @@ def dashboard_superadmin(request):
         return redirect('login')
     except Exception as e:
         messages.error(request, f'Error: {str(e)}')
-        return redirect('panel_admin')
+        return redirect('panel_superadmin')
 
 # ====================================================================
 # DASHBOARD ADMINISTRADOR 
@@ -1689,30 +1703,18 @@ def dashboard_administrador(request):
     try:
         usuario = Usuario.objects.get(id=usuario_id)
         
-        # ===============================================================
-        # VERIFICACIÓN DE ROL
-        # ===============================================================
+        # Verificación de rol
         if not usuario.rol:
             messages.error(request, 'Usuario sin rol asignado')
-            return redirect('panel_admin')
+            return redirect('login')
 
         rol_tipo = usuario.rol.tipo.strip()
 
-        # Solo administradores o superadministradores pueden acceder
         if rol_tipo not in ['Administrador', 'SuperAdmin']:
-            messages.error(request, f'No tiene permisos para acceder al dashboard. Rol actual: {usuario.rol.tipo}')
-            
-            # Redirigir según su rol real
-            if rol_tipo == 'Profesor':
-                return redirect('dashboard_profesor')
-            elif rol_tipo == 'Estudiante':
-                return redirect('dashboard_estudiante')
-            else:
-                return redirect('login')
+            messages.error(request, f'No tiene permisos para acceder al dashboard.')
+            return redirect('login')
 
-        # ===============================================================
-        # PERFIL DE ADMINISTRADOR Y COLEGIO
-        # ===============================================================
+        # Perfil de administrador y colegio
         administrador = Administrador.objects.filter(usuario=usuario).first()
 
         if administrador and administrador.colegio:
@@ -1726,24 +1728,17 @@ def dashboard_administrador(request):
                     'administrador': None,
                     'colegio': None,
                     'estadisticas': {},
-                    'datos_torta_cursos': json.dumps([]),
-                    'datos_barras_cursos': json.dumps({'cursos': [], 'estudiantes': []}),
+                    'datos_torta_cursos': json.dumps([{'name': 'Sin datos', 'y': 1}]),
+                    'datos_barras_cursos': json.dumps({'cursos': ['Sin datos'], 'estudiantes': [0]}),
                     'estudiantes_recientes': [],
                     'profesores': [],
-                    'fecha_inicio': '',
-                    'fecha_fin': '',
                 }
                 return render(request, 'administrador/dashboard_administrador.html', context)
 
-        # ===============================================================
-        # FILTROS
-        # ===============================================================
-        fecha_inicio = request.GET.get('fecha_inicio', '')
-        fecha_fin = request.GET.get('fecha_fin', '')
+        # FILTRO ÚNICO DE FECHA
+        fecha_filtro = request.GET.get('fecha', '')
 
-        # ===============================================================
-        # CONSULTAS BASE
-        # ===============================================================
+        # Consultas base
         estudiantes_query = Estudiante.objects.filter(colegio=colegio_admin)
         profesores_query = Profesor.objects.filter(colegio=colegio_admin)
         cursos_query = Curso.objects.filter(profesor__colegio=colegio_admin)
@@ -1753,9 +1748,16 @@ def dashboard_administrador(request):
             fecha_fin__gte=timezone.now().date()
         ).first()
 
-        # ===============================================================
-        # ESTADÍSTICAS PRINCIPALES
-        # ===============================================================
+        # Aplicar filtro de fecha si existe
+        if fecha_filtro:
+            try:
+                fecha_dt = datetime.strptime(fecha_filtro, '%Y-%m-%d').date()
+                # Filtrar estudiantes creados hasta esa fecha (si tienes campo de fecha)
+                # estudiantes_query = estudiantes_query.filter(fecha_creacion__lte=fecha_dt)
+            except ValueError:
+                messages.error(request, 'Formato de fecha inválido')
+
+        # Estadísticas principales
         try:
             dias_restantes = 0
             if suscripcion_query:
@@ -1772,7 +1774,6 @@ def dashboard_administrador(request):
                 'dias_restantes': dias_restantes,
             }
         except Exception as e:
-            print(f"Error calculando estadísticas: {e}")
             estadisticas = {
                 'total_estudiantes': 0,
                 'total_profesores': 0,
@@ -1782,44 +1783,47 @@ def dashboard_administrador(request):
                 'dias_restantes': 0,
             }
 
-        # ===============================================================
-        # GRÁFICO DE TORTA - Estudiantes por curso
-        # ===============================================================
+        # Gráfico de torta - Estudiantes por curso (CORREGIDO)
         try:
-            estudiantes_por_curso = estudiantes_query.values('curso__nombre').annotate(
-                total=Count('id')
-            ).order_by('-total')
-
-            datos_torta_cursos = [
-                {'name': item['curso__nombre'] or 'Sin curso', 'y': item['total']}
-                for item in estudiantes_por_curso
-            ] or [{'name': 'No hay datos', 'y': 1}]
+            # SOLUCIÓN: Obtener datos de manera diferente para evitar el error
+            cursos_con_estudiantes = []
+            for curso in Curso.objects.filter(profesor__colegio=colegio_admin):
+                total_estudiantes = estudiantes_query.filter(curso=curso).count()
+                if total_estudiantes > 0:
+                    cursos_con_estudiantes.append({
+                        'curso_nombre': curso.nombre,
+                        'total': total_estudiantes
+                    })
+            
+            cursos_con_estudiantes.sort(key=lambda x: x['total'], reverse=True)
+            
+            if cursos_con_estudiantes:
+                datos_torta_cursos = [
+                    {'name': item['curso_nombre'], 'y': item['total']}
+                    for item in cursos_con_estudiantes
+                ]
+            else:
+                datos_torta_cursos = [{'name': 'Sin estudiantes', 'y': 1}]
         except Exception as e:
             print(f"Error en gráfico de torta: {e}")
             datos_torta_cursos = [{'name': 'Error en datos', 'y': 1}]
 
-        # ===============================================================
-        # GRÁFICO DE BARRAS - Cursos con más estudiantes
-        # ===============================================================
+        # Gráfico de barras - Cursos con más estudiantes (CORREGIDO)
         try:
-            cursos_con_estudiantes = estudiantes_query.values('curso__nombre').annotate(
-                total=Count('id')
-            ).order_by('-total')[:5]
-
-            datos_barras_cursos = {
-                'cursos': [c['curso__nombre'] or 'Sin curso' for c in cursos_con_estudiantes],
-                'estudiantes': [c['total'] for c in cursos_con_estudiantes]
-            }
-
-            if not datos_barras_cursos['cursos']:
-                datos_barras_cursos = {'cursos': ['No hay datos'], 'estudiantes': [0]}
+            # SOLUCIÓN: Usar la misma lógica corregida
+            if cursos_con_estudiantes:
+                datos_barras_cursos = {
+                    'cursos': [item['curso_nombre'][:20] + '...' if len(item['curso_nombre']) > 20 else item['curso_nombre'] 
+                              for item in cursos_con_estudiantes[:5]],
+                    'estudiantes': [item['total'] for item in cursos_con_estudiantes[:5]]
+                }
+            else:
+                datos_barras_cursos = {'cursos': ['Sin datos'], 'estudiantes': [0]}
         except Exception as e:
             print(f"Error en gráfico de barras: {e}")
             datos_barras_cursos = {'cursos': ['Error en datos'], 'estudiantes': [0]}
 
-        # ===============================================================
-        # TABLAS
-        # ===============================================================
+        # Tablas
         try:
             estudiantes_recientes = estudiantes_query.select_related('persona', 'colegio').order_by('-id')[:10]
         except:
@@ -1830,9 +1834,6 @@ def dashboard_administrador(request):
         except:
             profesores_lista = []
 
-        # ===============================================================
-        # CONTEXTO FINAL
-        # ===============================================================
         context = {
             'usuario': usuario,
             'administrador': administrador,
@@ -1842,8 +1843,7 @@ def dashboard_administrador(request):
             'datos_barras_cursos': json.dumps(datos_barras_cursos),
             'estudiantes_recientes': estudiantes_recientes,
             'profesores': profesores_lista,
-            'fecha_inicio': fecha_inicio,
-            'fecha_fin': fecha_fin,
+            'fecha_filtro': fecha_filtro,
         }
 
         return render(request, 'administrador/dashboard_administrador.html', context)
@@ -1852,10 +1852,8 @@ def dashboard_administrador(request):
         messages.error(request, 'Usuario no encontrado')
         return redirect('login')
     except Exception as e:
-        print(f"Error crítico en dashboard_administrador: {str(e)}")
         messages.error(request, f'Error al cargar el dashboard: {str(e)}')
         return redirect('panel_admin')
-
 
 # ====================================================================
 # DASHBOARD PROFESOR 
@@ -1868,20 +1866,15 @@ def dashboard_profesor(request):
         usuario = Usuario.objects.get(id=usuario_id)
         
         # Verificar que sea profesor
-        if not usuario.rol:
-            messages.error(request, 'Usuario sin rol asignado')
-            return redirect('panel_profesor')
-        
-        if usuario.rol.tipo.strip() != 'Profesor':
+        if not usuario.rol or usuario.rol.tipo.strip() != 'Profesor':
             messages.error(request, 'No tiene permisos para acceder a esta página')
-            return redirect('panel_profesor')
+            return redirect('login')
         
         # Obtener el profesor
         profesor = Profesor.objects.filter(usuario=usuario).first()
         
         if not profesor:
-            # Si no tiene perfil de profesor, mostrar dashboard básico
-            messages.warning(request, 'Perfil de profesor no encontrado, mostrando información básica')
+            messages.warning(request, 'Perfil de profesor no encontrado')
             context = {
                 'usuario': usuario,
                 'profesor': None,
@@ -1891,38 +1884,25 @@ def dashboard_profesor(request):
                     'temas_disponibles': 0,
                     'temas_no_disponibles': 0,
                 },
-                'datos_torta_temas': json.dumps([]),
-                'datos_barras_temas': json.dumps({'cursos': [], 'temas': []}),
+                'datos_torta_temas': json.dumps([{'name': 'Sin datos', 'y': 1}]),
+                'datos_barras_temas': json.dumps({'cursos': ['Sin datos'], 'temas': [0]}),
                 'temas_recientes': [],
                 'cursos': [],
-                'fecha_inicio': '',
-                'fecha_fin': '',
-                'curso_filtro': '',
             }
             return render(request, 'profesor/dashboard_profesor.html', context)
         
-        # FILTROS
-        fecha_inicio = request.GET.get('fecha_inicio', '')
-        fecha_fin = request.GET.get('fecha_fin', '')
-        curso_filtro = request.GET.get('curso', '')
+        # FILTRO ÚNICO DE FECHA
+        fecha_filtro = request.GET.get('fecha', '')
         
         # Consultas base del profesor CON ANNOTATE
         cursos_query = Curso.objects.filter(profesor=profesor).annotate(total_temas=Count('temas'))
         temas_query = Temas.objects.filter(curso__profesor=profesor)
         
-        if curso_filtro:
-            cursos_query = cursos_query.filter(id=curso_filtro)
-            temas_query = temas_query.filter(curso_id=curso_filtro)
-        
-        # Aplicar filtros de fecha si existen
-        if fecha_inicio and fecha_fin:
+        # Aplicar filtro de fecha si existe
+        if fecha_filtro:
             try:
-                fecha_inicio_dt = datetime.strptime(fecha_inicio, '%Y-%m-%d').date()
-                fecha_fin_dt = datetime.strptime(fecha_fin, '%Y-%m-%d').date()
-                temas_query = temas_query.filter(
-                    fecha_inicio__gte=fecha_inicio_dt,
-                    fecha_inicio__lte=fecha_fin_dt
-                )
+                fecha_dt = datetime.strptime(fecha_filtro, '%Y-%m-%d').date()
+                temas_query = temas_query.filter(fecha_inicio__lte=fecha_dt)
             except ValueError:
                 messages.error(request, 'Formato de fecha inválido')
         
@@ -1935,16 +1915,22 @@ def dashboard_profesor(request):
         }
         
         # GRÁFICO DE TORTA - Estado de temas
-        datos_torta_temas = [
-            {'name': 'Disponibles', 'y': estadisticas['temas_disponibles']},
-            {'name': 'No Disponibles', 'y': estadisticas['temas_no_disponibles']},
-        ]
+        if estadisticas['temas_disponibles'] > 0 or estadisticas['temas_no_disponibles'] > 0:
+            datos_torta_temas = [
+                {'name': 'Disponibles', 'y': estadisticas['temas_disponibles']},
+                {'name': 'No Disponibles', 'y': estadisticas['temas_no_disponibles']},
+            ]
+        else:
+            datos_torta_temas = [{'name': 'Sin temas', 'y': 1}]
         
         # GRÁFICO DE BARRAS - Temas por curso
-        datos_barras_temas = {
-            'cursos': [curso.nombre for curso in cursos_query],
-            'temas': [curso.total_temas for curso in cursos_query]
-        }
+        if cursos_query.exists():
+            datos_barras_temas = {
+                'cursos': [curso.nombre for curso in cursos_query],
+                'temas': [curso.total_temas for curso in cursos_query]
+            }
+        else:
+            datos_barras_temas = {'cursos': ['Sin cursos'], 'temas': [0]}
         
         # TABLA DE TEMAS RECIENTES
         temas_recientes = temas_query.select_related('curso').order_by('-fecha_inicio')[:10]
@@ -1960,9 +1946,7 @@ def dashboard_profesor(request):
             'datos_barras_temas': json.dumps(datos_barras_temas),
             'temas_recientes': temas_recientes,
             'cursos': cursos_lista,
-            'fecha_inicio': fecha_inicio,
-            'fecha_fin': fecha_fin,
-            'curso_filtro': curso_filtro,
+            'fecha_filtro': fecha_filtro,
         }
         
         return render(request, 'profesor/dashboard_profesor.html', context)
@@ -1972,135 +1956,763 @@ def dashboard_profesor(request):
         return redirect('login')
     except Exception as e:
         messages.error(request, f'Error: {str(e)}')
-        return redirect('panel_profesor') 
-        
-# ====================================================================
-# DASHBOARD ESTUDIANTE
-# ====================================================================
-@login_required_custom
+        return redirect('panel_profesor')
+
+
 def dashboard_estudiante(request):
-    usuario_id = request.session.get('usuario_id')
-    
-    try:
-        usuario = Usuario.objects.get(id=usuario_id)
-
-        # Verificar que el usuario tenga rol
-        if not usuario.rol or not usuario.rol.tipo:
-            messages.error(request, 'Usuario sin rol asignado')
-            return redirect('login')
-
-        # Normalizar el tipo de rol
-        rol_tipo = usuario.rol.tipo.strip()
-
-        # Verificar que sea estudiante
-        if rol_tipo != 'Estudiante':
-            messages.error(request, f'Acceso denegado: su rol es "{usuario.rol.tipo}".')
-            return redirect('login')
-
-        # Obtener el perfil de persona
-        persona = usuario.personas.first()
-        if not persona:
-            messages.error(request, 'Perfil de persona no encontrado')
-            return redirect('panel_estudiante')
-            
-        # Obtener el estudiante asociado
-        estudiante = Estudiante.objects.filter(persona=persona).first()
-        if not estudiante:
-            messages.error(request, 'Perfil de estudiante no encontrado')
-            return redirect('panel_estudiante')
-        
-        # Consultas del estudiante
-        temas_query = Temas.objects.filter(
-            curso=estudiante.curso,
-            estado='disponible'
-        )
-        
-        laboratorios_query = Laboratorio.objects.filter(
-            curso=estudiante.curso,
-            estado='activo'
-        )
-        
-        # ESTADÍSTICAS PRINCIPALES
-        estadisticas = {
-            'total_temas_disponibles': temas_query.count(),
-            'total_laboratorios': laboratorios_query.count(),
-            'curso_actual': estudiante.curso.nombre if estudiante.curso else 'Sin curso asignado',
-            'colegio': estudiante.colegio.nombre if estudiante.colegio else 'Sin colegio',
-        }
-        
-        # GRÁFICO DE TORTA - Temas disponibles (ejemplo)
-        datos_torta_progreso = [
-            {'name': 'Temas Disponibles', 'y': estadisticas['total_temas_disponibles']},
-            {'name': 'Laboratorios Activos', 'y': estadisticas['total_laboratorios']},
-        ]
-        
-        # TABLAS
-        temas_disponibles = temas_query.select_related('curso').order_by('numero')[:10]
-        laboratorios_activos = laboratorios_query.order_by('nombre')[:10]
-        
-        context = {
-            'usuario': usuario,
-            'estudiante': estudiante,
-            'estadisticas': estadisticas,
-            'datos_torta_progreso': json.dumps(datos_torta_progreso),
-            'temas_disponibles': temas_disponibles,
-            'laboratorios_activos': laboratorios_activos,
-        }
-        
-        return render(request, 'estudiante/dashboard_estudiante.html', context)
-        
-    except Usuario.DoesNotExist:
-        messages.error(request, 'Usuario no encontrado')
-        return redirect('login')
-        
-    except Exception as e:
-        print(f"Error en dashboard_estudiante: {str(e)}")
-        messages.error(request, f'Ocurrió un error: {str(e)}')
-        return redirect('panel_estudiante')
+    return render(request, 'estudiante/dashboard_estudiante.html')
 
 # ====================================================================
-# GENERAR REPORTES PDF
+# GENERAR REPORTE PDF COMPLETO 
 # ====================================================================
 @login_required_custom
-def generar_reporte_pdf(request, tipo_reporte):
+def generar_reporte_completo_pdf(request):
+    """Genera un PDF completo con todos los datos del dashboard según el rol"""
     usuario_id = request.session.get('usuario_id')
     
     try:
         usuario = Usuario.objects.get(id=usuario_id)
         rol = usuario.rol.tipo.strip() if usuario.rol else ''
         
-        # Crear el response PDF
+        # Crear el buffer y documento PDF
         buffer = io.BytesIO()
-        doc = SimpleDocTemplate(buffer, pagesize=A4)
+        doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=30)
         elements = []
         styles = getSampleStyleSheet()
         
-        # Título del reporte
-        titulo = f"Reporte - {tipo_reporte.replace('_', ' ').title()}"
-        elements.append(Paragraph(titulo, styles['Title']))
-        elements.append(Paragraph(f"Generado por: {usuario.correo}", styles['Normal']))
-        elements.append(Paragraph(f"Fecha: {timezone.now().strftime('%Y-%m-%d %H:%M')}", styles['Normal']))
-        elements.append(Spacer(1, 12))
+        # Estilo personalizado para el título
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=24,
+            textColor=colors.HexColor('#2c3e50'),
+            spaceAfter=30,
+            alignment=1  # Centrado
+        )
         
-        # CONTENIDO DEL REPORTE SEGÚN ROL Y TIPO
+        # Estilo para subtítulos
+        subtitle_style = ParagraphStyle(
+            'CustomSubtitle',
+            parent=styles['Heading2'],
+            fontSize=16,
+            textColor=colors.HexColor('#34495e'),
+            spaceAfter=12,
+            spaceBefore=12
+        )
+        
+        # ENCABEZADO DEL REPORTE
         if rol == 'SuperAdmin':
-            data = generar_reporte_superadmin(tipo_reporte, usuario)
+            titulo = "INFORME GENERAL DEL SISTEMA"
         elif rol == 'Administrador':
-            data = generar_reporte_administrador(tipo_reporte, usuario)
+            titulo = "INFORME ADMINISTRATIVO"
         elif rol == 'Profesor':
-            data = generar_reporte_profesor(tipo_reporte, usuario)
-        elif rol == 'Estudiante':
-            data = generar_reporte_estudiante(tipo_reporte, usuario)
+            titulo = "INFORME ACADÉMICO"
         else:
-            data = [['No hay datos disponibles para este rol']]
+            titulo = "INFORME"
         
-        # Crear tabla
-        if data and len(data) > 1:  # Si hay datos además del encabezado
-            table = Table(data)
-            table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2c3e50')),
+        elements.append(Paragraph(titulo, title_style))
+        elements.append(Paragraph(f"<b>Generado por:</b> {usuario.correo}", styles['Normal']))
+        elements.append(Paragraph(f"<b>Fecha:</b> {timezone.now().strftime('%d/%m/%Y %H:%M')}", styles['Normal']))
+        elements.append(Spacer(1, 20))
+        
+        # CONTENIDO SEGÚN ROL
+        if rol == 'SuperAdmin':
+            elements.extend(generar_contenido_superadmin_pdf(usuario, subtitle_style, styles))
+        elif rol == 'Administrador':
+            elements.extend(generar_contenido_administrador_pdf(usuario, subtitle_style, styles))
+        elif rol == 'Profesor':
+            elements.extend(generar_contenido_profesor_pdf(usuario, subtitle_style, styles))
+        else:
+            elements.append(Paragraph("No hay datos disponibles para su rol", styles['Normal']))
+        
+        # Generar PDF
+        try:
+            doc.build(elements)
+            buffer.seek(0)
+            
+            # Crear respuesta HTTP
+            filename = f'informe_{rol.lower()}_{timezone.now().strftime("%Y%m%d_%H%M%S")}.pdf'
+            response = HttpResponse(buffer, content_type='application/pdf')
+            response['Content-Disposition'] = f'attachment; filename="{filename}"'
+            
+            return response
+            
+        except Exception as e:
+            messages.error(request, f'Error al construir el PDF: {str(e)}')
+            return redirect('dashboard_administrador')
+        
+    except Usuario.DoesNotExist:
+        messages.error(request, 'Usuario no encontrado')
+        return redirect('login')
+    except Exception as e:
+        messages.error(request, f'Error al generar el reporte: {str(e)}')
+        return redirect('dashboard_administrador')
+
+# ====================================================================
+# FUNCIONES AUXILIARES PARA GENERAR CONTENIDO PDF (MEJORADAS)
+# ====================================================================
+def generar_contenido_superadmin_pdf(usuario, subtitle_style, styles):
+    """Genera el contenido completo y extendido del PDF para SuperAdmin"""
+    elements = []
+    
+    # ===== SECCIÓN 1: ESTADÍSTICAS GENERALES =====
+    elements.append(Paragraph("1. ESTADÍSTICAS GENERALES DEL SISTEMA", subtitle_style))
+    
+    try:
+        colegios_count = Colegio.objects.count()
+        usuarios_count = Usuario.objects.count()
+        estudiantes_count = Estudiante.objects.count()
+        profesores_count = Profesor.objects.count()
+        suscripciones_count = Suscripcion.objects.count()
+        suscripciones_activas = Suscripcion.objects.filter(fecha_fin__gte=timezone.now().date()).count()
+        suscripciones_vencidas = Suscripcion.objects.filter(fecha_fin__lt=timezone.now().date()).count()
+        total_ingresos = Pago.objects.filter(estado='aprobado').aggregate(total=Sum('monto'))['total'] or 0
+        total_pagos = Pago.objects.filter(estado='aprobado').count()
+        
+        data_estadisticas = [
+            ['Métrica', 'Cantidad'],
+            ['Total de Colegios Registrados', str(colegios_count)],
+            ['Total de Usuarios en el Sistema', str(usuarios_count)],
+            ['Total de Estudiantes', str(estudiantes_count)],
+            ['Total de Profesores', str(profesores_count)],
+            ['Total de Suscripciones', str(suscripciones_count)],
+            ['Suscripciones Activas', str(suscripciones_activas)],
+            ['Suscripciones Vencidas', str(suscripciones_vencidas)],
+            ['Total de Pagos Aprobados', str(total_pagos)],
+            ['Ingresos Totales Generados', f'${float(total_ingresos):,.2f}'],
+        ]
+        
+        table_estadisticas = Table(data_estadisticas, colWidths=[350, 150])
+        table_estadisticas.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#3498db')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('ALIGN', (1, 0), (1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#ecf0f1')),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('FONTSIZE', (0, 1), (-1, -1), 10),
+        ]))
+        elements.append(table_estadisticas)
+    except Exception as e:
+        elements.append(Paragraph(f"Error al cargar estadísticas generales: {str(e)}", styles['Normal']))
+    
+    elements.append(Spacer(1, 20))
+    
+    # ===== SECCIÓN 2: DISTRIBUCIÓN DE USUARIOS POR ROL =====
+    elements.append(Paragraph("2. DISTRIBUCIÓN DE USUARIOS POR ROL", subtitle_style))
+    
+    try:
+        distribucion_roles = Usuario.objects.values('rol__tipo').annotate(
+            total=Count('id')
+        ).order_by('-total')
+        
+        data_roles = [['Rol', 'Cantidad de Usuarios', 'Porcentaje']]
+        total_usuarios = Usuario.objects.count()
+        
+        for item in distribucion_roles:
+            nombre_rol = item['rol__tipo'] if item['rol__tipo'] else 'Sin rol asignado'
+            cantidad = item['total']
+            porcentaje = (cantidad / total_usuarios * 100) if total_usuarios > 0 else 0
+            data_roles.append([nombre_rol, str(cantidad), f"{porcentaje:.1f}%"])
+        
+        if len(data_roles) > 1:
+            table_roles = Table(data_roles, colWidths=[250, 150, 100])
+            table_roles.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#e74c3c')),
                 ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 12),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#ecf0f1')),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ]))
+            elements.append(table_roles)
+        else:
+            elements.append(Paragraph("No hay datos disponibles de roles", styles['Normal']))
+    except Exception as e:
+        elements.append(Paragraph("Error al cargar distribución de roles", styles['Normal']))
+    
+    elements.append(Spacer(1, 20))
+    
+    # ===== SECCIÓN 3: TOP 10 COLEGIOS CON MÁS ESTUDIANTES =====
+    elements.append(Paragraph("3. TOP 10 COLEGIOS CON MÁS ESTUDIANTES", subtitle_style))
+    
+    try:
+        top_colegios = Colegio.objects.annotate(
+            total_estudiantes=Count('estudiantes'),
+            total_profesores=Count('profesores')
+        ).order_by('-total_estudiantes')[:10]
+        
+        data_colegios = [['#', 'Nombre del Colegio', 'Estudiantes', 'Profesores']]
+        
+        for idx, colegio in enumerate(top_colegios, 1):
+            nombre_corto = colegio.nombre[:35] + '...' if len(colegio.nombre) > 35 else colegio.nombre
+            data_colegios.append([
+                str(idx),
+                nombre_corto,
+                str(colegio.total_estudiantes),
+                str(colegio.total_profesores)
+            ])
+        
+        if len(data_colegios) > 1:
+            table_colegios = Table(data_colegios, colWidths=[30, 300, 80, 80])
+            table_colegios.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#9b59b6')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('ALIGN', (0, 0), (0, -1), 'CENTER'),
+                ('ALIGN', (2, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 11),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#ecf0f1')),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                ('FONTSIZE', (0, 1), (-1, -1), 9),
+            ]))
+            elements.append(table_colegios)
+        else:
+            elements.append(Paragraph("No hay colegios registrados", styles['Normal']))
+    except Exception as e:
+        elements.append(Paragraph("Error al cargar ranking de colegios", styles['Normal']))
+    
+    elements.append(Spacer(1, 20))
+    
+    # ===== SECCIÓN 4: DISTRIBUCIÓN DE SUSCRIPCIONES POR TIPO DE MEMBRESÍA =====
+    elements.append(Paragraph("4. DISTRIBUCIÓN DE SUSCRIPCIONES POR MEMBRESÍA", subtitle_style))
+    
+    try:
+        membresias = Membresia.objects.annotate(
+            total_suscripciones=Count('suscripciones'),
+            activas=Count('suscripciones', filter=Q(suscripciones__fecha_fin__gte=timezone.now().date())),
+            vencidas=Count('suscripciones', filter=Q(suscripciones__fecha_fin__lt=timezone.now().date()))
+        ).order_by('-total_suscripciones')
+        
+        data_membresias = [['Tipo de Membresía', 'Total', 'Activas', 'Vencidas', 'Precio']]
+        
+        for membresia in membresias:
+            data_membresias.append([
+                membresia.nombre,
+                str(membresia.total_suscripciones),
+                str(membresia.activas),
+                str(membresia.vencidas),
+                f'${float(membresia.precio):,.2f}'
+            ])
+        
+        if len(data_membresias) > 1:
+            table_membresias = Table(data_membresias, colWidths=[180, 80, 80, 80, 80])
+            table_membresias.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#16a085')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 11),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#ecf0f1')),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                ('FONTSIZE', (0, 1), (-1, -1), 9),
+            ]))
+            elements.append(table_membresias)
+        else:
+            elements.append(Paragraph("No hay membresías registradas", styles['Normal']))
+    except Exception as e:
+        elements.append(Paragraph("Error al cargar distribución de membresías", styles['Normal']))
+    
+    elements.append(Spacer(1, 20))
+    
+    # ===== SECCIÓN 5: ÚLTIMAS 15 SUSCRIPCIONES REGISTRADAS =====
+    elements.append(Paragraph("5. ÚLTIMAS 15 SUSCRIPCIONES REGISTRADAS", subtitle_style))
+    
+    try:
+        suscripciones_recientes = Suscripcion.objects.select_related(
+            'colegio', 'membresia'
+        ).order_by('-fecha_inicio')[:15]
+        
+        data_suscripciones = [['Colegio', 'Membresía', 'Inicio', 'Fin', 'Estado']]
+        
+        for sus in suscripciones_recientes:
+            nombre_colegio = sus.colegio.nombre[:25] + '...' if len(sus.colegio.nombre) > 25 else sus.colegio.nombre
+            estado = 'ACTIVA' if sus.fecha_fin >= timezone.now().date() else 'VENCIDA'
+            color_estado = 'green' if estado == 'ACTIVA' else 'red'
+            
+            data_suscripciones.append([
+                nombre_colegio,
+                sus.membresia.nombre,
+                sus.fecha_inicio.strftime('%d/%m/%Y'),
+                sus.fecha_fin.strftime('%d/%m/%Y'),
+                estado
+            ])
+        
+        if len(data_suscripciones) > 1:
+            table_suscripciones = Table(data_suscripciones, colWidths=[160, 100, 80, 80, 80])
+            table_suscripciones.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#f39c12')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('ALIGN', (2, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 11),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#ecf0f1')),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                ('FONTSIZE', (0, 1), (-1, -1), 8),
+            ]))
+            elements.append(table_suscripciones)
+        else:
+            elements.append(Paragraph("No hay suscripciones registradas", styles['Normal']))
+    except Exception as e:
+        elements.append(Paragraph("Error al cargar suscripciones recientes", styles['Normal']))
+    
+    elements.append(Spacer(1, 20))
+    
+    # ===== SECCIÓN 6: ÚLTIMOS 15 PAGOS APROBADOS =====
+    elements.append(Paragraph("6. ÚLTIMOS 15 PAGOS APROBADOS", subtitle_style))
+    
+    try:
+        pagos_recientes = Pago.objects.filter(estado='aprobado').select_related(
+            'usuario'
+        ).order_by('-fecha')[:15]
+        
+        data_pagos = [['Fecha', 'Usuario', 'Monto', 'Método', 'Referencia']]
+        
+        for pago in pagos_recientes:
+            data_pagos.append([
+                pago.fecha.strftime('%d/%m/%Y %H:%M'),
+                pago.usuario.correo[:30] if pago.usuario else 'N/A',
+                f'${float(pago.monto):,.2f}',
+                pago.metodo_pago if hasattr(pago, 'metodo_pago') else 'N/A',
+                str(pago.referencia_pago)[:15] if hasattr(pago, 'referencia_pago') else 'N/A'
+            ])
+        
+        if len(data_pagos) > 1:
+            table_pagos = Table(data_pagos, colWidths=[100, 150, 80, 80, 90])
+            table_pagos.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#27ae60')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('ALIGN', (2, 0), (2, -1), 'RIGHT'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 11),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#ecf0f1')),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                ('FONTSIZE', (0, 1), (-1, -1), 8),
+            ]))
+            elements.append(table_pagos)
+        else:
+            elements.append(Paragraph("No hay pagos registrados", styles['Normal']))
+    except Exception as e:
+        elements.append(Paragraph("Error al cargar pagos recientes", styles['Normal']))
+    
+    elements.append(Spacer(1, 20))
+    
+    # ===== SECCIÓN 7: RESUMEN FINANCIERO =====
+    elements.append(Paragraph("7. RESUMEN FINANCIERO", subtitle_style))
+    
+    try:
+        ingresos_totales = Pago.objects.filter(estado='aprobado').aggregate(total=Sum('monto'))['total'] or 0
+        pagos_pendientes = Pago.objects.filter(estado='pendiente').count()
+        pagos_rechazados = Pago.objects.filter(estado='rechazado').count()
+        pagos_aprobados = Pago.objects.filter(estado='aprobado').count()
+        
+        # Ingresos por membresía
+        ingresos_membresias = Suscripcion.objects.values('membresia__nombre').annotate(
+            ingresos=Sum('membresia__precio')
+        ).order_by('-ingresos')
+        
+        data_financiero = [['Concepto', 'Valor']]
+        data_financiero.append(['Total Ingresos Generados', f'${float(ingresos_totales):,.2f}'])
+        data_financiero.append(['Pagos Aprobados', str(pagos_aprobados)])
+        data_financiero.append(['Pagos Pendientes', str(pagos_pendientes)])
+        data_financiero.append(['Pagos Rechazados', str(pagos_rechazados)])
+        
+        table_financiero = Table(data_financiero, colWidths=[350, 150])
+        table_financiero.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2c3e50')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('ALIGN', (1, 0), (1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#ecf0f1')),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('FONTSIZE', (0, 1), (-1, -1), 10),
+        ]))
+        elements.append(table_financiero)
+    except Exception as e:
+        elements.append(Paragraph("Error al cargar resumen financiero", styles['Normal']))
+    
+    elements.append(Spacer(1, 20))
+    
+    return elements
+
+def generar_contenido_administrador_pdf(usuario, subtitle_style, styles):
+    """Genera el contenido completo y extendido del PDF para Administrador"""
+    elements = []
+    
+    # Obtener colegio del administrador
+    try:
+        administrador = Administrador.objects.filter(usuario=usuario).first()
+        if administrador and administrador.colegio:
+            colegio_admin = administrador.colegio
+        else:
+            colegio_admin = Colegio.objects.first()
+        
+        if not colegio_admin:
+            elements.append(Paragraph("No hay colegio asignado", styles['Normal']))
+            return elements
+        
+        elements.append(Paragraph(f"COLEGIO: {colegio_admin.nombre}", subtitle_style))
+        elements.append(Paragraph(f"<b>Dirección:</b> {colegio_admin.direccion if hasattr(colegio_admin, 'direccion') else 'N/A'}", styles['Normal']))
+        elements.append(Spacer(1, 10))
+        
+        # ===== SECCIÓN 1: ESTADÍSTICAS GENERALES DEL COLEGIO =====
+        elements.append(Paragraph("1. ESTADÍSTICAS GENERALES DEL COLEGIO", subtitle_style))
+        
+        estudiantes_query = Estudiante.objects.filter(colegio=colegio_admin)
+        profesores_query = Profesor.objects.filter(colegio=colegio_admin)
+        cursos_query = Curso.objects.filter(profesor__colegio=colegio_admin)
+        
+        suscripcion = Suscripcion.objects.filter(
+            colegio=colegio_admin,
+            fecha_fin__gte=timezone.now().date()
+        ).first()
+        
+        dias_restantes = 0
+        if suscripcion:
+            dias_restantes = max((suscripcion.fecha_fin - timezone.now().date()).days, 0)
+        
+        data_estadisticas = [
+            ['Métrica', 'Cantidad'],
+            ['Total Estudiantes Registrados', str(estudiantes_query.count())],
+            ['Total Profesores Activos', str(profesores_query.count())],
+            ['Total Cursos Disponibles', str(cursos_query.count())],
+            ['Membresía Actual', suscripcion.membresia.nombre if suscripcion else 'Sin membresía activa'],
+            ['Usuarios Actuales en Plataforma', str(suscripcion.usuarios_actuales if suscripcion else 0)],
+            ['Días Restantes de Membresía', str(dias_restantes)],
+            ['Fecha Inicio Suscripción', suscripcion.fecha_inicio.strftime('%d/%m/%Y') if suscripcion else 'N/A'],
+            ['Fecha Fin Suscripción', suscripcion.fecha_fin.strftime('%d/%m/%Y') if suscripcion else 'N/A'],
+        ]
+        
+        table_estadisticas = Table(data_estadisticas, colWidths=[350, 150])
+        table_estadisticas.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#3498db')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('ALIGN', (1, 0), (1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#ecf0f1')),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('FONTSIZE', (0, 1), (-1, -1), 10),
+        ]))
+        elements.append(table_estadisticas)
+        
+    except Exception as e:
+        elements.append(Paragraph(f"Error al cargar datos del colegio: {str(e)}", styles['Normal']))
+    
+    elements.append(Spacer(1, 20))
+    
+    # ===== SECCIÓN 2: DISTRIBUCIÓN DE ESTUDIANTES POR CURSO =====
+    elements.append(Paragraph("2. DISTRIBUCIÓN DE ESTUDIANTES POR CURSO", subtitle_style))
+    
+    try:
+        estudiantes_query = Estudiante.objects.filter(colegio=colegio_admin)
+        cursos_con_estudiantes = []
+        
+        for curso in Curso.objects.filter(profesor__colegio=colegio_admin):
+            total_estudiantes = estudiantes_query.filter(curso=curso).count()
+            profesor_nombre = curso.profesor.usuario.correo if curso.profesor and curso.profesor.usuario else 'Sin profesor'
+            cursos_con_estudiantes.append({
+                'curso_nombre': curso.nombre,
+                'profesor': profesor_nombre,
+                'total': total_estudiantes
+            })
+        
+        cursos_con_estudiantes.sort(key=lambda x: x['total'], reverse=True)
+        
+        data_cursos = [['Curso', 'Profesor', 'Total Estudiantes']]
+        for item in cursos_con_estudiantes:
+            nombre_curso = item['curso_nombre'][:30] + '...' if len(item['curso_nombre']) > 30 else item['curso_nombre']
+            nombre_prof = item['profesor'][:25] + '...' if len(item['profesor']) > 25 else item['profesor']
+            data_cursos.append([nombre_curso, nombre_prof, str(item['total'])])
+        
+        if len(data_cursos) > 1:
+            table_cursos = Table(data_cursos, colWidths=[200, 200, 100])
+            table_cursos.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#e74c3c')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('ALIGN', (2, 0), (2, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 11),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#ecf0f1')),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                ('FONTSIZE', (0, 1), (-1, -1), 9),
+            ]))
+            elements.append(table_cursos)
+        else:
+            elements.append(Paragraph("No hay cursos con estudiantes asignados", styles['Normal']))
+            
+    except Exception as e:
+        elements.append(Paragraph("Error al cargar distribución por cursos", styles['Normal']))
+    
+    elements.append(Spacer(1, 20))
+    
+    # ===== SECCIÓN 3: LISTADO DE PROFESORES =====
+    elements.append(Paragraph("3. LISTADO COMPLETO DE PROFESORES", subtitle_style))
+    
+    try:
+        profesores_lista = Profesor.objects.filter(colegio=colegio_admin).select_related('usuario')
+        
+        data_profesores = [['#', 'Correo Electrónico', 'Cursos Asignados']]
+        
+        for idx, profesor in enumerate(profesores_lista, 1):
+            cursos_count = Curso.objects.filter(profesor=profesor).count()
+            correo = profesor.usuario.correo if profesor.usuario else 'Sin correo'
+            correo_corto = correo[:35] + '...' if len(correo) > 35 else correo
+            data_profesores.append([str(idx), correo_corto, str(cursos_count)])
+        
+        if len(data_profesores) > 1:
+            table_profesores = Table(data_profesores, colWidths=[30, 370, 100])
+            table_profesores.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#9b59b6')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('ALIGN', (0, 0), (0, -1), 'CENTER'),
+                ('ALIGN', (2, 0), (2, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 11),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#ecf0f1')),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                ('FONTSIZE', (0, 1), (-1, -1), 9),
+            ]))
+            elements.append(table_profesores)
+        else:
+            elements.append(Paragraph("No hay profesores registrados en este colegio", styles['Normal']))
+    except Exception as e:
+        elements.append(Paragraph("Error al cargar listado de profesores", styles['Normal']))
+    
+    elements.append(Spacer(1, 20))
+    
+    # ===== SECCIÓN 4: ÚLTIMOS 20 ESTUDIANTES REGISTRADOS =====
+    elements.append(Paragraph("4. ÚLTIMOS 20 ESTUDIANTES REGISTRADOS", subtitle_style))
+    
+    try:
+        estudiantes_recientes = Estudiante.objects.filter(
+            colegio=colegio_admin
+        ).select_related('persona', 'curso').order_by('-id')[:20]
+        
+        data_estudiantes = [['#', 'Nombre Completo', 'Curso Asignado']]
+        
+        for idx, estudiante in enumerate(estudiantes_recientes, 1):
+            if estudiante.persona:
+                nombre_completo = f"{estudiante.persona.nombre} {estudiante.persona.apellido_paterno}"
+                nombre_corto = nombre_completo[:30] + '...' if len(nombre_completo) > 30 else nombre_completo
+            else:
+                nombre_corto = "Sin información"
+            
+            curso_nombre = estudiante.curso.nombre[:25] if estudiante.curso else 'Sin curso'
+            data_estudiantes.append([str(idx), nombre_corto, curso_nombre])
+        
+        if len(data_estudiantes) > 1:
+            table_estudiantes = Table(data_estudiantes, colWidths=[30, 300, 170])
+            table_estudiantes.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#16a085')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('ALIGN', (0, 0), (0, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 11),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#ecf0f1')),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                ('FONTSIZE', (0, 1), (-1, -1), 9),
+            ]))
+            elements.append(table_estudiantes)
+        else:
+            elements.append(Paragraph("No hay estudiantes registrados recientemente", styles['Normal']))
+    except Exception as e:
+        elements.append(Paragraph("Error al cargar estudiantes recientes", styles['Normal']))
+    
+    elements.append(Spacer(1, 20))
+    
+    # ===== SECCIÓN 5: HISTORIAL DE SUSCRIPCIONES DEL COLEGIO =====
+    elements.append(Paragraph("5. HISTORIAL DE SUSCRIPCIONES", subtitle_style))
+    
+    try:
+        historial_suscripciones = Suscripcion.objects.filter(
+            colegio=colegio_admin
+        ).select_related('membresia').order_by('-fecha_inicio')
+        
+        data_historial = [['Membresía', 'Fecha Inicio', 'Fecha Fin', 'Duración', 'Estado']]
+        
+        for sus in historial_suscripciones:
+            duracion_dias = (sus.fecha_fin - sus.fecha_inicio).days
+            estado = 'ACTIVA' if sus.fecha_fin >= timezone.now().date() else 'VENCIDA'
+            
+            data_historial.append([
+                sus.membresia.nombre,
+                sus.fecha_inicio.strftime('%d/%m/%Y'),
+                sus.fecha_fin.strftime('%d/%m/%Y'),
+                f"{duracion_dias} días",
+                estado
+            ])
+        
+        if len(data_historial) > 1:
+            table_historial = Table(data_historial, colWidths=[120, 90, 90, 90, 110])
+            table_historial.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#f39c12')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 11),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#ecf0f1')),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                ('FONTSIZE', (0, 1), (-1, -1), 9),
+            ]))
+            elements.append(table_historial)
+        else:
+            elements.append(Paragraph("No hay historial de suscripciones", styles['Normal']))
+    except Exception as e:
+        elements.append(Paragraph("Error al cargar historial de suscripciones", styles['Normal']))
+    
+    elements.append(Spacer(1, 20))
+    
+    # ===== SECCIÓN 6: PROYECCIÓN Y ALERTAS =====
+    elements.append(Paragraph("6. PROYECCIÓN Y ALERTAS", subtitle_style))
+    
+    try:
+        alertas_texto = []
+        
+        if suscripcion:
+            if dias_restantes <= 7 and dias_restantes > 0:
+                alertas_texto.append(f"ATENCIÓN: La membresía vence en {dias_restantes} días. Se recomienda renovar pronto.")
+            elif dias_restantes == 0:
+                alertas_texto.append("URGENTE: La membresía vence hoy. Renovar inmediatamente.")
+            elif dias_restantes < 0:
+                alertas_texto.append(f"CRÍTICO: La membresía venció hace {abs(dias_restantes)} días. Acceso suspendido.")
+            else:
+                alertas_texto.append(f"✓ La membresía está activa y vence en {dias_restantes} días.")
+        else:
+            alertas_texto.append("No hay membresía activa. El colegio no tiene acceso a la plataforma.")
+        
+        # Alertas adicionales
+        if estudiantes_query.count() == 0:
+            alertas_texto.append("No hay estudiantes registrados en el sistema.")
+        
+        if profesores_query.count() == 0:
+            alertas_texto.append("No hay profesores asignados al colegio.")
+        
+        if cursos_query.count() == 0:
+            alertas_texto.append("No hay cursos creados en el sistema.")
+        
+        for alerta in alertas_texto:
+            elements.append(Paragraph(alerta, styles['Normal']))
+            elements.append(Spacer(1, 5))
+        
+    except Exception as e:
+        elements.append(Paragraph("Error al generar alertas", styles['Normal']))
+    
+    elements.append(Spacer(1, 20))
+    
+    return elements
+
+def generar_contenido_profesor_pdf(usuario, subtitle_style, styles):
+    """Genera el contenido completo y extendido del PDF para Profesor"""
+    elements = []
+    
+    try:
+        # Obtener el profesor
+        profesor = Profesor.objects.filter(usuario=usuario).first()
+        
+        if not profesor:
+            elements.append(Paragraph("Perfil de profesor no encontrado", styles['Normal']))
+            return elements
+        
+        elements.append(Paragraph(f"PROFESOR: {usuario.correo}", subtitle_style))
+        if profesor.colegio:
+            elements.append(Paragraph(f"<b>Colegio:</b> {profesor.colegio.nombre}", styles['Normal']))
+        elements.append(Spacer(1, 10))
+        
+        # ===== SECCIÓN 1: ESTADÍSTICAS GENERALES DEL PROFESOR =====
+        elements.append(Paragraph("1. ESTADÍSTICAS GENERALES", subtitle_style))
+        
+        cursos_query = Curso.objects.filter(profesor=profesor)
+        temas_query = Temas.objects.filter(curso__profesor=profesor)
+        
+        temas_disponibles = temas_query.filter(estado='disponible').count()
+        temas_no_disponibles = temas_query.filter(estado='no disponible').count()
+        
+        # Contar estudiantes totales
+        total_estudiantes = 0
+        for curso in cursos_query:
+            total_estudiantes += Estudiante.objects.filter(curso=curso).count()
+        
+        data_estadisticas = [
+            ['Métrica', 'Cantidad'],
+            ['Total de Cursos Asignados', str(cursos_query.count())],
+            ['Total de Temas Creados', str(temas_query.count())],
+            ['Temas Disponibles', str(temas_disponibles)],
+            ['Temas No Disponibles', str(temas_no_disponibles)],
+            ['Total de Estudiantes', str(total_estudiantes)],
+        ]
+        
+        table_estadisticas = Table(data_estadisticas, colWidths=[350, 150])
+        table_estadisticas.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#3498db')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('ALIGN', (1, 0), (1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#ecf0f1')),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('FONTSIZE', (0, 1), (-1, -1), 10),
+        ]))
+        elements.append(table_estadisticas)
+        
+    except Exception as e:
+        elements.append(Paragraph(f"Error al cargar datos del profesor: {str(e)}", styles['Normal']))
+    
+    elements.append(Spacer(1, 20))
+    
+    # ===== SECCIÓN 2: DISTRIBUCIÓN DE TEMAS POR ESTADO =====
+    elements.append(Paragraph("2. DISTRIBUCIÓN DE TEMAS POR ESTADO", subtitle_style))
+    
+    try:
+        temas_por_estado = temas_query.values('estado').annotate(
+            total=Count('id')
+        ).order_by('-total')
+        
+        data_estados = [['Estado', 'Cantidad de Temas', 'Porcentaje']]
+        total_temas = temas_query.count()
+        
+        for item in temas_por_estado:
+            estado = item['estado'] if item['estado'] else 'Sin estado'
+            cantidad = item['total']
+            porcentaje = (cantidad / total_temas * 100) if total_temas > 0 else 0
+            data_estados.append([estado.title(), str(cantidad), f"{porcentaje:.1f}%"])
+        
+        if len(data_estados) > 1:
+            table_estados = Table(data_estados, colWidths=[250, 150, 100])
+            table_estados.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#e74c3c')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
                 ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
                 ('FONTSIZE', (0, 0), (-1, 0), 12),
                 ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
@@ -2108,220 +2720,235 @@ def generar_reporte_pdf(request, tipo_reporte):
                 ('GRID', (0, 0), (-1, -1), 1, colors.black),
                 ('FONTSIZE', (0, 1), (-1, -1), 10),
             ]))
-            elements.append(table)
+            elements.append(table_estados)
         else:
-            elements.append(Paragraph("No hay datos disponibles para este reporte.", styles['Normal']))
-        
-        # Generar PDF
-        doc.build(elements)
-        buffer.seek(0)
-        
-        response = HttpResponse(buffer, content_type='application/pdf')
-        response['Content-Disposition'] = f'attachment; filename="reporte_{tipo_reporte}_{timezone.now().strftime("%Y%m%d_%H%M")}.pdf"'
-        
-        return response
-        
-    except Usuario.DoesNotExist:
-        messages.error(request, 'Usuario no encontrado')
-        return redirect('login')
+            elements.append(Paragraph("No hay datos de estados de temas", styles['Normal']))
     except Exception as e:
-        messages.error(request, f'Error al generar el reporte: {str(e)}')
-        return redirect('panel_admin')
-
-# ====================================================================
-# FUNCIONES AUXILIARES PARA REPORTES
-# ====================================================================
-def generar_reporte_superadmin(tipo_reporte, usuario):
-    """Genera datos para reportes del superadministrador"""
-    if tipo_reporte == 'usuarios':
-        usuarios = Usuario.objects.select_related('rol').values_list(
-            'correo', 'rol__tipo', 'estado'
-        )
-        data = [['Correo', 'Rol', 'Estado']]
-        data.extend(list(usuarios))
-        
-    elif tipo_reporte == 'colegios':
-        colegios = Colegio.objects.all().values_list('nombre', 'direccion')
-        data = [['Nombre', 'Dirección']]
-        data.extend(list(colegios))
-        
-    elif tipo_reporte == 'suscripciones':
-        suscripciones = Suscripcion.objects.select_related('colegio', 'membresia').values_list(
-            'colegio__nombre', 'membresia__nombre', 'fecha_inicio', 'fecha_fin', 'usuarios_actuales'
-        )
-        data = [['Colegio', 'Membresía', 'Fecha Inicio', 'Fecha Fin', 'Usuarios Actuales']]
-        data.extend(list(suscripciones))
-        
-    elif tipo_reporte == 'pagos':
-        pagos = Pago.objects.select_related('usuario').filter(estado='aprobado').values_list(
-            'usuario__correo', 'monto', 'fecha', 'metodo'
-        )
-        data = [['Usuario', 'Monto', 'Fecha', 'Método']]
-        data.extend(list(pagos))
-        
-    else:
-        data = [['Reporte no disponible']]
+        elements.append(Paragraph("Error al cargar distribución de estados", styles['Normal']))
     
-    return data
-
-def generar_reporte_administrador(tipo_reporte, usuario):
-    """Genera datos para reportes del administrador"""
-    # Obtener el colegio del administrador (en implementación real)
-    colegio_admin = Colegio.objects.first()
+    elements.append(Spacer(1, 20))
     
-    if tipo_reporte == 'estudiantes':
-        estudiantes = Estudiante.objects.filter(colegio=colegio_admin).select_related('persona').values_list(
-            'persona__nombre', 'persona__apellidoPaterno', 'persona__apellidoMaterno', 'curso'
-        )
-        data = [['Nombre', 'Apellido Paterno', 'Apellido Materno', 'Curso']]
-        data.extend(list(estudiantes))
-        
-    elif tipo_reporte == 'profesores':
-        profesores = Profesor.objects.filter(colegio=colegio_admin).select_related('usuario').values_list(
-            'usuario__correo', 'curso'
-        )
-        data = [['Correo', 'Curso']]
-        data.extend(list(profesores))
-        
-    elif tipo_reporte == 'cursos':
-        cursos = Curso.objects.filter(profesor__colegio=colegio_admin).values_list(
-            'nombre', 'profesor__usuario__correo'
-        )
-        data = [['Curso', 'Profesor']]
-        data.extend(list(cursos))
-        
-    else:
-        data = [['Reporte no disponible']]
-    
-    return data
-
-def generar_reporte_profesor(tipo_reporte, usuario):
-    """Genera datos para reportes del profesor"""
-    profesor = Profesor.objects.filter(usuario=usuario).first()
-    
-    if not profesor:
-        return [['Profesor no encontrado']]
-    
-    if tipo_reporte == 'cursos':
-        cursos = Curso.objects.filter(profesor=profesor).values_list('nombre', 'id')
-        data = [['Nombre del Curso', 'ID']]
-        data.extend(list(cursos))
-        
-    elif tipo_reporte == 'temas':
-        temas = Temas.objects.filter(curso__profesor=profesor).select_related('curso').values_list(
-            'nombre_archivo', 'curso__nombre', 'estado', 'fecha_inicio', 'numero'
-        )
-        data = [['Tema', 'Curso', 'Estado', 'Fecha Inicio', 'Número']]
-        data.extend(list(temas))
-        
-    else:
-        data = [['Reporte no disponible']]
-    
-    return data
-
-def generar_reporte_estudiante(tipo_reporte, usuario):
-    """Genera datos para reportes del estudiante"""
-    persona = usuario.personas.first()
-    estudiante = Estudiante.objects.filter(persona=persona).first()
-    
-    if not estudiante:
-        return [['Estudiante no encontrado']]
-    
-    if tipo_reporte == 'temas_disponibles':
-        temas = Temas.objects.filter(
-            curso__profesor__colegio=estudiante.colegio,
-            estado='disponible'
-        ).select_related('curso').values_list('nombre_archivo', 'curso__nombre', 'fecha_inicio', 'numero')
-        data = [['Tema', 'Curso', 'Fecha Inicio', 'Número']]
-        data.extend(list(temas))
-        
-    elif tipo_reporte == 'laboratorios':
-        laboratorios = Laboratorio.objects.filter(estado='activo').values_list(
-            'nombre', 'estado'
-        )
-        data = [['Laboratorio', 'Estado']]
-        data.extend(list(laboratorios))
-        
-    else:
-        data = [['Reporte no disponible']]
-    
-    return data
-
-# ====================================================================
-# APIS PARA DATOS EN TIEMPO REAL (AJAX)
-# ====================================================================
-@login_required_custom
-def api_estadisticas_tiempo_real(request):
-    """API para obtener estadísticas en tiempo real"""
-    usuario_id = request.session.get('usuario_id')
-    if not usuario_id:
-        return JsonResponse({'error': 'No autenticado'}, status=401)
+    # ===== SECCIÓN 3: DETALLE DE CURSOS Y TEMAS =====
+    elements.append(Paragraph("3. DETALLE DE CURSOS Y CANTIDAD DE TEMAS", subtitle_style))
     
     try:
-        usuario = Usuario.objects.get(id=usuario_id)
-        rol = usuario.rol.tipo.strip() if usuario.rol else ''
+        cursos_detalle = Curso.objects.filter(profesor=profesor).annotate(
+            total_temas=Count('temas'),
+            temas_disponibles=Count('temas', filter=Q(temas__estado='disponible')),
+            temas_no_disponibles=Count('temas', filter=Q(temas__estado='no disponible')),
+            total_estudiantes=Count('estudiantes')
+        ).order_by('-total_temas')
         
-        data = {}
-        hoy = timezone.now().date()
+        data_cursos = [['Curso', 'Total Temas', 'Disponibles', 'No Disponibles', 'Estudiantes']]
         
-        if rol == 'SuperAdmin':
-            # Estadísticas en tiempo real para superadmin
-            data = {
-                'total_usuarios': Usuario.objects.count(),
-                'total_colegios': Colegio.objects.count(),
-                'ingresos_hoy': float(Pago.objects.filter(
-                    fecha__date=hoy, 
-                    estado='aprobado'
-                ).aggregate(Sum('monto'))['monto__sum'] or 0),
-                'suscripciones_activas': Suscripcion.objects.filter(
-                    fecha_fin__gte=hoy
-                ).count(),
-            }
-            
-        elif rol == 'Administrador':
-            # Estadísticas para administrador
-            colegio_admin = Colegio.objects.first()  # En realidad vendría de la relación
-            data = {
-                'estudiantes_totales': Estudiante.objects.filter(colegio=colegio_admin).count(),
-                'profesores_totales': Profesor.objects.filter(colegio=colegio_admin).count(),
-                'cursos_totales': Curso.objects.filter(profesor__colegio=colegio_admin).count(),
-            }
-            
-        elif rol == 'Profesor':
-            # Estadísticas para profesor
-            profesor = Profesor.objects.filter(usuario=usuario).first()
-            if profesor:
-                data = {
-                    'cursos_totales': Curso.objects.filter(profesor=profesor).count(),
-                    'temas_totales': Temas.objects.filter(curso__profesor=profesor).count(),
-                    'temas_disponibles': Temas.objects.filter(
-                        curso__profesor=profesor, 
-                        estado='disponible'
-                    ).count(),
-                }
-                
-        elif rol == 'Estudiante':
-            # Estadísticas para estudiante
-            persona = usuario.personas.first()
-            estudiante = Estudiante.objects.filter(persona=persona).first()
-            if estudiante:
-                data = {
-                    'temas_disponibles': Temas.objects.filter(
-                        curso__profesor__colegio=estudiante.colegio,
-                        estado='disponible'
-                    ).count(),
-                    'laboratorios_activos': Laboratorio.objects.filter(estado='activo').count(),
-                }
+        for curso in cursos_detalle:
+            nombre_curso = curso.nombre[:35] + '...' if len(curso.nombre) > 35 else curso.nombre
+            data_cursos.append([
+                nombre_curso,
+                str(curso.total_temas),
+                str(curso.temas_disponibles),
+                str(curso.temas_no_disponibles),
+                str(curso.total_estudiantes)
+            ])
         
-        return JsonResponse({'success': True, 'data': data})
-        
-    except Usuario.DoesNotExist:
-        return JsonResponse({'error': 'Usuario no encontrado'}, status=404)
+        if len(data_cursos) > 1:
+            table_cursos = Table(data_cursos, colWidths=[220, 70, 70, 80, 70])
+            table_cursos.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#9b59b6')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 11),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#ecf0f1')),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                ('FONTSIZE', (0, 1), (-1, -1), 9),
+            ]))
+            elements.append(table_cursos)
+        else:
+            elements.append(Paragraph("No hay cursos asignados al profesor", styles['Normal']))
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        elements.append(Paragraph("Error al cargar detalle de cursos", styles['Normal']))
+    
+    elements.append(Spacer(1, 20))
+    
+    # ===== SECCIÓN 4: ÚLTIMOS 20 TEMAS CREADOS =====
+    elements.append(Paragraph("4. ÚLTIMOS 20 TEMAS CREADOS", subtitle_style))
+    
+    try:
+        temas_recientes = Temas.objects.filter(
+            curso__profesor=profesor
+        ).select_related('curso').order_by('-fecha_inicio')[:20]
+        
+        data_temas = [['Tema', 'Curso', 'Fecha Inicio', 'Fecha Fin', 'Estado']]
+        
+        for tema in temas_recientes:
+            nombre_tema = tema.nombre[:30] + '...' if len(tema.nombre) > 30 else tema.nombre
+            nombre_curso = tema.curso.nombre[:25] + '...' if len(tema.curso.nombre) > 25 else tema.curso.nombre
+            fecha_inicio = tema.fecha_inicio.strftime('%d/%m/%Y') if tema.fecha_inicio else 'N/A'
+            fecha_fin = tema.fecha_fin.strftime('%d/%m/%Y') if tema.fecha_fin else 'N/A'
+            estado = tema.estado.title() if tema.estado else 'N/A'
+            
+            data_temas.append([
+                nombre_tema,
+                nombre_curso,
+                fecha_inicio,
+                fecha_fin,
+                estado
+            ])
+        
+        if len(data_temas) > 1:
+            table_temas = Table(data_temas, colWidths=[140, 130, 80, 80, 80])
+            table_temas.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#16a085')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('ALIGN', (2, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 11),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#ecf0f1')),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                ('FONTSIZE', (0, 1), (-1, -1), 8),
+            ]))
+            elements.append(table_temas)
+        else:
+            elements.append(Paragraph("No hay temas creados recientemente", styles['Normal']))
+    except Exception as e:
+        elements.append(Paragraph("Error al cargar temas recientes", styles['Normal']))
+    
+    elements.append(Spacer(1, 20))
+    
+    # ===== SECCIÓN 5: TEMAS PRÓXIMOS A INICIAR =====
+    elements.append(Paragraph("5. TEMAS PRÓXIMOS A INICIAR (Siguientes 30 días)", subtitle_style))
+    
+    try:
+        fecha_actual = timezone.now().date()
+        fecha_limite = fecha_actual + timedelta(days=30)
+        
+        temas_proximos = Temas.objects.filter(
+            curso__profesor=profesor,
+            fecha_inicio__gte=fecha_actual,
+            fecha_inicio__lte=fecha_limite
+        ).select_related('curso').order_by('fecha_inicio')
+        
+        data_proximos = [['Tema', 'Curso', 'Fecha Inicio', 'Días Restantes']]
+        
+        for tema in temas_proximos:
+            nombre_tema = tema.nombre[:35] + '...' if len(tema.nombre) > 35 else tema.nombre
+            nombre_curso = tema.curso.nombre[:30] + '...' if len(tema.curso.nombre) > 30 else tema.curso.nombre
+            fecha_inicio = tema.fecha_inicio.strftime('%d/%m/%Y')
+            dias_restantes = (tema.fecha_inicio - fecha_actual).days
+            
+            data_proximos.append([
+                nombre_tema,
+                nombre_curso,
+                fecha_inicio,
+                f"{dias_restantes} días"
+            ])
+        
+        if len(data_proximos) > 1:
+            table_proximos = Table(data_proximos, colWidths=[180, 160, 80, 90])
+            table_proximos.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#f39c12')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('ALIGN', (2, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 11),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#ecf0f1')),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                ('FONTSIZE', (0, 1), (-1, -1), 9),
+            ]))
+            elements.append(table_proximos)
+        else:
+            elements.append(Paragraph("No hay temas programados para los próximos 30 días", styles['Normal']))
+    except Exception as e:
+        elements.append(Paragraph("Error al cargar temas próximos", styles['Normal']))
+    
+    elements.append(Spacer(1, 20))
+    
+    # ===== SECCIÓN 6: RESUMEN POR CURSO =====
+    elements.append(Paragraph("6. RESUMEN DETALLADO POR CURSO", subtitle_style))
+    
+    try:
+        for curso in cursos_query:
+            elements.append(Paragraph(f"<b>Curso:</b> {curso.nombre}", styles['Normal']))
+            
+            temas_curso = Temas.objects.filter(curso=curso)
+            estudiantes_curso = Estudiante.objects.filter(curso=curso).count()
+            
+            info_curso = [
+                f"• Total de temas: {temas_curso.count()}",
+                f"• Temas disponibles: {temas_curso.filter(estado='disponible').count()}",
+                f"• Temas no disponibles: {temas_curso.filter(estado='no disponible').count()}",
+                f"• Total de estudiantes inscritos: {estudiantes_curso}",
+            ]
+            
+            for info in info_curso:
+                elements.append(Paragraph(info, styles['Normal']))
+            
+            elements.append(Spacer(1, 10))
+            
+    except Exception as e:
+        elements.append(Paragraph("Error al cargar resumen por curso", styles['Normal']))
+    
+    elements.append(Spacer(1, 20))
+    
+    # ===== SECCIÓN 7: ALERTAS Y RECOMENDACIONES =====
+    elements.append(Paragraph("7. ALERTAS Y RECOMENDACIONES", subtitle_style))
+    
+    try:
+        alertas = []
+        
+        # Verificar cursos sin temas
+        cursos_sin_temas = cursos_query.annotate(
+            num_temas=Count('temas')
+        ).filter(num_temas=0)
+        
+        if cursos_sin_temas.exists():
+            alertas.append(f"Hay {cursos_sin_temas.count()} curso(s) sin temas asignados.")
+        
+        # Verificar temas sin fechas
+        temas_sin_fechas = temas_query.filter(fecha_inicio__isnull=True)
+        if temas_sin_fechas.exists():
+            alertas.append(f"Hay {temas_sin_fechas.count()} tema(s) sin fecha de inicio configurada.")
+        
+        # Verificar temas vencidos
+        temas_vencidos = temas_query.filter(
+            fecha_fin__lt=timezone.now().date(),
+            estado='disponible'
+        )
+        if temas_vencidos.exists():
+            alertas.append(f"Hay {temas_vencidos.count()} tema(s) vencido(s) que aún están marcados como disponibles.")
+        
+        # Verificar cursos sin estudiantes
+        cursos_sin_estudiantes = []
+        for curso in cursos_query:
+            if Estudiante.objects.filter(curso=curso).count() == 0:
+                cursos_sin_estudiantes.append(curso.nombre)
+        
+        if cursos_sin_estudiantes:
+            alertas.append(f"Hay {len(cursos_sin_estudiantes)} curso(s) sin estudiantes inscritos.")
+        
+        if not alertas:
+            alertas.append("✓ No se encontraron alertas. Todo está en orden.")
+        
+        for alerta in alertas:
+            elements.append(Paragraph(alerta, styles['Normal']))
+            elements.append(Spacer(1, 5))
+        
+    except Exception as e:
+        elements.append(Paragraph("Error al generar alertas", styles['Normal']))
+    
+    elements.append(Spacer(1, 20))
+    
+    return elements
 
 # ====================================================================
-# VISTA PRINCIPAL DE INFORMES
+# VISTA PRINCIPAL DE INFORMES (Redirige según rol)
 # ====================================================================
 @login_required_custom
 def informes_principal(request):
@@ -2340,16 +2967,14 @@ def informes_principal(request):
             return redirect('dashboard_administrador')
         elif rol == 'Profesor':
             return redirect('dashboard_profesor')
-        elif rol == 'Estudiante':
-            return redirect('dashboard_estudiante')
         else:
-            messages.error(request, 'Rol no reconocido')
-            return redirect('panel_admin')
+            messages.error(request, 'No tiene acceso al módulo de informes')
+            return redirect('login')
             
     except Usuario.DoesNotExist:
         messages.error(request, 'Usuario no encontrado')
         return redirect('login')
-
+    
 ##VISTA PARA CONTENIDO TEORICO##
 
 def gestion_documentos_profesor(request):
@@ -2707,3 +3332,5 @@ def componentes_estudiante_tarjetas(request):
         'componentes_json': json.dumps(componentes_json, cls=DjangoJSONEncoder)
     }
     return render(request, 'estudiante/componentes_tarjetas.html', context)
+
+

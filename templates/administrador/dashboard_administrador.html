@@ -16,7 +16,7 @@
                 <div class="avatar">
                     <i class="fas fa-user-shield"></i>
                 </div>
-                <span class="user-name">Administrador</span>
+                <span class="user-name">{{ usuario.correo }}</span>
             </div>
         </div>
     </div>
@@ -31,7 +31,7 @@
             <div class="filter-row">
                 <div class="filter-group">
                     <label class="filter-label">Fecha:</label>
-                    <input type="date" name="fecha" value="{{ fecha|default:'' }}" class="filter-input">
+                    <input type="date" name="fecha" value="{{ fecha_filtro }}" class="filter-input">
                 </div>
                 <div class="filter-actions">
                     <button type="submit" class="btn btn-filter">
@@ -47,57 +47,56 @@
         </form>
     </div>
 
+    <!-- Botón Generar PDF Completo -->
+    <div class="pdf-action-container">
+        <a href="{% url 'generar_reporte_completo_pdf' %}" class="btn-generate-pdf" target="_blank">
+            <i class="fas fa-file-pdf"></i>
+            Generar Informe Completo en PDF
+        </a>
+    </div>
+
     <!-- Estadísticas -->
     <div class="stats-container">
         <div class="stats-grid">
             <!-- Tarjeta Estudiantes -->
-            <div class="stat-card">
+            <div class="stat-card card-estudiantes">
                 <div class="stat-header">
                     <div class="stat-icon">
                         <i class="fas fa-user-graduate"></i>
                     </div>
-                    <h3 class="stat-title">TOTAL ESTUDIANTES</h3>
+                    <h3 class="stat-title">Total Estudiantes</h3>
                 </div>
                 <div class="stat-content">
                     <div class="stat-number">{{ estadisticas.total_estudiantes|default:"0" }}</div>
-                    <a href="{% url 'reporte_estudiantes' %}" class="download-btn">
-                        <i class="fas fa-download"></i>
-                        Descargar PDF
-                    </a>
+                    <div class="stat-label">Estudiantes activos</div>
                 </div>
             </div>
 
             <!-- Tarjeta Profesores -->
-            <div class="stat-card">
+            <div class="stat-card card-profesores">
                 <div class="stat-header">
                     <div class="stat-icon">
                         <i class="fas fa-chalkboard-teacher"></i>
                     </div>
-                    <h3 class="stat-title">TOTAL PROFESORES</h3>
+                    <h3 class="stat-title">Total Profesores</h3>
                 </div>
                 <div class="stat-content">
                     <div class="stat-number">{{ estadisticas.total_profesores|default:"0" }}</div>
-                    <a href="{% url 'reporte_profesores' %}" class="download-btn">
-                        <i class="fas fa-download"></i>
-                        Descargar PDF
-                    </a>
+                    <div class="stat-label">Profesores activos</div>
                 </div>
             </div>
 
             <!-- Tarjeta Cursos -->
-            <div class="stat-card">
+            <div class="stat-card card-cursos">
                 <div class="stat-header">
                     <div class="stat-icon">
                         <i class="fas fa-book"></i>
                     </div>
-                    <h3 class="stat-title">TOTAL CURSOS</h3>
+                    <h3 class="stat-title">Total Cursos</h3>
                 </div>
                 <div class="stat-content">
                     <div class="stat-number">{{ estadisticas.total_cursos|default:"0" }}</div>
-                    <a href="{% url 'reporte_cursos' %}" class="download-btn">
-                        <i class="fas fa-download"></i>
-                        Descargar PDF
-                    </a>
+                    <div class="stat-label">Cursos disponibles</div>
                 </div>
             </div>
 
@@ -107,17 +106,23 @@
                     <div class="stat-icon">
                         <i class="fas fa-crown"></i>
                     </div>
-                    <h3 class="stat-title">MEMBRESÍA ACTUAL</h3>
+                    <h3 class="stat-title">Membresía Actual</h3>
                 </div>
                 <div class="stat-content">
-                    <div class="stat-number">{{ estadisticas.membresia_actual|default:"Sin membresía" }}</div>
+                    <div class="membership-name">{{ estadisticas.membresia_actual|default:"Sin membresía" }}</div>
                     <div class="membership-details">
                         <div class="detail-row">
-                            <span class="detail-label">Usuarios:</span>
+                            <span class="detail-label">
+                                <i class="fas fa-users"></i>
+                                Usuarios:
+                            </span>
                             <span class="detail-value">{{ estadisticas.usuarios_actuales|default:"0" }}</span>
                         </div>
                         <div class="detail-row">
-                            <span class="detail-label">Días restantes:</span>
+                            <span class="detail-label">
+                                <i class="fas fa-calendar-alt"></i>
+                                Días restantes:
+                            </span>
                             <span class="detail-value">{{ estadisticas.dias_restantes|default:"0" }}</span>
                         </div>
                     </div>
@@ -158,6 +163,110 @@
             </div>
         </div>
     </div>
+
+    <!-- Tablas de Datos -->
+    <div class="tables-container">
+        <div class="section-title">
+            <i class="fas fa-table"></i>
+            Datos Recientes
+        </div>
+        
+        <div class="tables-grid">
+            <!-- Tabla de Estudiantes Recientes -->
+            <div class="table-wrapper">
+                <h3 class="table-title">
+                    <i class="fas fa-user-graduate"></i>
+                    Estudiantes Recientes
+                </h3>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Nombre Completo</th>
+                                <th>Curso</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if estudiantes_recientes %}
+                                {% for estudiante in estudiantes_recientes %}
+                                <tr>
+                                    <td>
+                                        {% if estudiante.persona %}
+                                            {{ estudiante.persona.nombre }} {{ estudiante.persona.apellidoPaterno }} {{ estudiante.persona.apellidoMaterno }}
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if estudiante.curso %}
+                                            {{ estudiante.curso.nombre }}
+                                        {% else %}
+                                            Sin curso
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-{{ estudiante.estado|lower }}">
+                                            {{ estudiante.estado }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="3" class="text-center">No hay estudiantes registrados</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tabla de Profesores -->
+            <div class="table-wrapper">
+                <h3 class="table-title">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                    Profesores del Colegio
+                </h3>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Correo</th>
+                                <th>Curso</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if profesores %}
+                                {% for profesor in profesores %}
+                                <tr>
+                                    <td>
+                                        {% if profesor.usuario %}
+                                            {{ profesor.usuario.correo }}
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ profesor.curso|default:"N/A" }}</td>
+                                    <td>
+                                        <span class="badge badge-{{ profesor.estado|lower }}">
+                                            {{ profesor.estado }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="3" class="text-center">No hay profesores registrados</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Highcharts -->
@@ -171,107 +280,119 @@
     try {
         // Parsear datos de torta
         const tortaRaw = '{{ datos_torta_cursos|escapejs }}';
-        console.log("Datos torta crudos:", tortaRaw);
-        
-        if (tortaRaw && tortaRaw !== 'None' && tortaRaw !== '[]') {
-            datosTorta = JSON.parse(tortaRaw.replace(/&quot;/g, '"'));
+        if (tortaRaw && tortaRaw !== 'None' && tortaRaw !== '[]' && tortaRaw !== '') {
+            datosTorta = JSON.parse(tortaRaw);
         }
         
         // Parsear datos de barras
         const barrasRaw = '{{ datos_barras_cursos|escapejs }}';
-        console.log("Datos barras crudos:", barrasRaw);
-        
-        if (barrasRaw && barrasRaw !== 'None' && barrasRaw !== '{"cursos": [], "estudiantes": []}') {
-            datosBarras = JSON.parse(barrasRaw.replace(/&quot;/g, '"'));
+        if (barrasRaw && barrasRaw !== 'None' && barrasRaw !== '{"cursos": [], "estudiantes": []}' && barrasRaw !== '') {
+            datosBarras = JSON.parse(barrasRaw);
         }
     } catch (error) {
         console.error('Error parsing chart data:', error);
-        // Datos de ejemplo como fallback
-        datosTorta = [
-            { name: 'Curso A', y: 10 },
-            { name: 'Curso B', y: 5 },
-            { name: 'Curso C', y: 3 }
-        ];
-        datosBarras = {
-            cursos: ['Curso A', 'Curso B', 'Curso C'],
-            estudiantes: [10, 5, 3]
-        };
     }
 
     // Inicializar gráficos cuando el DOM esté listo
     document.addEventListener('DOMContentLoaded', function() {
         // Gráfico de Torta
-        if (document.getElementById('chartTorta') && datosTorta.length > 0) {
-            Highcharts.chart('chartTorta', {
-                chart: { 
-                    type: 'pie',
-                    backgroundColor: 'transparent',
-                    height: 280
-                },
-                title: { text: null },
-                tooltip: { 
-                    pointFormat: '<b>{point.y}</b> estudiantes ({point.percentage:.1f}%)' 
-                },
-                plotOptions: {
-                    pie: {
-                        allowPointSelect: true,
-                        cursor: 'pointer',
-                        dataLabels: { 
-                            enabled: true, 
-                            format: '<b>{point.name}</b>: {point.y}',
-                            distance: -30
-                        },
-                        showInLegend: true
-                    }
-                },
-                series: [{
-                    name: 'Estudiantes',
-                    colorByPoint: true,
-                    data: datosTorta
-                }],
-                credits: { enabled: false }
-            });
-        } else if (document.getElementById('chartTorta')) {
-            document.getElementById('chartTorta').innerHTML = 
-                '<div class="no-data"><p>No hay datos disponibles</p></div>';
+        if (document.getElementById('chartTorta')) {
+            if (datosTorta.length > 0) {
+                Highcharts.chart('chartTorta', {
+                    chart: { 
+                        type: 'pie',
+                        backgroundColor: 'transparent',
+                        height: 320
+                    },
+                    title: { text: null },
+                    tooltip: { 
+                        pointFormat: '<b>{point.y}</b> estudiantes ({point.percentage:.1f}%)' 
+                    },
+                    plotOptions: {
+                        pie: {
+                            allowPointSelect: true,
+                            cursor: 'pointer',
+                            dataLabels: { 
+                                enabled: true, 
+                                format: '<b>{point.name}</b>: {point.y}',
+                                distance: -30,
+                                style: {
+                                    fontSize: '12px',
+                                    textOutline: 'none'
+                                }
+                            },
+                            showInLegend: true
+                        }
+                    },
+                    series: [{
+                        name: 'Estudiantes',
+                        colorByPoint: true,
+                        data: datosTorta
+                    }],
+                    credits: { enabled: false },
+                    colors: ['#133E87', '#608BC1', '#CBDCEB', '#F3F3E0', '#8B9DC3', '#5A7BA6']
+                });
+            } else {
+                document.getElementById('chartTorta').innerHTML = 
+                    '<div class="no-data"><i class="fas fa-chart-pie"></i><p>No hay datos disponibles</p></div>';
+            }
         }
 
         // Gráfico de Barras
-        if (document.getElementById('chartBarras') && datosBarras.cursos.length > 0) {
-            Highcharts.chart('chartBarras', {
-                chart: { 
-                    type: 'column',
-                    backgroundColor: 'transparent',
-                    height: 280
-                },
-                title: { text: null },
-                xAxis: { 
-                    categories: datosBarras.cursos,
-                    title: { text: null }
-                },
-                yAxis: {
-                    min: 0,
-                    title: { text: 'Estudiantes' }
-                },
-                tooltip: { 
-                    valueSuffix: ' estudiantes' 
-                },
-                plotOptions: { 
-                    column: { 
-                        dataLabels: { enabled: true } 
-                    } 
-                },
-                legend: { enabled: false },
-                series: [{
-                    name: 'Estudiantes',
-                    data: datosBarras.estudiantes,
-                    color: '#608BC1'
-                }],
-                credits: { enabled: false }
-            });
-        } else if (document.getElementById('chartBarras')) {
-            document.getElementById('chartBarras').innerHTML = 
-                '<div class="no-data"><p>No hay datos disponibles</p></div>';
+        if (document.getElementById('chartBarras')) {
+            if (datosBarras.cursos && datosBarras.cursos.length > 0) {
+                Highcharts.chart('chartBarras', {
+                    chart: { 
+                        type: 'column',
+                        backgroundColor: 'transparent',
+                        height: 320
+                    },
+                    title: { text: null },
+                    xAxis: { 
+                        categories: datosBarras.cursos,
+                        title: { text: null },
+                        labels: {
+                            style: {
+                                fontSize: '11px'
+                            }
+                        }
+                    },
+                    yAxis: {
+                        min: 0,
+                        title: { 
+                            text: 'Número de Estudiantes',
+                            style: {
+                                fontSize: '12px'
+                            }
+                        }
+                    },
+                    tooltip: { 
+                        valueSuffix: ' estudiantes' 
+                    },
+                    plotOptions: { 
+                        column: { 
+                            dataLabels: { 
+                                enabled: true,
+                                style: {
+                                    fontSize: '11px',
+                                    textOutline: 'none'
+                                }
+                            },
+                            colorByPoint: false,
+                            color: '#608BC1'
+                        } 
+                    },
+                    legend: { enabled: false },
+                    series: [{
+                        name: 'Estudiantes',
+                        data: datosBarras.estudiantes
+                    }],
+                    credits: { enabled: false }
+                });
+            } else {
+                document.getElementById('chartBarras').innerHTML = 
+                    '<div class="no-data"><i class="fas fa-chart-bar"></i><p>No hay datos disponibles</p></div>';
+            }
         }
     });
 </script>
@@ -287,16 +408,21 @@
         --text-dark: #333333;
         --text-light: #666666;
         --border: #E0E0E0;
-        --shadow: 0 2px 8px rgba(0,0,0,0.1);
-        --shadow-hover: 0 4px 12px rgba(0,0,0,0.15);
-        --border-radius: 8px;
+        --shadow: 0 2px 8px rgba(0,0,0,0.08);
+        --shadow-hover: 0 4px 16px rgba(0,0,0,0.12);
+        --border-radius: 12px;
+        --transition: all 0.3s ease;
     }
 
     /* Reset y base */
-    .dashboard-admin {
+    * {
+        box-sizing: border-box;
+    }
+
+    .dashboard-profesor {
         min-height: 100vh;
         background: var(--background);
-        padding: 20px;
+        padding: 24px;
         display: flex;
         flex-direction: column;
         gap: 24px;
@@ -306,7 +432,7 @@
     .dashboard-header {
         background: var(--white);
         border-radius: var(--border-radius);
-        padding: 24px;
+        padding: 28px;
         box-shadow: var(--shadow);
     }
 
@@ -317,8 +443,8 @@
     }
 
     .page-title {
-        font-size: 24px;
-        font-weight: 600;
+        font-size: 28px;
+        font-weight: 700;
         color: var(--primary-blue);
         margin: 0;
         display: flex;
@@ -327,7 +453,7 @@
     }
 
     .page-title i {
-        font-size: 28px;
+        font-size: 32px;
         color: var(--secondary-blue);
     }
 
@@ -335,24 +461,27 @@
         display: flex;
         align-items: center;
         gap: 12px;
+        padding: 8px 16px;
+        background: var(--light-blue);
+        border-radius: 50px;
     }
 
     .avatar {
-        width: 40px;
-        height: 40px;
+        width: 42px;
+        height: 42px;
         background: linear-gradient(135deg, var(--secondary-blue), var(--primary-blue));
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         color: var(--white);
-        font-weight: 600;
-        font-size: 14px;
+        font-size: 16px;
     }
 
     .user-name {
         font-weight: 500;
         color: var(--text-dark);
+        font-size: 14px;
     }
 
     /* Filtros */
@@ -370,7 +499,12 @@
         margin-bottom: 20px;
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 10px;
+    }
+
+    .section-title i {
+        font-size: 20px;
+        color: var(--secondary-blue);
     }
 
     .filters-form {
@@ -380,7 +514,7 @@
     .filter-row {
         display: flex;
         align-items: end;
-        gap: 20px;
+        gap: 16px;
         flex-wrap: wrap;
     }
 
@@ -389,7 +523,8 @@
         flex-direction: column;
         gap: 8px;
         flex: 1;
-        min-width: 200px;
+        min-width: 220px;
+        max-width: 300px;
     }
 
     .filter-label {
@@ -399,38 +534,39 @@
     }
 
     .filter-input {
-        padding: 12px;
-        border: 1px solid var(--border);
-        border-radius: 6px;
+        padding: 12px 16px;
+        border: 2px solid var(--border);
+        border-radius: 8px;
         font-size: 14px;
-        transition: border-color 0.3s;
+        transition: var(--transition);
+        background: var(--white);
     }
 
     .filter-input:focus {
         outline: none;
         border-color: var(--secondary-blue);
-        box-shadow: 0 0 0 2px rgba(96, 139, 193, 0.1);
+        box-shadow: 0 0 0 3px rgba(96, 139, 193, 0.1);
     }
 
     .filter-actions {
         display: flex;
         gap: 12px;
-        margin-bottom: 8px;
     }
 
     /* Botones */
     .btn {
-        padding: 12px 20px;
+        padding: 12px 24px;
         border: none;
-        border-radius: 6px;
-        font-weight: 500;
+        border-radius: 8px;
+        font-weight: 600;
         font-size: 14px;
         cursor: pointer;
         text-decoration: none;
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        transition: all 0.3s ease;
+        transition: var(--transition);
+        white-space: nowrap;
     }
 
     .btn-filter {
@@ -440,17 +576,51 @@
 
     .btn-filter:hover {
         background: var(--primary-blue);
-        transform: translateY(-1px);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-hover);
     }
 
     .btn-clear {
         background: var(--light-blue);
         color: var(--primary-blue);
+        border: 2px solid var(--light-blue);
     }
 
     .btn-clear:hover {
-        background: var(--secondary-blue);
+        background: var(--white);
+        border-color: var(--secondary-blue);
+        color: var(--secondary-blue);
+    }
+
+    /* Botón PDF */
+    .pdf-action-container {
+        display: flex;
+        justify-content: center;
+    }
+
+    .btn-generate-pdf {
+        padding: 16px 32px;
+        background: linear-gradient(135deg, #d32f2f, #b71c1c);
         color: var(--white);
+        text-decoration: none;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 16px;
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        transition: var(--transition);
+        box-shadow: 0 4px 12px rgba(211, 47, 47, 0.3);
+    }
+
+    .btn-generate-pdf:hover {
+        background: linear-gradient(135deg, #b71c1c, #7f0000);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(211, 47, 47, 0.4);
+    }
+
+    .btn-generate-pdf i {
+        font-size: 20px;
     }
 
     /* Estadísticas */
@@ -460,7 +630,7 @@
 
     .stats-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
         gap: 20px;
     }
 
@@ -469,32 +639,61 @@
         border-radius: var(--border-radius);
         padding: 24px;
         box-shadow: var(--shadow);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        border: 1px solid var(--border);
+        transition: var(--transition);
+        border-left: 4px solid transparent;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 100px;
+        height: 100px;
+        background: var(--light-blue);
+        border-radius: 50%;
+        transform: translate(30%, -30%);
+        opacity: 0.3;
     }
 
     .stat-card:hover {
-        transform: translateY(-2px);
+        transform: translateY(-4px);
         box-shadow: var(--shadow-hover);
+    }
+
+    .card-cursos {
+        border-left-color: #3498db;
+    }
+
+    .card-temas {
+        border-left-color: #9b59b6;
+    }
+
+    .card-disponibles {
+        border-left-color: #27ae60;
     }
 
     .stat-header {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 14px;
         margin-bottom: 16px;
+        position: relative;
+        z-index: 1;
     }
 
     .stat-icon {
-        width: 50px;
-        height: 50px;
+        width: 54px;
+        height: 54px;
         background: var(--light-blue);
-        border-radius: 10px;
+        border-radius: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
         color: var(--primary-blue);
-        font-size: 20px;
+        font-size: 24px;
     }
 
     .stat-title {
@@ -509,69 +708,85 @@
     .stat-content {
         display: flex;
         flex-direction: column;
-        gap: 16px;
+        gap: 8px;
+        position: relative;
+        z-index: 1;
     }
 
     .stat-number {
-        font-size: 36px;
+        font-size: 42px;
         font-weight: 700;
         color: var(--primary-blue);
         line-height: 1;
     }
 
-    .download-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 10px 16px;
-        background: var(--light-blue);
-        color: var(--primary-blue);
-        text-decoration: none;
-        border-radius: 6px;
-        font-size: 14px;
+    .stat-label {
+        font-size: 13px;
+        color: var(--text-light);
         font-weight: 500;
-        transition: all 0.3s ease;
-        border: 1px solid transparent;
     }
 
-    .download-btn:hover {
-        background: var(--secondary-blue);
+    /* Barra de progreso */
+    .stat-progress {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .progress-bar {
+        width: 100%;
+        height: 10px;
+        background: var(--light-blue);
+        border-radius: 5px;
+        overflow: hidden;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--secondary-blue), var(--primary-blue));
+        border-radius: 5px;
+        transition: width 0.6s ease;
+    }
+
+    .progress-text {
+        font-size: 12px;
+        color: var(--text-light);
+        text-align: center;
+        font-weight: 600;
+    }
+
+    /* Tarjeta especial destacada */
+    .highlight-card {
+        background: linear-gradient(135deg, var(--secondary-blue) 0%, var(--primary-blue) 100%);
         color: var(--white);
-        transform: translateY(-1px);
+        border-left-color: transparent;
     }
 
-    /* Tarjeta de membresía especial */
-    .membership-card {
-        background: linear-gradient(135deg, var(--secondary-blue), var(--primary-blue));
-        color: var(--white);
-        border: none;
+    .highlight-card::before {
+        background: rgba(255,255,255,0.1);
     }
 
-    .membership-card .stat-title,
-    .membership-card .stat-number {
-        color: var(--white);
+    .highlight-card .stat-title,
+    .highlight-card .stat-label {
+        color: rgba(255,255,255,0.9);
     }
 
-    .membership-card .stat-icon {
+    .highlight-card .stat-icon {
         background: rgba(255,255,255,0.2);
         color: var(--white);
     }
 
-    .membership-card .download-btn {
-        background: rgba(255,255,255,0.2);
+    .membership-name {
+        font-size: 24px;
+        font-weight: 700;
         color: var(--white);
-        border: 1px solid rgba(255,255,255,0.3);
-    }
-
-    .membership-card .download-btn:hover {
-        background: var(--white);
-        color: var(--primary-blue);
+        margin-bottom: 12px;
     }
 
     .membership-details {
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 10px;
     }
 
     .detail-row {
@@ -579,37 +794,48 @@
         justify-content: space-between;
         align-items: center;
         font-size: 14px;
+        padding: 8px 12px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 6px;
     }
 
     .detail-label {
-        opacity: 0.9;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        opacity: 0.95;
     }
 
     .detail-value {
-        font-weight: 600;
+        font-weight: 700;
+        font-size: 16px;
     }
 
     /* Gráficos */
     .charts-container {
         background: var(--white);
         border-radius: var(--border-radius);
-        padding: 24px;
+        padding: 28px;
         box-shadow: var(--shadow);
     }
 
     .charts-grid {
         display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 24px;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 28px;
+        margin-top: 20px;
     }
 
     .chart-wrapper {
         display: flex;
         flex-direction: column;
+        background: var(--background);
+        padding: 20px;
+        border-radius: 10px;
     }
 
     .chart-header {
-        margin-bottom: 20px;
+        margin-bottom: 16px;
     }
 
     .chart-title {
@@ -619,12 +845,12 @@
         margin: 0;
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 10px;
     }
 
     .chart-area {
         flex: 1;
-        min-height: 300px;
+        min-height: 320px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -638,19 +864,143 @@
     .no-data {
         text-align: center;
         color: var(--text-light);
+        padding: 60px 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .no-data i {
+        font-size: 48px;
+        opacity: 0.3;
+    }
+
+    .no-data p {
+        margin: 0;
+        font-size: 14px;
         font-style: italic;
-        padding: 40px 20px;
+    }
+
+    /* Tablas */
+    .tables-container {
+        background: var(--white);
+        border-radius: var(--border-radius);
+        padding: 28px;
+        box-shadow: var(--shadow);
+    }
+
+    .tables-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 24px;
+        margin-top: 20px;
+    }
+
+    .table-wrapper {
+        background: var(--background);
+        border-radius: 10px;
+        padding: 20px;
+        overflow: hidden;
+    }
+
+    .table-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--primary-blue);
+        margin: 0 0 16px 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .table-responsive {
+        overflow-x: auto;
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--white);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .data-table thead {
+        background: var(--primary-blue);
+        color: var(--white);
+    }
+
+    .data-table th {
+        padding: 14px 16px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .data-table td {
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--border);
+        font-size: 14px;
+        color: var(--text-dark);
+    }
+
+    .data-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .data-table tbody tr:hover {
+        background: var(--light-blue);
+    }
+
+    .text-center {
+        text-align: center;
+        color: var(--text-light);
+        font-style: italic;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .badge-disponible {
+        background: #e8f5e9;
+        color: #2e7d32;
+    }
+
+    .badge-no {
+        background: #ffebee;
+        color: #c62828;
+    }
+
+    .badge-activo {
+        background: #e8f5e9;
+        color: #2e7d32;
+    }
+
+    .badge-inactivo {
+        background: #ffebee;
+        color: #c62828;
     }
 
     /* Responsive */
-    @media (max-width: 1024px) {
-        .charts-grid {
+    @media (max-width: 1200px) {
+        .charts-grid,
+        .tables-grid {
             grid-template-columns: 1fr;
         }
     }
 
     @media (max-width: 768px) {
-        .dashboard-admin {
+        .dashboard-profesor {
             padding: 16px;
             gap: 20px;
         }
@@ -661,6 +1011,10 @@
             text-align: center;
         }
 
+        .page-title {
+            font-size: 22px;
+        }
+
         .filter-row {
             flex-direction: column;
             align-items: stretch;
@@ -668,10 +1022,27 @@
 
         .filter-group {
             min-width: auto;
+            max-width: 100%;
         }
 
         .filter-actions {
             justify-content: center;
+            width: 100%;
+        }
+
+        .filter-actions .btn {
+            flex: 1;
+        }
+
+        .pdf-action-container {
+            padding: 0 8px;
+        }
+
+        .btn-generate-pdf {
+            width: 100%;
+            justify-content: center;
+            padding: 14px 20px;
+            font-size: 14px;
         }
 
         .stats-grid {
@@ -679,17 +1050,146 @@
         }
 
         .stat-number {
-            font-size: 32px;
+            font-size: 36px;
+        }
+
+        .membership-name {
+            font-size: 20px;
+        }
+
+        .chart-area {
+            min-height: 280px;
+        }
+
+        .table-wrapper {
+            padding: 16px;
+        }
+
+        .data-table {
+            font-size: 13px;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 10px 12px;
         }
     }
 
     @media (max-width: 480px) {
+        .dashboard-header {
+            padding: 20px;
+        }
+
         .page-title {
+            font-size: 18px;
+        }
+
+        .page-title i {
+            font-size: 24px;
+        }
+
+        .user-name {
+            font-size: 12px;
+        }
+
+        .section-title {
+            font-size: 16px;
+        }
+
+        .stat-number {
+            font-size: 32px;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
             font-size: 20px;
         }
 
         .chart-title {
             font-size: 14px;
+        }
+
+        .table-title {
+            font-size: 14px;
+        }
+
+        .data-table {
+            font-size: 12px;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 8px 10px;
+        }
+
+        .btn-generate-pdf {
+            font-size: 13px;
+            padding: 12px 16px;
+        }
+
+        .btn-generate-pdf i {
+            font-size: 16px;
+        }
+    }
+
+    /* Animaciones */
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .stat-card,
+    .chart-wrapper,
+    .table-wrapper {
+        animation: fadeIn 0.5s ease-out;
+    }
+
+    /* Scrollbar personalizado */
+    .table-responsive::-webkit-scrollbar {
+        height: 8px;
+    }
+
+    .table-responsive::-webkit-scrollbar-track {
+        background: var(--background);
+        border-radius: 4px;
+    }
+
+    .table-responsive::-webkit-scrollbar-thumb {
+        background: var(--secondary-blue);
+        border-radius: 4px;
+    }
+
+    .table-responsive::-webkit-scrollbar-thumb:hover {
+        background: var(--primary-blue);
+    }
+
+    /* Estados de carga */
+    .loading {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 200px;
+        color: var(--text-light);
+    }
+
+    .loading i {
+        font-size: 32px;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        from {
+            transform: rotate(0deg);
+        }
+        to {
+            transform: rotate(360deg);
         }
     }
 </style>
