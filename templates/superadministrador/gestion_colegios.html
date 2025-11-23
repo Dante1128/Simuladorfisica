@@ -18,11 +18,14 @@
     <!-- Toolbar -->
     <div class="toolbar">
         <div class="search-container">
-            <i class="fas fa-search search-icon"></i>
-            <input type="text" id="searchInput" placeholder="Buscar por nombre o dirección...">
-            <button class="clear-search" id="clearSearch">
-                <i class="fas fa-times"></i>
-            </button>
+            <!-- Envolvemos en form GET para que la vista reciba ?search=... al enviar -->
+            <form method="get" action="" style="display:flex; align-items:center; width:100%;">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="searchInput" name="search" placeholder="Buscar por nombre o dirección..." value="{{ request.GET.search|default:'' }}">
+                <button class="clear-search" id="clearSearch" type="button">
+                    <i class="fas fa-times"></i>
+                </button>
+            </form>
         </div>
         <div class="actions-container">
             <button class="btn-primary" id="newSchool">
@@ -117,16 +120,17 @@
     </div>
 </div>
 
-<!-- Modal Nuevo Colegio -->
+<!-- Modal Nuevo Colegio con Configuración Visual -->
 <div class="modal-overlay" id="schoolModal" style="display: none;">
     <div class="modal-content">
         <div class="modal-header">
             <h3><i class="fas fa-plus" id="modalIcon"></i> <span id="modalTitle">Nuevo Colegio</span></h3>
             <button class="close-modal" id="closeModal" type="button">&times;</button>
         </div>
-        <form id="schoolForm" method="post" action="">
+        <form id="schoolForm" method="post" action="" enctype="multipart/form-data">
             {% csrf_token %}
             <div class="modal-body">
+                <!-- Nombre y Dirección -->
                 <div class="form-group">
                     <label for="schoolName"><i class="fas fa-school"></i> Nombre del colegio</label>
                     <input type="text" id="schoolName" name="nombre" class="form-control" placeholder="Ej: Colegio San Francisco" required>
@@ -135,6 +139,27 @@
                     <label for="schoolAddress"><i class="fas fa-map-marker-alt"></i> Dirección</label>
                     <input type="text" id="schoolAddress" name="direccion" class="form-control" placeholder="Ej: Av. Principal #123" required>
                 </div>
+
+                <!-- Configuración Visual -->
+                <hr>
+                <h4>Configuración Visual (Opcional)</h4>
+
+                <div class="form-group">
+                    <label for="color_primario">Color Primario</label>
+                    <input type="color" id="color_primario" name="color_primario" value="#007bff">
+                </div>
+
+                <div class="form-group">
+                    <label for="color_secundario">Color Secundario</label>
+                    <input type="color" id="color_secundario" name="color_secundario" value="#6c757d">
+                </div>
+
+                <div class="form-group">
+                    <label for="logo">Logo</label>
+                    <input type="file" id="logo" name="logo" accept="image/*">
+                </div>
+
+
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-secondary" id="cancelBtn">Cancelar</button>

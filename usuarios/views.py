@@ -1,6 +1,8 @@
 # ======================
 # IMPORTS DE DJANGO
 # ======================
+from django.shortcuts import render
+from .models import ConfiguracionVisual
 from .views_superadmin_componentes import (
     superadmin_componentes_list,
     superadmin_componente_create,
@@ -35,6 +37,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q, Count, Sum
 from django.db import models
 from django.contrib.admin.views.decorators import staff_member_required
+from .models import Colegio, ConfiguracionVisual
 
 # ======================
 # IMPORTS DE MODELOS
@@ -187,7 +190,9 @@ def perfil_superadmin(request):
         return redirect('login')
 
 def gestion_colegios(request):
+    # =========================
     # CAMBIO DE ESTADO
+    # =========================
     estado_id = request.GET.get('estado_id')
     if estado_id:
         try:
@@ -199,20 +204,35 @@ def gestion_colegios(request):
             messages.error(request, 'Colegio no encontrado.')
         return HttpResponse(status=204)
 
-    # CREAR COLEGIO
+    # =========================
+    # CREAR COLEGIO + CONFIGURACION VISUAL
+    # =========================
     if request.method == 'POST' and 'crear' in request.POST:
         nombre = request.POST.get('nombre', '').strip()
         direccion = request.POST.get('direccion', '').strip()
+        color_primario = request.POST.get('color_primario', '#007bff')
+        color_secundario = request.POST.get('color_secundario', '#6c757d')
+        logo = request.FILES.get('logo')
+      
         if nombre and direccion:
             if not Colegio.objects.filter(nombre__iexact=nombre).exists():
-                Colegio.objects.create(nombre=nombre, direccion=direccion)
-                messages.success(request, 'Colegio creado correctamente.')
+                colegio = Colegio.objects.create(nombre=nombre, direccion=direccion)
+                # Crear configuración visual
+                ConfiguracionVisual.objects.create(
+                    colegio=colegio,
+                    color_primario=color_primario,
+                    color_secundario=color_secundario,
+                    logo=logo,
+                )
+                messages.success(request, 'Colegio creado correctamente con configuración visual.')
             else:
                 messages.error(request, 'Ya existe un colegio con ese nombre.')
         else:
             messages.error(request, 'Todos los campos son obligatorios.')
 
+    # =========================
     # EDITAR COLEGIO
+    # =========================
     if request.method == 'POST' and 'editar_id' in request.POST:
         editar_id = request.POST.get('editar_id')
         nombre = request.POST.get('editar_nombre', '').strip()
@@ -229,7 +249,9 @@ def gestion_colegios(request):
         else:
             messages.error(request, 'Todos los campos son obligatorios para editar.')
 
+    # =========================
     # FILTRO
+    # =========================
     search_term = request.GET.get('search', '').strip()
     if search_term:
         colegios = Colegio.objects.filter(
@@ -239,7 +261,6 @@ def gestion_colegios(request):
         colegios = Colegio.objects.all().order_by('-id')  
 
     return render(request, 'superadministrador/gestion_colegios.html', {'colegios': colegios})
-
 
 def gestion_administradores(request):
     administradores = Administrador.objects.all().select_related('usuario', 'persona', 'colegio')
@@ -1937,6 +1958,10 @@ def dashboard_profesor(request):
         messages.error(request, f'Error: {str(e)}')
         return redirect('panel_profesor')
 
+
+def dashboard_estudiante(request):
+    return render(request, 'estudiante/dashboard_estudiante.html')
+
 # ====================================================================
 # GENERAR REPORTE PDF COMPLETO 
 # ====================================================================
@@ -3307,3 +3332,5 @@ def componentes_estudiante_tarjetas(request):
         'componentes_json': json.dumps(componentes_json, cls=DjangoJSONEncoder)
     }
     return render(request, 'estudiante/componentes_tarjetas.html', context)
+
+

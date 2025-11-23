@@ -77,6 +77,7 @@ urlpatterns = [
     path('dashboard/superadmin/', views.dashboard_superadmin, name='dashboard_superadmin'),
     path('dashboard/administrador/', views.dashboard_administrador, name='dashboard_administrador'),
     path('dashboard/profesor/', views.dashboard_profesor, name='dashboard_profesor'),
+    path('dashboard/estudiante/', views.dashboard_estudiante, name='dashboard_estudiante'),
     # Vista principal de informes (redirige según rol)
     path('informes/', views.informes_principal, name='informes_principal'),
     # Generación de PDF completo (un solo PDF por rol)
