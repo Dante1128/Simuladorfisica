@@ -2876,14 +2876,28 @@ def informes_principal(request):
     
 ##VISTA PARA CONTENIDO TEORICO##
 
+import json
+from django.http import JsonResponse, HttpResponse
+from django.shortcuts import render, get_object_or_404
+from django.db.models import Q
+from django.views.decorators.csrf import csrf_protect
+from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
+from django.utils import timezone
+from datetime import timedelta
+from django.contrib.auth.hashers import make_password
+
+from .models import Documento, Temas, Usuario, Rol, Persona, Colegio, Administrador, Profesor, Curso
+
+# ============================================================
+# VISTAS PRINCIPALES DE GESTIÓN DE DOCUMENTOS
+# ============================================================
+
 def gestion_documentos_profesor(request):
-    """
-    Vista exclusiva para profesores para gestionar documentos
-    """
+    """Vista exclusiva para profesores para gestionar documentos"""
     documentos = Documento.objects.all().order_by('-fecha_creacion')
     
     if request.method == 'POST':
-        # Manejar AJAX requests para crear/editar/eliminar
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return manejar_ajax_documentos(request)
     
@@ -2892,171 +2906,370 @@ def gestion_documentos_profesor(request):
     })
 
 def gestion_documentos_administrador(request):
-    """
-    Vista exclusiva para administradores para gestionar documentos
-    """
-    documentos = Documento.objects.all().order_by('-fecha_creacion')
+    """Vista específica para administradores"""
+    print("📥 Llegó a gestion_documentos_administrador")
     
-    if request.method == 'POST':
-        # Manejar AJAX requests para crear/editar/eliminar
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return manejar_ajax_documentos(request)
-    
-    return render(request, 'administrador/gestion_documentos.html', {
-        'documentos': documentos
-    })
+    try:
+        documentos = Documento.objects.all().order_by('-fecha_creacion')
+        
+        if request.method == 'POST':
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return manejar_ajax_documentos(request)
+        
+        return render(request, 'administrador/gestion_documentos.html', {
+            'documentos': documentos
+        })
+            
+    except Exception as e:
+        print(f"❌ Error en gestion_documentos_administrador: {str(e)}")
+        import traceback
+        print(traceback.format_exc())
+        return JsonResponse({'error': str(e)}, status=500)
 
 def gestion_documentos_superadministrador(request):
-    """
-    Vista exclusiva para superadministradores para gestionar documentos
-    """
+    """Vista exclusiva para superadministradores para gestionar documentos"""
     documentos = Documento.objects.all().order_by('-fecha_creacion')
     
     if request.method == 'POST':
-        # Manejar AJAX requests para crear/editar/eliminar
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return manejar_ajax_documentos(request)
     
     return render(request, 'superadministrador/gestion_documentos.html', {
         'documentos': documentos
     })
-    
-def crear_documento_ajax(request_or_data):
-    """Crear documento via AJAX que funcione tanto con request como con data"""
+
+# ============================================================
+# FUNCIONES AUXILIARES PARA CREAR ESTRUCTURA
+# ============================================================
+
+def crear_estructura_si_no_existe():
+    """SOLUCIÓN CON MODELO TEMAS REAL"""
     try:
-        # Determinar si es request (con archivos) o data (sin archivos)
-        if hasattr(request_or_data, 'POST'):
-            # Es un request con posible archivo
-            request = request_or_data
-            nombre = request.POST.get('nombre', '').strip()
-            descripcion = request.POST.get('descripcion', '')
-            estado = request.POST.get('estado', 'Activo')
-            categoria = request.POST.get('categoria', 'fisica_general')
-        else:
-            # Es data sin archivos
-            data = request_or_data
-            nombre = data.get('nombre', '').strip()
-            descripcion = data.get('descripcion', '')
-            estado = data.get('estado', 'Activo')
-            categoria = data.get('categoria', 'fisica_general')
+        # Verificar si ya existe un tema
+        tema_existente = Temas.objects.first()
+        if tema_existente:
+            print("✅ Tema existente encontrado")
+            return tema_existente
         
-        if not nombre:
-            return JsonResponse({'error': 'El nombre es requerido'}, status=400)
+        print("🔧 Creando estructura con modelo Temas real...")
         
-        # Crear documento
-        documento = Documento(
-            nombre=nombre,
-            descripcion=descripcion,
-            estado=estado,
-            categoria=categoria
+        # PASO 1: CREAR ROLES
+        print("📋 Paso 1: Creando roles...")
+        rol_admin, _ = Rol.objects.get_or_create(tipo='Administrador')
+        rol_profesor, _ = Rol.objects.get_or_create(tipo='Profesor')
+        print("✅ Roles creados")
+        
+        # PASO 2: CREAR USUARIOS
+        print("📋 Paso 2: Creando usuarios...")
+        
+        usuario_admin, _ = Usuario.objects.get_or_create(
+            correo='admin_sistema@temp.com',
+            defaults={
+                'rol': rol_admin,
+                'contrasenia': make_password('admin123'),
+                'estado': 'activo'
+            }
         )
         
-        # Manejar archivo PDF solo si es request con archivos
-        if hasattr(request_or_data, 'FILES') and 'archivo_pdf' in request_or_data.FILES:
-            archivo = request_or_data.FILES['archivo_pdf']
-            documento.archivo_pdf = archivo.read()
-            documento.nombre_archivo = archivo.name
-            documento.tamaño = archivo.size
+        usuario_profesor, _ = Usuario.objects.get_or_create(
+            correo='profesor_sistema@temp.com', 
+            defaults={
+                'rol': rol_profesor,
+                'contrasenia': make_password('prof123'),
+                'estado': 'activo'
+            }
+        )
+        print("✅ Usuarios creados")
         
-        documento.save()
+        # PASO 3: CREAR PERSONAS
+        print("📋 Paso 3: Creando personas...")
         
-        return JsonResponse({
-            'success': True,
-            'message': 'Documento creado correctamente' + (' con PDF' if hasattr(request_or_data, 'FILES') and 'archivo_pdf' in request_or_data.FILES else '')
-        })
+        persona_admin, _ = Persona.objects.get_or_create(
+            usuario=usuario_admin,
+            defaults={
+                'nombre': 'Admin',
+                'apellidoPaterno': 'Sistema',
+                'apellidoMaterno': 'Temp',
+                'estado': 'activo'
+            }
+        )
+        
+        persona_profesor, _ = Persona.objects.get_or_create(
+            usuario=usuario_profesor,
+            defaults={
+                'nombre': 'Profesor',
+                'apellidoPaterno': 'Temporal', 
+                'apellidoMaterno': 'Sistema',
+                'estado': 'activo'
+            }
+        )
+        print("✅ Personas creadas")
+        
+        # PASO 4: CREAR COLEGIO
+        print("📋 Paso 4: Creando colegio...")
+        colegio_default, _ = Colegio.objects.get_or_create(
+            nombre='Colegio Temporal Sistema',
+            defaults={
+                'direccion': 'Dirección temp 123',
+                'estado': 'activo'
+            }
+        )
+        print("✅ Colegio creado")
+        
+        # PASO 5: CREAR ADMINISTRADOR
+        print("📋 Paso 5: Creando administrador...")
+        admin_obj, _ = Administrador.objects.get_or_create(
+            usuario=usuario_admin,
+            defaults={'colegio': colegio_default}
+        )
+        print("✅ Administrador creado")
+        
+        # PASO 6: CREAR PROFESOR
+        print("📋 Paso 6: Creando profesor...")
+        profesor_default, _ = Profesor.objects.get_or_create(
+            usuario=usuario_profesor,
+            defaults={'colegio': colegio_default}
+        )
+        print("✅ Profesor creado")
+        
+        # PASO 7: CREAR CURSO
+        print("📋 Paso 7: Creando curso...")
+        curso_default, _ = Curso.objects.get_or_create(
+            nombre='Física General - Temporal',
+            defaults={'profesor': profesor_default}
+        )
+        print("✅ Curso creado")
+        
+        # PASO 8: CREAR TEMA - CON TUS CAMPOS REALES
+        print("📋 Paso 8: Creando tema...")
+        tema_default = Temas.objects.create(
+            curso=curso_default,
+            nombre_archivo='Física General y Conceptos Básicos',
+            descripcion='Tema temporal para documentos del sistema de física',
+            numero=1,
+            estado='disponible',
+            fecha_inicio=timezone.now().date(),
+            tamanio=10,
+            archivo=None
+        )
+        print(f"✅ TEMA CREADO EXITOSAMENTE: {tema_default.id}")
+        
+        return tema_default
         
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
-    
+        print(f"❌ ERROR en crear_estructura_si_no_existe:")
+        print(f"   Tipo: {type(e).__name__}")
+        print(f"   Mensaje: {str(e)}")
+        import traceback
+        print("   Traceback completo:")
+        print(traceback.format_exc())
+        return None
+
+def crear_estructura_emergencia():
+    """SOLUCIÓN DE EMERGENCIA CON MODELO TEMAS REAL"""
+    try:
+        tema_existente = Temas.objects.first()
+        if tema_existente:
+            return tema_existente
+        
+        print("🚨 CREANDO ESTRUCTURA DE EMERGENCIA...")
+        
+        # Buscar cualquier curso existente
+        curso = Curso.objects.first()
+        
+        # Si no hay curso, crear uno mínimo
+        if not curso:
+            # Buscar cualquier profesor
+            profesor = Profesor.objects.first()
+            
+            # Crear curso
+            curso_data = {'nombre': "Curso Emergencia Física"}
+            if profesor:
+                curso_data['profesor'] = profesor
+            curso = Curso.objects.create(**curso_data)
+            print("✅ Curso de emergencia creado")
+        
+        # Crear tema con campos REALES de tu modelo
+        tema_default = Temas.objects.create(
+            curso=curso,
+            nombre_archivo="Tema Emergencia Física General",
+            descripcion="Tema temporal del sistema",
+            numero=1,
+            estado="disponible",
+            fecha_inicio=timezone.now().date(),
+            tamanio=1,
+            archivo=None
+        )
+        print(f"✅ Tema de emergencia creado: {tema_default.id}")
+        
+        return tema_default
+        
+    except Exception as e:
+        print(f"❌ FALLA en emergencia: {e}")
+        return None
+
+# ============================================================
+# MANEJO DE PETICIONES AJAX
+# ============================================================
+
+@require_POST
+@csrf_protect
 def manejar_ajax_documentos(request):
     """Manejar operaciones AJAX para documentos"""
     if request.method == 'POST':
         try:
+            print("📥 Datos recibidos en manejar_ajax_documentos")
+            print("Content-Type:", request.content_type)
+            print("POST data:", dict(request.POST))
+            print("FILES data:", dict(request.FILES))
+            
             # Verificar si es FormData (con archivos)
             if request.content_type.startswith('multipart/form-data'):
                 action = request.POST.get('action', 'crear')
                 
                 if action == 'crear':
-                    return crear_documento_ajax(request)
+                    return crear_documento_con_archivos(request)
                 elif action == 'editar':
-                    return editar_documento_ajax_con_archivos(request)  # Nueva función
+                    return editar_documento_con_archivos(request)
+                elif action == 'eliminar':
+                    return eliminar_documento_ajax(request)
                 else:
-                    return JsonResponse({'error': 'Acción no válida para FormData'}, status=400)
+                    return JsonResponse({'error': 'Acción no válida'}, status=400)
                     
             else:
                 # Manejo normal JSON (sin archivos)
                 data = json.loads(request.body)
                 action = data.get('action')
                 
-                if action == 'crear':
-                    return crear_documento_sin_archivos(data)  # O ajustar crear_documento_ajax
-                elif action == 'editar':
-                    return editar_documento_ajax(data)
-                elif action == 'eliminar':
+                if action == 'eliminar':
                     return eliminar_documento_ajax(data)
                 else:
-                    return JsonResponse({'error': 'Acción no válida'}, status=400)
+                    return JsonResponse({'error': 'Acción JSON no soportada para crear/editar'}, status=400)
                 
         except Exception as e:
+            print(f"❌ Error en manejar_ajax_documentos: {str(e)}")
+            import traceback
+            print(traceback.format_exc())
             return JsonResponse({'error': str(e)}, status=500)
     
     return JsonResponse({'error': 'Método no permitido'}, status=405)
 
-    
-def editar_documento_ajax(data):
-    """Editar documento via AJAX"""
+def crear_documento_con_archivos(request):
+    """Crear documento con archivos - VERSIÓN FINAL"""
     try:
-        documento_id = data.get('id')
-        if not documento_id:
-            return JsonResponse({'error': 'ID de documento requerido'}, status=400)
+        nombre = request.POST.get('nombre', '').strip()
+        descripcion = request.POST.get('descripcion', '')
+        estado = request.POST.get('estado', 'Activo')
+        categoria = request.POST.get('categoria', 'fisica_general')
         
-        documento = Documento.objects.get(id=documento_id)
-        documento.nombre = data.get('nombre', documento.nombre).strip()
-        documento.descripcion = data.get('descripcion', documento.descripcion)
-        documento.estado = data.get('estado', documento.estado)
-        documento.categoria = data.get('categoria', documento.categoria)
+        print(f"📝 Creando documento: {nombre}")
+        
+        if not nombre:
+            return JsonResponse({'error': 'El nombre es requerido'}, status=400)
+        
+        # INTENTAR CREAR ESTRUCTURA
+        tema_default = crear_estructura_si_no_existe()
+        
+        if not tema_default:
+            print("❌ Falló estructura principal, intentando emergencia...")
+            tema_default = crear_estructura_emergencia()
+        
+        if not tema_default:
+            return JsonResponse({
+                'error': 'No se pudo configurar el sistema. Contacta al administrador.'
+            }, status=400)
+        
+        # CREAR DOCUMENTO
+        documento = Documento(
+            nombre=nombre,
+            descripcion=descripcion,
+            estado=estado,
+            categoria=categoria,
+            tema=tema_default
+        )
+        
+        # MANEJAR ARCHIVO PDF
+        if 'archivo_pdf' in request.FILES:
+            archivo = request.FILES['archivo_pdf']
+            print(f"📎 Procesando archivo: {archivo.name}")
+            
+            if not archivo.name.lower().endswith('.pdf'):
+                return JsonResponse({'error': 'Solo se permiten archivos PDF'}, status=400)
+            
+            if archivo.size > 10 * 1024 * 1024:
+                return JsonResponse({'error': 'El archivo es demasiado grande (máx. 10MB)'}, status=400)
+            
+            documento.archivo_pdf = archivo
+        
+        # GUARDAR DOCUMENTO
         documento.save()
+        print(f"🎉 DOCUMENTO CREADO EXITOSAMENTE: {documento.id}")
         
         return JsonResponse({
             'success': True,
-            'message': 'Documento actualizado correctamente'
+            'message': 'Documento creado correctamente' + (' con PDF' if 'archivo_pdf' in request.FILES else '')
         })
         
-    except Documento.DoesNotExist:
-        return JsonResponse({'error': 'Documento no encontrado'}, status=404)
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
-    
-def editar_documento_ajax_con_archivos(request):
-    """Editar documento via AJAX con soporte para archivos PDF"""
+        print(f"❌ ERROR en crear_documento_con_archivos: {str(e)}")
+        import traceback
+        print(traceback.format_exc())
+        return JsonResponse({'error': f'Error al crear documento: {str(e)}'}, status=500)
+
+def editar_documento_con_archivos(request):
+    """Editar documento con archivos"""
     try:
         documento_id = request.POST.get('id')
+        nombre = request.POST.get('nombre', '').strip()
+        descripcion = request.POST.get('descripcion', '')
+        estado = request.POST.get('estado', 'Activo')
+        categoria = request.POST.get('categoria', 'fisica_general')
+        remove_current_file = request.POST.get('remove_current_file') == 'true'
+        
+        print(f"✏️ Editando documento ID: {documento_id}")
+        
         if not documento_id:
             return JsonResponse({'error': 'ID de documento requerido'}, status=400)
         
         documento = Documento.objects.get(id=documento_id)
-        documento.nombre = request.POST.get('nombre', documento.nombre).strip()
-        documento.descripcion = request.POST.get('descripcion', documento.descripcion)
-        documento.estado = request.POST.get('estado', documento.estado)
-        documento.categoria = request.POST.get('categoria', documento.categoria)
+        documento.nombre = nombre
+        documento.descripcion = descripcion
+        documento.estado = estado
+        documento.categoria = categoria
         
-        # Manejar archivo PDF si se subió uno nuevo
+        # Si el documento no tiene tema, asignarle uno
+        if not documento.tema:
+            tema_default = crear_estructura_si_no_existe()
+            if tema_default:
+                documento.tema = tema_default
+        
+        # Manejar eliminación de archivo actual
+        if remove_current_file:
+            print("🗑️ Eliminando archivo actual")
+            if documento.archivo_pdf:
+                documento.archivo_pdf.delete(save=False)
+            documento.archivo_pdf = None
+        
+        # Manejar nuevo archivo PDF
         if 'archivo_pdf' in request.FILES:
             archivo = request.FILES['archivo_pdf']
-            if archivo:
-                # Validar que sea PDF
-                if not archivo.name.lower().endswith('.pdf'):
-                    return JsonResponse({'error': 'Solo se permiten archivos PDF'}, status=400)
-                # Validar tamaño (10MB)
-                if archivo.size > 10 * 1024 * 1024:
-                    return JsonResponse({'error': 'El archivo es demasiado grande (máx. 10MB)'}, status=400)
-                
-                # Guardar el archivo (depende de tu modelo)
-                documento.archivo_pdf = archivo.read()  # Si guardas como binario
-                documento.nombre_archivo = archivo.name
-                documento.tamaño = archivo.size
+            print(f"📎 Nuevo archivo: {archivo.name}, tamaño: {archivo.size}")
+            
+            # Validaciones
+            if not archivo.name.lower().endswith('.pdf'):
+                return JsonResponse({'error': 'Solo se permiten archivos PDF'}, status=400)
+            
+            if archivo.size > 10 * 1024 * 1024:
+                return JsonResponse({'error': 'El archivo es demasiado grande (máx. 10MB)'}, status=400)
+            
+            # Eliminar archivo anterior si existe
+            if documento.archivo_pdf:
+                documento.archivo_pdf.delete(save=False)
+            
+            documento.archivo_pdf = archivo
         
         documento.save()
+        print(f"✅ Documento actualizado: {documento.id}")
         
         return JsonResponse({
             'success': True,
@@ -3066,7 +3279,10 @@ def editar_documento_ajax_con_archivos(request):
     except Documento.DoesNotExist:
         return JsonResponse({'error': 'Documento no encontrado'}, status=404)
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        print(f"❌ Error al editar documento: {str(e)}")
+        import traceback
+        print(traceback.format_exc())
+        return JsonResponse({'error': f'Error al editar documento: {str(e)}'}, status=500)
 
 def eliminar_documento_ajax(data):
     """Eliminar documento via AJAX"""
@@ -3077,7 +3293,13 @@ def eliminar_documento_ajax(data):
         
         documento = Documento.objects.get(id=documento_id)
         documento_nombre = documento.nombre
+        
+        # Eliminar archivo físico si existe
+        if documento.archivo_pdf:
+            documento.archivo_pdf.delete(save=False)
+            
         documento.delete()
+        print(f"✅ Documento eliminado: {documento_nombre}")
         
         return JsonResponse({
             'success': True,
@@ -3087,8 +3309,12 @@ def eliminar_documento_ajax(data):
     except Documento.DoesNotExist:
         return JsonResponse({'error': 'Documento no encontrado'}, status=404)
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        print(f"❌ Error al eliminar documento: {str(e)}")
+        return JsonResponse({'error': f'Error al eliminar documento: {str(e)}'}, status=500)
 
+# ============================================================
+# VISTAS PARA ESTUDIANTES (CONSULTA DE DOCUMENTOS)
+# ============================================================
 
 def contenido_teorico(request):
     """Vista para mostrar el contenido teórico a los usuarios"""
@@ -3180,6 +3406,14 @@ def preview_documento(request, documento_id):
     except Exception as e:
         return HttpResponse(f'Error al visualizar el documento: {str(e)}', status=500)
 
+# ============================================================
+# FUNCIONES OBSOLETAS (MANTENIDAS POR COMPATIBILIDAD)
+# ============================================================
+
+def crear_documento_ajax(request_or_data):
+    """Función obsoleta - Mantenida por compatibilidad"""
+    print("⚠️  Usando función obsoleta crear_documento_ajax")
+    return crear_documento_con_archivos(request_or_data)
 # =====================
 # COMPONENTES EN TARJETAS PARA PROFESOR
 # =====================
