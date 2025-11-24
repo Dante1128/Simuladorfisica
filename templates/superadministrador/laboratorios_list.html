@@ -708,7 +708,7 @@ input:checked + .slider:before {
                 <thead>
                     <tr>
                         <th>LABORATORIO</th>
-                        <th>CARPETA</th>
+                     
                         <th>ESTADO</th>
                         <th>ACCIONES</th>
                     </tr>
@@ -723,16 +723,11 @@ input:checked + .slider:before {
                                 </div>
                                 <div class="lab-details">
                                     <div class="lab-name">{{ l.nombre }}</div>
-                                    <div class="lab-id">ID: #{{ l.id }}</div>
+                                   
                                 </div>
                             </div>
                         </td>
-                        <td>
-                            <div class="address-cell">
-                                <i class="fas fa-map-marker-alt"></i>
-                                <span>{{ l.carpeta|default:'-' }}</span>
-                            </div>
-                        </td>
+                       
                         <td>
                             <label class="switch">
                                 <input type="checkbox" {% if l.estado == 'Activo' %}checked{% endif %}>

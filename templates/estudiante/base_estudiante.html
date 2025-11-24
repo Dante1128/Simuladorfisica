@@ -255,10 +255,6 @@
                 <i class="fas fa-tasks"></i>
                 <span>Asignaciones</span>
             </div>
-            <div class="menu-item">
-                <i class="fas fa-chart-bar"></i>
-                <span>Calificaciones</span>
-            </div>
             <div class="menu-item {% if request.path == '/contenido-teorico/' %}active{% endif %}" onclick="window.location.href='{% url 'contenido_teorico' %}'">
                 <i class="fas fa-chart-bar" ></i>
                 <span>Contenido Teorico</span>
@@ -266,6 +262,11 @@
             <div class="menu-item {% if request.path == '/estudiante/componentes/' %}active{% endif %}" onclick="window.location.href='{% url 'componentes_estudiante' %}'">
                 <i class="fas fa-microscope"></i>
                 <span>Componentes 3D</span>
+            </div>
+             <div class="menu-item {% if request.path == '/estudiantes/laboratorios/' %}active{% endif %}" 
+                onclick="window.location.href='{% url 'estudiantes_laboratorios_list' %}'">
+                <i class="fas fa-flask"></i>
+                <span>Laboratorios</span>
             </div>
         </div>
         

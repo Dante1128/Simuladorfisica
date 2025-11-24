@@ -1,0 +1,12 @@
+
+{% block content %}
+<div style="width: 100%; height: 100vh; margin: 0; padding: 0;">
+    {% if html_url %}
+        <iframe src="{{ html_url }}" width="100%" height="100%" style="border: none;"></iframe>
+    {% else %}
+        <div style="display: flex; justify-content: center; align-items: center; height: 100%;">
+            <h3>No hay archivos HTML disponibles para este laboratorio.</h3>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

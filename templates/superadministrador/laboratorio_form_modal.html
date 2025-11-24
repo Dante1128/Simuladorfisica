@@ -1,5 +1,7 @@
 {% load static %}
-<form method="post" enctype="multipart/form-data" id="labFormModal" action="{{ action_url|default:'' }}">
+{% load widget_tweaks %}
+
+<form method="post" id="labFormModal" action="{{ action_url|default:'' }}">
     {% csrf_token %}
     
     {% if form.non_field_errors %}
@@ -11,9 +13,9 @@
     
     <div class="form-group">
         <label for="{{ form.nombre.id_for_label }}">
-            <i class="fas fa-flask"></i> Nombre del Laboratorioooooo
+            <i class="fas fa-flask"></i> Nombre del Laboratorio
         </label>
-        {{ form.nombre }}
+        {{ form.nombre|add_class:"form-control" }}
         {% if form.nombre.errors %}
         <div class="form-error">
             <i class="fas fa-exclamation-triangle"></i>
@@ -26,24 +28,18 @@
     </div>
     
     <div class="form-group">
-        <label for="{{ form.archivo_zip.id_for_label }}">
-            <i class="fas fa-file-archive"></i> Archivo ZIP
+        <label for="{{ form.url.id_for_label }}">
+            <i class="fas fa-link"></i> URL del Laboratorio
         </label>
-        <div class="file-input-wrapper">
-            {{ form.archivo_zip }}
-            <div class="file-input-label">
-                <i class="fas fa-cloud-upload-alt"></i>
-                <span>Seleccionar archivo...</span>
-            </div>
-        </div>
-        {% if form.archivo_zip.errors %}
+        {{ form.url|add_class:"form-control" }}
+        {% if form.url.errors %}
         <div class="form-error">
             <i class="fas fa-exclamation-triangle"></i>
-            {{ form.archivo_zip.errors|first }}
+            {{ form.url.errors|first }}
         </div>
         {% endif %}
-        {% if form.archivo_zip.help_text %}
-        <small class="form-help">{{ form.archivo_zip.help_text }}</small>
+        {% if form.url.help_text %}
+        <small class="form-help">{{ form.url.help_text }}</small>
         {% endif %}
     </div>
     
@@ -51,7 +47,7 @@
         <label for="{{ form.estado.id_for_label }}">
             <i class="fas fa-toggle-on"></i> Estado
         </label>
-        {{ form.estado }}
+        {{ form.estado|add_class:"form-control" }}
         {% if form.estado.errors %}
         <div class="form-error">
             <i class="fas fa-exclamation-triangle"></i>
@@ -74,6 +70,7 @@
         Guardar Laboratorio
     </button>
 </div>
+
 
 <style>
 /* Estilos para el formulario */

@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinValueValidator
 import base64
+from django.contrib.auth.hashers import make_password, check_password
 
 from django.db.models.signals import post_migrate
 
@@ -35,9 +36,9 @@ class Usuario(models.Model):
     correo = models.CharField(max_length=100)
     contrasenia = models.CharField(max_length=100)
     estado = models.CharField(max_length=20, choices=[
-        ('Activo', 'activo'),
-        ('Inactivo', 'inactivo'),
-    ] ,default='Activo'
+        ('activo', 'Activo'),
+        ('inactivo', 'Inactivo'),
+    ] ,default='activo'
                               )
 
     class Meta:
@@ -46,22 +47,65 @@ class Usuario(models.Model):
 
     def __str__(self):
         return f"{self.correo} ({self.rol})"
+    def set_password(self, raw_password):
+        
+        self.password = make_password(raw_password)
+        self.save()
+
+    def check_password(self, raw_password):
+        
+        return check_password(raw_password, self.password)
 
 
+# ======================
+# MODELO: PERSONA
+# ======================
+class Persona(models.Model):
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='personas')
+    nombre = models.CharField(max_length=100)
+    apellidoPaterno = models.CharField(max_length=100)
+    apellidoMaterno = models.CharField(max_length=100)
+    estado = models.CharField(max_length=20, choices=[
+        ('activo', 'Activo'),
+        ('inactivo', 'Inactivo'),
+    ], default='activo')
+
+    class Meta:
+        verbose_name = 'Persona'
+        verbose_name_plural = 'Personas'
+
+    def __str__(self):
+        return f"{self.nombre} {self.apellidoPaterno}"
+# ======================
+# MODELO: COLEGIO
+# ======================
+class Colegio(models.Model):
+    nombre = models.CharField(max_length=200)
+    direccion = models.CharField(max_length=300)
+    estado = models.CharField(max_length=20, choices=[
+        ('activo', 'Activo'),
+        ('inactivo', 'Inactivo'),
+    ],default='activo')
+
+    class Meta:
+        verbose_name = 'Colegio'
+        verbose_name_plural = 'Colegios'
+
+    def __str__(self):
+        return self.nombre
+    
 # ======================
 # MODELO: ADMINISTRADOR
 # ======================
 class Administrador(models.Model):
     usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='administradores')
     persona = models.ForeignKey('Persona', on_delete=models.SET_NULL, null=True, blank=True, related_name='administradores')
+    colegio = models.ForeignKey('Colegio', on_delete=models.SET_NULL, null=True, blank=True, related_name='administradores')
     estado = models.CharField(max_length=20, choices=[
-        ('Activo', 'activo'),
-        ('Inactivo', 'inactivo'),
+        ('activo', 'Activo'),
+        ('inactivo', 'Inactivo'),
     ], default='Activo')
     
-    # Relación con Colegio (opcional)
-    colegio = models.ForeignKey('Colegio', on_delete=models.SET_NULL, null=True, blank=True, related_name='administradores')
-
     class Meta:
         verbose_name = 'Administrador'
         verbose_name_plural = 'Administradores'
@@ -78,16 +122,10 @@ class Administrador(models.Model):
 # MODELO: CONFIGURACIÓN VISUAL
 # ======================
 class ConfiguracionVisual(models.Model):
-    administrador = models.OneToOneField(Administrador, on_delete=models.CASCADE, related_name='config_visual')
+    colegio = models.OneToOneField(Colegio, on_delete=models.CASCADE)
     logo = models.ImageField(upload_to='logos/', null=True, blank=True)
-    icono = models.ImageField(upload_to='iconos/', null=True, blank=True)
-    fuente = models.CharField(max_length=100, default='Arial')
-    formato = models.CharField(max_length=50, default='moderno')
     color_primario = models.CharField(max_length=7, default='#007bff')
     color_secundario = models.CharField(max_length=7, default='#6c757d')
-    estilo_menu = models.CharField(max_length=50, default='horizontal')
-    puede_probar = models.BooleanField(default=True)
-    despliegue = models.CharField(max_length=50, default='web')
     fecha_actualizacion = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -95,47 +133,7 @@ class ConfiguracionVisual(models.Model):
         verbose_name_plural = 'Configuraciones Visuales'
 
     def __str__(self):
-        return f"Configuración de {self.administrador.usuario.username}"
-
-
-# ======================
-# MODELO: PERSONA
-# ======================
-class Persona(models.Model):
-    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='personas')
-    nombre = models.CharField(max_length=100)
-    apellidoPaterno = models.CharField(max_length=100)
-    apellidoMaterno = models.CharField(max_length=100)
-    estado = models.CharField(max_length=20, choices=[
-        ('Activo', 'activo'),
-        ('Inactivo', 'inactivo'),
-    ], default='Activo')
-
-    class Meta:
-        verbose_name = 'Persona'
-        verbose_name_plural = 'Personas'
-
-    def __str__(self):
-        return f"{self.nombre} {self.apellidoPaterno}"
-
-
-# ======================
-# MODELO: COLEGIO
-# ======================
-class Colegio(models.Model):
-    nombre = models.CharField(max_length=200)
-    direccion = models.CharField(max_length=300)
-    estado = models.CharField(max_length=20, choices=[
-        ('Activo', 'activo'),
-        ('Inactivo', 'inactivo'),
-    ],default='Activo')
-
-    class Meta:
-        verbose_name = 'Colegio'
-        verbose_name_plural = 'Colegios'
-
-    def __str__(self):
-        return self.nombre
+        return f"Configuración de {self.administrador.usuario.correo}"
 
 
 # ======================
@@ -197,7 +195,7 @@ class Curso(models.Model):
         return self.nombre
 
 # ======================
-# MODELO: TEMAS
+# MODELO: TEMA
 # ======================
 class Temas(models.Model):
     curso = models.ForeignKey(Curso, on_delete=models.CASCADE, related_name='temas')
@@ -210,9 +208,9 @@ class Temas(models.Model):
     ], default='disponible')
     fecha_inicio = models.DateField()
     tamanio = models.IntegerField(help_text="Duración en horas o días")
-    archivo = models.FileField(upload_to='temas/')
+    archivo = models.FileField(upload_to='tema/')
     class Meta:
-        verbose_name = 'Tema'
+        verbose_name = 'Temas'
         verbose_name_plural = 'Temas'
         ordering = ['curso', 'numero']
 
@@ -223,10 +221,12 @@ class Temas(models.Model):
 # ======================
 # MODELO: LABORATORIO
 # ======================
+from django.db import models
+
 class Laboratorio(models.Model):
     nombre = models.CharField(max_length=200)
-    # ruta relativa dentro de MEDIA_ROOT donde se extrae el paquete (por ejemplo: 'laboratorios/23/')
-    carpeta = models.CharField(max_length=300, blank=True, null=True)
+    # URL pública desde donde se puede acceder al laboratorio (por ejemplo, GitHub Pages)
+    url = models.URLField(max_length=500, blank=True, null=True)
     estado = models.CharField(max_length=50, choices=[
         ('activo', 'Activo'),
         ('inactivo', 'Inactivo'),
@@ -251,7 +251,6 @@ class Componente(models.Model):
     modelo3D = models.FileField(upload_to='modelos3D/', null=True, blank=True)
     especificaciones = models.TextField(blank=True)
     video_explicacion = models.URLField(max_length=500, blank=True)
-    # Campo `tema` eliminado según solicitud. Si necesita referenciar temas, usar otra relación.
     laboratorio = models.ForeignKey(Laboratorio, on_delete=models.SET_NULL, null=True, blank=True, related_name='componentes')
     estado = models.CharField(max_length=20, choices=[
         ('Activo', 'activo'),
@@ -263,7 +262,7 @@ class Componente(models.Model):
         verbose_name_plural = 'Componentes'
 
     def __str__(self):
-        # `tema` fue removido; mostrar nombre y laboratorio si existe
+       
         if self.laboratorio:
             return f"{self.laboratorio.nombre} - {self.nombre}"
         return self.nombre
@@ -346,7 +345,7 @@ class Pago(models.Model):
         ordering = ['-fecha']
 
     def __str__(self):
-        return f"Pago {self.id} - {self.usuario.username} - ${self.monto}"
+     return f"Pago {self.id} - {self.usuario.correo} - ${self.monto}"
 
 
  # ======================
@@ -358,26 +357,28 @@ class Documento(models.Model):
         ('Inactivo', 'Inactivo'),
         ('En revisión', 'En revisión'),
     ]
+    tema = models.ForeignKey(
+        'Temas',
+        on_delete=models.CASCADE,
+        related_name='documentos',
+        null = False,
+        verbose_name="Temas"
+    )
+    nombre = models.CharField(max_length=255, verbose_name="Nombre del documento")
+    descripcion = models.TextField(blank=True, verbose_name="Descripción")
+    archivo_pdf = models.FileField(upload_to="pdfs/")  
+    nombre_archivo = models.CharField(max_length=255, verbose_name="Nombre del archivo", blank=True)
+    tamaño = models.IntegerField(verbose_name="Tamaño (bytes)", null=True, blank=True)
+    
     
     categoria = models.CharField(
     max_length=50, 
     default='fisica_general',
     verbose_name="Categoría"
-)
-    
-    nombre = models.CharField(max_length=255, verbose_name="Nombre del documento")
-    descripcion = models.TextField(blank=True, verbose_name="Descripción")
-    archivo_pdf = models.BinaryField(verbose_name="Archivo PDF", null=True, blank=True)  # ← ¡CORREGIDO!
-    nombre_archivo = models.CharField(max_length=255, verbose_name="Nombre del archivo", blank=True)
-    tamaño = models.IntegerField(verbose_name="Tamaño (bytes)", null=True, blank=True)
-    categoria = models.CharField(
-        max_length=50, 
-        default='fisica_general',
-        verbose_name="Categoría"
     )
     estado = models.CharField(max_length=20, choices=[
-        ('Activo', 'activo'),
-        ('Inactivo', 'inactivo'),
+        ('activo', 'Activo'),
+        ('inactivo', 'Inactivo'),
     ],default='Activo')
     fecha_creacion = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de creación")
     fecha_actualizacion = models.DateTimeField(auto_now=True, verbose_name="Fecha de actualización", null=True)

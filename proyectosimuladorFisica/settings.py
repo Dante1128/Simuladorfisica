@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',   
     'django.contrib.humanize',     
     'usuarios',
+    'widget_tweaks',
 ]
 
 MIDDLEWARE = [
@@ -66,6 +67,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+               
             ],
         },
     },
@@ -80,14 +82,13 @@ WSGI_APPLICATION = 'proyectosimuladorFisica.wsgi.app'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'Simuladordefisica',  # nombre de la base de datos
+        'NAME': 'SimuladordeFisica',  
         'USER': 'postgres',
         'PASSWORD': '12345',
         'HOST': 'localhost',
         'PORT': '5432',
     }
 }
-
 
 
 # Configuración para archivos grandes

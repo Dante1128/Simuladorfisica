@@ -1,0 +1,14 @@
+{% extends 'estudiante/base_estudiante.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h2>¿Deseas abrir el laboratorio: {{ laboratorio.nombre }}?</h2>
+    <p>{{ laboratorio.descripcion }}</p>
+    
+    <a href="{% url 'laboratorio_entrar' laboratorio.id %}" class="btn btn-primary" target="_blank">
+        Entrar al Laboratorio
+    </a>
+    <a href="{% url 'estudiantes_laboratorios_list' %}" class="btn btn-secondary">
+        Cancelar
+    </a>
+</div>
+{% endblock %}

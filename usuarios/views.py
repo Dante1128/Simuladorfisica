@@ -1,6 +1,8 @@
 # ======================
 # IMPORTS DE DJANGO
 # ======================
+from django.shortcuts import render
+from .models import ConfiguracionVisual
 from .views_superadmin_componentes import (
     superadmin_componentes_list,
     superadmin_componente_create,
@@ -35,6 +37,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q, Count, Sum
 from django.db import models
 from django.contrib.admin.views.decorators import staff_member_required
+from .models import Colegio, ConfiguracionVisual
 
 # ======================
 # IMPORTS DE MODELOS
@@ -187,7 +190,9 @@ def perfil_superadmin(request):
         return redirect('login')
 
 def gestion_colegios(request):
+    # =========================
     # CAMBIO DE ESTADO
+    # =========================
     estado_id = request.GET.get('estado_id')
     if estado_id:
         try:
@@ -199,20 +204,35 @@ def gestion_colegios(request):
             messages.error(request, 'Colegio no encontrado.')
         return HttpResponse(status=204)
 
-    # CREAR COLEGIO
+    # =========================
+    # CREAR COLEGIO + CONFIGURACION VISUAL
+    # =========================
     if request.method == 'POST' and 'crear' in request.POST:
         nombre = request.POST.get('nombre', '').strip()
         direccion = request.POST.get('direccion', '').strip()
+        color_primario = request.POST.get('color_primario', '#007bff')
+        color_secundario = request.POST.get('color_secundario', '#6c757d')
+        logo = request.FILES.get('logo')
+      
         if nombre and direccion:
             if not Colegio.objects.filter(nombre__iexact=nombre).exists():
-                Colegio.objects.create(nombre=nombre, direccion=direccion)
-                messages.success(request, 'Colegio creado correctamente.')
+                colegio = Colegio.objects.create(nombre=nombre, direccion=direccion)
+                # Crear configuración visual
+                ConfiguracionVisual.objects.create(
+                    colegio=colegio,
+                    color_primario=color_primario,
+                    color_secundario=color_secundario,
+                    logo=logo,
+                )
+                messages.success(request, 'Colegio creado correctamente con configuración visual.')
             else:
                 messages.error(request, 'Ya existe un colegio con ese nombre.')
         else:
             messages.error(request, 'Todos los campos son obligatorios.')
 
+    # =========================
     # EDITAR COLEGIO
+    # =========================
     if request.method == 'POST' and 'editar_id' in request.POST:
         editar_id = request.POST.get('editar_id')
         nombre = request.POST.get('editar_nombre', '').strip()
@@ -229,7 +249,9 @@ def gestion_colegios(request):
         else:
             messages.error(request, 'Todos los campos son obligatorios para editar.')
 
+    # =========================
     # FILTRO
+    # =========================
     search_term = request.GET.get('search', '').strip()
     if search_term:
         colegios = Colegio.objects.filter(
@@ -239,7 +261,6 @@ def gestion_colegios(request):
         colegios = Colegio.objects.all().order_by('-id')  
 
     return render(request, 'superadministrador/gestion_colegios.html', {'colegios': colegios})
-
 
 def gestion_administradores(request):
     administradores = Administrador.objects.all().select_related('usuario', 'persona', 'colegio')
@@ -1234,16 +1255,17 @@ def laboratorio_delete_confirm(request, pk):
     return render(request, 'superadministrador/laboratorio_confirm_delete.html', {'laboratorio': lab})
 
 
-### --- VISTAS ESTUDIANTES (INTERFAZ) --- ###
+### --- VISTAS ESTUDIANTES (INTERFAZ) --- ###ESTE si
+
 def estudiantes_laboratorios_list(request):
     # lista pública (o basada en sesión) de laboratorios disponibles
     labs = Laboratorio.objects.filter(estado='activo')
-    return render(request, 'estudiantes/laboratorios_list.html', {'laboratorios': labs})
+    return render(request, 'estudiante/laboratorios.html', {'laboratorios': labs})
 
 
 def laboratorio_access_confirm(request, pk):
     lab = get_object_or_404(Laboratorio, pk=pk)
-    return render(request, 'estudiantes/laboratorio_confirm.html', {'laboratorio': lab})
+    return render(request, 'estudiante/laboratorio_confirm.html', {'laboratorio': lab})
 
 
 def laboratorio_entrar(request, pk):
@@ -1275,45 +1297,9 @@ def laboratorio_entrar(request, pk):
         filename = html_files[0]
 
     html_url = reverse('laboratorio_serve', kwargs={'pk': lab.id, 'filename': filename})
-    return render(request, 'estudiantes/laboratorio_view.html', {'laboratorio': lab, 'html_url': html_url})
+    return render(request, 'estudiante/laboratorio_view.html', {'laboratorio': lab, 'html_url': html_url})
 
 
-def laboratorio_serve(request, pk, filename):
-    """Sirve archivos de laboratorio de forma segura desde MEDIA_ROOT/<lab.carpeta>/<filename>.
-    Evita path traversal y restringe extensiones permitidas.
-    """
-    lab = get_object_or_404(Laboratorio, pk=pk)
-    if not lab.carpeta:
-        raise Http404('Recursos no disponibles')
-
-    # normalizar filename y prevenir traversal
-    safe_rel = os.path.normpath(filename)
-    if safe_rel.startswith('..') or os.path.isabs(safe_rel):
-        raise Http404('Archivo no permitido')
-
-    media_base = os.path.abspath(os.path.join(settings.MEDIA_ROOT, lab.carpeta))
-    full_path = os.path.abspath(os.path.join(media_base, safe_rel))
-    if not full_path.startswith(media_base):
-        raise Http404('Acceso denegado')
-    if not os.path.exists(full_path):
-        raise Http404('Archivo no encontrado')
-
-    allowed_exts = {'.html', '.htm', '.png', '.jpg', '.jpeg', '.gif', '.css', '.js', '.glb', '.gltf', '.obj', '.mtl', '.bin', '.svg'}
-    ext = os.path.splitext(full_path)[1].lower()
-    if ext not in allowed_exts:
-        raise Http404('Tipo de archivo no permitido')
-
-    mime, _ = mimetypes.guess_type(full_path)
-    if not mime:
-        mime = 'application/octet-stream'
-
-    response = FileResponse(open(full_path, 'rb'), content_type=mime)
-    response['X-Content-Type-Options'] = 'nosniff'
-    # CSP básica para HTML
-    if mime == 'text/html':
-        response['Content-Security-Policy'] = "default-src 'self' 'unsafe-inline' data: blob:; frame-ancestors 'self';"
-
-    return response
 
 
 ### --- VISTAS PARA LABORATORIOS (SUPERADMIN) --- ###
@@ -1340,12 +1326,15 @@ def laboratorio_create(request):
             if archivo_zip and zipfile.is_zipfile(archivo_zip):
                 target_dir = os.path.join(settings.MEDIA_ROOT, 'laboratorios', str(lab.id))
                 os.makedirs(target_dir, exist_ok=True)
+
                 tmp_zip_path = os.path.join(target_dir, f'tmp_{lab.id}.zip')
                 with open(tmp_zip_path, 'wb') as f:
                     for chunk in archivo_zip.chunks():
                         f.write(chunk)
+
                 allowed_exts = {'.html', '.htm', '.png', '.jpg', '.jpeg', '.gif', '.css', '.js', '.glb', '.gltf', '.obj', '.mtl', '.bin', '.svg'}
                 import shutil as _shutil
+
                 with zipfile.ZipFile(tmp_zip_path, 'r') as z:
                     for member in z.infolist():
                         name = member.filename
@@ -1362,15 +1351,26 @@ def laboratorio_create(request):
                         dest_dir = os.path.dirname(dest_path)
                         os.makedirs(dest_dir, exist_ok=True)
                         with z.open(member) as source, open(dest_path, 'wb') as target:
-                            shutil.copyfileobj(source, target)
+                            _shutil.copyfileobj(source, target)
+
                 os.remove(tmp_zip_path)
-                rel_path = os.path.join('laboratorios', str(lab.id))
-                lab.carpeta = rel_path
+
+                # --- NUEVO: buscar carpeta que contenga index.html ---
+                final_carpeta = target_dir
+                for root, dirs, files in os.walk(target_dir):
+                    if 'index.html' in files:
+                        final_carpeta = root
+                        break
+
+                # guardar la ruta relativa
+                lab.carpeta = os.path.relpath(final_carpeta, settings.MEDIA_ROOT)
                 lab.save()
 
             messages.success(request, 'Laboratorio creado correctamente')
+
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return HttpResponse('OK')
+
             return redirect('laboratorios_list')
         else:
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
@@ -1459,86 +1459,6 @@ def laboratorio_delete_confirm(request, pk):
     return render(request, 'superadministrador/laboratorio_confirm_delete.html', {'laboratorio': lab})
 
 
-### --- VISTAS ESTUDIANTES (INTERFAZ) --- ###
-def estudiantes_laboratorios_list(request):
-    # lista pública (o basada en sesión) de laboratorios disponibles
-    labs = Laboratorio.objects.filter(estado='activo')
-    return render(request, 'estudiantes/laboratorios_list.html', {'laboratorios': labs})
-
-
-def laboratorio_access_confirm(request, pk):
-    lab = get_object_or_404(Laboratorio, pk=pk)
-    return render(request, 'estudiantes/laboratorio_confirm.html', {'laboratorio': lab})
-
-
-def laboratorio_entrar(request, pk):
-    lab = get_object_or_404(Laboratorio, pk=pk)
-    # buscar archivo HTML principal en la carpeta extraída
-    if not lab.carpeta:
-        raise Http404('El laboratorio no tiene recursos cargados.')
-
-    carpeta_fs = os.path.join(settings.MEDIA_ROOT, lab.carpeta)
-    if not os.path.isdir(carpeta_fs):
-        raise Http404('Los archivos del laboratorio no existen.')
-
-    # preferir index.html
-    index_candidate = os.path.join(carpeta_fs, 'index.html')
-    if os.path.exists(index_candidate):
-        index_rel = os.path.join(settings.MEDIA_URL, lab.carpeta, 'index.html')
-    else:
-        # buscar primer .html en la carpeta
-        html_files = [f for f in os.listdir(carpeta_fs) if f.lower().endswith('.html')]
-        if not html_files:
-            raise Http404('No hay archivo HTML en la carpeta del laboratorio.')
-        index_rel = os.path.join(settings.MEDIA_URL, lab.carpeta, html_files[0])
-
-    # pasar la URL pública del HTML al template para incrustarlo en un iframe
-    # Usar una vista segura para servir los recursos del laboratorio
-    if index_candidate and os.path.exists(index_candidate):
-        filename = 'index.html'
-    else:
-        filename = html_files[0]
-
-    html_url = reverse('laboratorio_serve', kwargs={'pk': lab.id, 'filename': filename})
-    return render(request, 'estudiantes/laboratorio_view.html', {'laboratorio': lab, 'html_url': html_url})
-
-
-def laboratorio_serve(request, pk, filename):
-    """Sirve archivos de laboratorio de forma segura desde MEDIA_ROOT/<lab.carpeta>/<filename>.
-    Evita path traversal y restringe extensiones permitidas.
-    """
-    lab = get_object_or_404(Laboratorio, pk=pk)
-    if not lab.carpeta:
-        raise Http404('Recursos no disponibles')
-
-    # normalizar filename y prevenir traversal
-    safe_rel = os.path.normpath(filename)
-    if safe_rel.startswith('..') or os.path.isabs(safe_rel):
-        raise Http404('Archivo no permitido')
-
-    media_base = os.path.abspath(os.path.join(settings.MEDIA_ROOT, lab.carpeta))
-    full_path = os.path.abspath(os.path.join(media_base, safe_rel))
-    if not full_path.startswith(media_base):
-        raise Http404('Acceso denegado')
-    if not os.path.exists(full_path):
-        raise Http404('Archivo no encontrado')
-
-    allowed_exts = {'.html', '.htm', '.png', '.jpg', '.jpeg', '.gif', '.css', '.js', '.glb', '.gltf', '.obj', '.mtl', '.bin', '.svg'}
-    ext = os.path.splitext(full_path)[1].lower()
-    if ext not in allowed_exts:
-        raise Http404('Tipo de archivo no permitido')
-
-    mime, _ = mimetypes.guess_type(full_path)
-    if not mime:
-        mime = 'application/octet-stream'
-
-    response = FileResponse(open(full_path, 'rb'), content_type=mime)
-    response['X-Content-Type-Options'] = 'nosniff'
-    # CSP básica para HTML
-    if mime == 'text/html':
-        response['Content-Security-Policy'] = "default-src 'self' 'unsafe-inline' data: blob:; frame-ancestors 'self';"
-
-    return response
 
 # ====================================================================
 # DECORATOR PERSONALIZADO PARA AUTENTICACIÓN
@@ -1936,6 +1856,10 @@ def dashboard_profesor(request):
     except Exception as e:
         messages.error(request, f'Error: {str(e)}')
         return redirect('panel_profesor')
+
+
+def dashboard_estudiante(request):
+    return render(request, 'estudiante/dashboard_estudiante.html')
 
 # ====================================================================
 # GENERAR REPORTE PDF COMPLETO 
@@ -3307,3 +3231,5 @@ def componentes_estudiante_tarjetas(request):
         'componentes_json': json.dumps(componentes_json, cls=DjangoJSONEncoder)
     }
     return render(request, 'estudiante/componentes_tarjetas.html', context)
+
+
