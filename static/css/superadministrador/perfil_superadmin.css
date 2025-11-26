@@ -30,11 +30,12 @@
     }
 
     .container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 20px;
-        animation: fadeInUp 0.8s ease-out;
-    }
+    max-width: 1200px;
+    margin: 0 0 0 auto;
+    padding: 20px;
+    animation: fadeInUp 0.8s ease-out;
+}
+
 
     @keyframes fadeInUp {
         from {

@@ -1,5 +1,5 @@
 from django import forms
-from .models import Componente, Laboratorio
+from .models import Componente, Laboratorio, Membresia
 
 
 class ComponenteForm(forms.ModelForm):

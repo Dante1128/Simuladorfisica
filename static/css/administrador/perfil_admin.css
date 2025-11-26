@@ -1,4 +1,8 @@
 /* ESTILOS INDEPENDIENTES PARA PERFIL DE ADMINISTRADOR */
+.container {
+    display: flex;
+    justify-content: flex-end;
+}
 
 .main-content {
     margin-left: 150px!important;
