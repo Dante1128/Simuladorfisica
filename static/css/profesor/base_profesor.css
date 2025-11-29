@@ -27,6 +27,7 @@
         
         /* Sidebar */
         .sidebar {
+            position: fixed; 
             width: 280px;
             background: linear-gradient(180deg, var(--color-primario) 0%, #0d2e63 100%);
             color: white;
@@ -43,6 +44,7 @@
             align-items: center;
             gap: 15px;
         }
+        
         
         .sidebar-header img {
             width: 45px;
@@ -160,21 +162,23 @@
         
         /* Main Content */
         .main-content {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
+    flex-grow: 1;
+    margin-left: 250px; /* Igual al ancho del sidebar */
+    display: flex;
+    flex-direction: column;
+    overflow: auto; /* Permite scroll del contenido */
+    min-height: 100vh;
+}
         
         /* Navbar */
         .navbar {
             background: linear-gradient(90deg, white 0%, #f8f8f8 100%);
-            padding: 18px 35px;
+            padding: 18px 80px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
-            z-index: 100;
+        
             border-bottom: 1px solid var(--color-borde);
         }
         

@@ -229,18 +229,57 @@
         .alert-close:hover {
             background: rgba(255, 255, 255, 0.3);
         }
+
+        .sidebar-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.user-avatar img.icono-admin {
+    width: 45px;
+    height: 45px;
+
+    /* Convierte PNG a azul */
+    filter: invert(15%) sepia(92%) saturate(5000%) hue-rotate(206deg) brightness(90%) contrast(95%);
+
+
+.user-info h2 {
+    font-size: 18px;
+    margin: 0;
+    color: white;
+}
+
+.user-info p {
+    margin: 0;
+    color: white;
+}
+
+.superuser-badge {
+    background: #ff4040;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 6px;
+    font-size: 10px;
+    margin-left: 4.5px;
+}
+
     </style>
 </head>
 <body>
     <!-- Sidebar/Navbar -->
     <div class="sidebar">
-        <div class="sidebar-header">
-            <div class="user-avatar"></div>
-            <div class="user-info">
-                <h2>SuperUsuario <span class="superuser-badge">Admin</span></h2>
-                <p>Panel de Control</p>
-            </div>
-        </div>
+       <div class="sidebar-header">
+    <div class="user-avatar">
+       <img src="{% static 'img/superadministrador.png' %}" class="icono-admin">
+
+    </div>
+    <div class="user-info">
+        <h2>SuperUsuario <span class="superuser-badge">ADMIN</span></h2>
+      
+    </div>
+</div>
+
         
         <div class="nav-container">
             <nav>
